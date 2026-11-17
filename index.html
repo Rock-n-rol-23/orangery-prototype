@@ -73,8 +73,9 @@ html,body{height:100%;margin:0;overflow:clip;background:var(--page-bg);overscrol
 .btn{cursor:pointer;outline:none}
 .btn:focus-visible .ring{stroke:var(--focus);stroke-width:2.5}
 .sw-dawn{fill:var(--sw-dawn)}.sw-day{fill:var(--sw-day)}.sw-dusk{fill:var(--sw-dusk)}.sw-night{fill:var(--sw-night);stroke:var(--sw-night-line);stroke-width:1}
-.ghost{fill:var(--white);opacity:0}
-.ghost.on{opacity:.16}
+.eat{fill:none;stroke:var(--gold);stroke-width:1.8;stroke-dasharray:5 4}
+.made{fill:none;stroke:var(--gold);stroke-width:2.4}
+.link{font-size:13px;text-decoration:underline}
 .pw{transform-box:fill-box;transform-origin:50% 80%}
 .pop{font-size:17px;font-weight:600;fill:var(--core1);stroke:var(--over-soil1);stroke-width:3px;paint-order:stroke;stroke-linejoin:round}
 .fxp{transform-box:fill-box;transform-origin:center}
@@ -109,7 +110,7 @@ noscript p{color:var(--over-ink);font-family:var(--font-game);padding:24px}
   <div class="screen t-night" id="screen">
     <svg id="bg0" class="pass" viewBox="0 0 390 844" aria-hidden="true" focusable="false"></svg>
     <svg id="bg1" class="pass anim" viewBox="0 0 390 844" aria-hidden="true" focusable="false"></svg>
-    <svg id="game" class="anim" viewBox="0 0 390 844" role="application" aria-label="Оранжерея: перетаскивайте ростки из лотка на грядку"></svg>
+    <svg id="game" class="anim" viewBox="0 0 390 844" role="application" aria-label="Оранжерея: перетаскивайте фигуры из лотка на грядку, касание поворачивает фигуру"></svg>
     <svg id="fg" class="pass anim" viewBox="0 0 390 844" aria-hidden="true" focusable="false"></svg>
     <svg id="vig" class="pass" viewBox="0 0 390 844" aria-hidden="true" focusable="false"></svg>
     <svg class="pass grain" viewBox="0 0 390 844" aria-hidden="true" focusable="false"><rect width="390" height="844" filter="url(#grain)"/></svg>
@@ -277,41 +278,42 @@ const px=BX-12,py=BY-12,pw=BW+24;
 let stat=`<ellipse cx="195" cy="${py+pw+4}" rx="196" ry="22" style="fill:${u('pshadow')}"/><rect x="${px}" y="${py}" width="${pw}" height="${pw}" rx="26" style="fill:${u('soil')};stroke:var(--panel-line);stroke-width:1.2"/><path d="M${px+30},${py+.8} H${px+pw-30}" style="fill:none;stroke:var(--white);stroke-width:1;stroke-linecap:round;opacity:.28"/>`;
 for(let r=0;r<5;r++)for(let c=0;c<5;c++){const x=BX+c*STEP,y=BY+r*STEP;
   stat+=`<rect x="${x}" y="${y}" width="${CELL}" height="${CELL}" rx="13" style="${fill('cell')};stroke:var(--cell-line);stroke-width:.9"/><path d="M${x+13},${y+CELL-.6} H${x+CELL-13}" style="fill:none;stroke:var(--white);stroke-width:.8;stroke-linecap:round;opacity:.12"/><circle class="dot" cx="${x+30}" cy="${y+30}" r="1.6" style="${fill('cell-dot')}"/>`;}
-stat+=`<rect class="ghost" width="${CELL}" height="${CELL}" rx="13"/><rect class="ghost" width="${CELL}" height="${CELL}" rx="13"/><rect class="ghost" width="${CELL}" height="${CELL}" rx="13"/>`;
 const chip=x=>`<rect class="ring" x="${x}" y="50" width="104" height="36" rx="18" style="${fill('chip')};stroke:var(--chip-line);stroke-width:1"/>`;
 stat+=chip(21)+`<text id="best" x="73" y="73" text-anchor="middle" style="font-size:14px;font-weight:500;${fill('ink-top')}">рекорд 0</text>
   <g id="restart" class="btn" role="button" tabindex="0" aria-label="Начать забег заново">${chip(265)}<text id="restart-t" x="317" y="73" text-anchor="middle" style="font-size:14px;font-weight:500;${fill('ink-top')}">заново</text></g>
   <text x="195" y="58" text-anchor="middle" style="font-size:12px;${fill('muted-top')}">очки</text>
   <text id="score" class="fxp" x="195" y="90" text-anchor="middle" style="font-size:33px;font-weight:500;${fill('ink-top')}">0</text>
-  <text x="24" y="626" style="font-size:13px;${fill('muted-low')}">Тяните ростки на грядку: три одинаковых сливаются</text>`;
+  <g id="label"></g>
+  <g id="help" class="btn" role="button" tabindex="0" aria-label="Правила игры"><rect x="281" y="603" width="88" height="44" style="fill:transparent"/><rect class="ring" x="281" y="609" width="88" height="32" rx="16" style="${fill('card')};stroke:var(--card-line);stroke-width:1"/><text x="325" y="630" text-anchor="middle" style="font-size:13.5px;font-weight:500;${fill('ink-low')}">правила</text></g>`;
 ORDER.forEach((id,i)=>{const x=144+i*34;
   stat+=`<g class="btn" role="button" tabindex="0" data-theme="${id}" aria-label="Время суток: ${({dawn:'рассвет',day:'день',dusk:'закат',night:'ночь'})[id]}"><rect x="${x-15}" y="12" width="30" height="30" style="fill:transparent"/><circle cx="${x}" cy="27" r="5.5" class="sw-${id}"/><circle class="ring" cx="${x}" cy="27" r="9"/></g>`;});
-stat+=`<g id="tray"></g><g id="plants"></g><g id="fx"></g><g id="drag" style="pointer-events:none"></g><g id="over" style="display:none"></g>`;
+stat+=`<g id="tray"></g><g id="plants"></g><g id="pre" style="pointer-events:none"></g><g id="tutg" style="pointer-events:none"></g><g id="fx"></g><g id="drag" style="pointer-events:none"></g><g id="over" style="display:none"></g>`;
 game.innerHTML=stat;
-const dotsEl=[...game.querySelectorAll('.dot')],ghosts=[...game.querySelectorAll('.ghost')];
-const trayG=$('tray'),plantsG=$('plants'),fxG=$('fx'),dragG=$('drag'),overG=$('over');
+const dotsEl=[...game.querySelectorAll('.dot')];
+const trayG=$('tray'),plantsG=$('plants'),preG=$('pre'),tutG=$('tutg'),labelG=$('label'),fxG=$('fx'),dragG=$('drag'),overG=$('over');
 const holders=[];
 for(let i=0;i<25;i++){const g=document.createElementNS(NS,'g');g.setAttribute('transform',`translate(${BX+(i%5)*STEP-1},${BY+((i/5)|0)*STEP-1})`);g.style.pointerEvents='none';plantsG.appendChild(g);holders.push(g);}
 
 /* ---------- состояние ---------- */
-const SHAPES=[
-  [[[0,0]]],
-  [[[0,0],[1,0]],[[0,0],[0,1]]],
-  [[[0,0],[1,0],[0,1]],[[0,0],[1,0],[1,1]],[[0,0],[0,1],[1,1]],[[1,0],[0,1],[1,1]]]
-];
-let grid,tray,score,best=0,busy,over,drag=null,grnd=Math.random,queue=Promise.resolve();
+const SHAPES=[[[0,0]],[[0,0],[1,0]],[[0,0],[1,0],[0,1]]];
+let grid,tray,score,best=0,busy,over,modal=null,tut=null,drag=null,pend=null,gv=0,grnd=Math.random,queue=Promise.resolve();
 try{best=+localStorage.getItem('orangery-best')||0;}catch(e){}
 const pick=a=>a[(grnd()*a.length)|0];
+const mkPiece=cells=>({cells,w:Math.max(...cells.map(q=>q[0]))+1,h:Math.max(...cells.map(q=>q[1]))+1});
+/* поворот на четверть оборота по часовой стрелке; растения остаются стоять прямо */
+function rotate(p){const h=p.h;p.cells=p.cells.map(q=>[h-1-q[1],q[0],q[2],q[3]]);p.h=p.w;p.w=h;}
 function newPiece(){
-  /* баланс подобран симуляцией: фигура одного вида, третий вид приходит с 800 очков */
-  const k=grnd(),size=k<.5?0:k<.9?1:2,shape=pick(SHAPES[size]);
-  const sp=pick((score||0)>=800?['r','y','b']:['r','y']);
-  const cells=shape.map(q=>[q[0],q[1],sp,grnd()<.12?2:1]);
-  return {cells,w:Math.max(...shape.map(q=>q[0]))+1,h:Math.max(...shape.map(q=>q[1]))+1};
+  /* баланс подобран симуляцией. В одной фигуре нет двух одинаковых растений, поэтому
+     в каждом слиянии участвует ровно одна клетка фигуры: новый цветок вырастает в ней.
+     Третий вид приходит с 1500 очков. */
+  const k=grnd(),n=k<.5?0:k<.92?1:2,pool=(score||0)>=1500?['r','y','b']:['r','y'],used={},cells=[];
+  SHAPES[n].forEach(q=>{let sp,st,tries=0;do{sp=pick(pool);st=grnd()<.15?2:1;}while(used[sp+st]&&++tries<40);used[sp+st]=1;cells.push([q[0],q[1],sp,st]);});
+  const p=mkPiece(cells);for(let i=(grnd()*4)|0;i>0;i--)rotate(p);return p;
 }
 const wait=ms=>new Promise(r=>setTimeout(r,RM?0:ms));
-const fits=(p,c,r)=>p.cells.every(q=>{const cc=c+q[0],rr=r+q[1];return cc>=0&&cc<5&&rr>=0&&rr<5&&!grid[rr*5+cc];});
-const anyMove=()=>tray.some(p=>{if(!p)return false;for(let r=0;r<5;r++)for(let c=0;c<5;c++)if(fits(p,c,r))return true;return false;});
+const fitsRaw=(p,c,r)=>p.cells.every(q=>{const cc=c+q[0],rr=r+q[1];return cc>=0&&cc<5&&rr>=0&&rr<5&&!grid[rr*5+cc];});
+const fits=(p,c,r)=>fitsRaw(p,c,r)&&(!tut||(tut.phase==='do'&&c===TUT[tut.n].at[0]&&r===TUT[tut.n].at[1]&&tutWant()));
+const anyMove=()=>tray.some(p=>{if(!p)return false;const t=mkPiece(p.cells);for(let o=0;o<4;o++){for(let r=0;r<5;r++)for(let c=0;c<5;c++)if(fitsRaw(t,c,r))return true;rotate(t);}return false;});
 
 function renderCell(i,popIn){
   const h=holders[i],t=grid[i];dotsEl[i].style.opacity=t?0:1;
@@ -322,20 +324,32 @@ function renderCell(i,popIn){
 function pieceHTML(p,size,gap,lifted){
   let s='';
   p.cells.forEach(q=>{const x=q[0]*(size+gap),y=q[1]*(size+gap);
-    s+=`<rect x="${x}" y="${y}" width="${size}" height="${size}" rx="${f1(size*.22)}" style="fill:${u('soil')};stroke:var(--${lifted?'panel-line':'cell-line'});stroke-width:${lifted?1.1:.8}"/><g transform="translate(${x-1*size/62},${y-1*size/62}) scale(${(size/60).toFixed(3)})">${plant(q[2],q[3])}</g>`;});
+    s+=`<g class="pc"><rect x="${x}" y="${y}" width="${size}" height="${size}" rx="${f1(size*.22)}" style="fill:${u('soil')};stroke:var(--${lifted?'panel-line':'cell-line'});stroke-width:${lifted?1.1:.8}"/><g transform="translate(${x-1*size/62},${y-1*size/62}) scale(${(size/60).toFixed(3)})">${plant(q[2],q[3])}</g></g>`;});
   return s;
 }
+const TM=36,TG=4;
+const turnIco=(x,y)=>`<g transform="translate(${x},${y}) scale(.85)" style="fill:none;stroke:var(--muted-low);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M-5.5,1.5 A5.5,5.5 0 0 1 5.5,1.5"/><path d="M2.6,.4 L5.6,3.6 L8.4,.2"/></g>`;
 function renderTray(popIn){
   let s='';
   for(let k=0;k<3;k++){
     const cx=CARD.xs[k],p=tray[k];
     s+=`<rect x="${cx}" y="${CARD.y}" width="${CARD.w}" height="${CARD.w}" rx="20" style="${fill('card')};stroke:var(--card-line);stroke-width:1"/>`;
     if(!p)continue;
-    const m=36,g=4,w=p.w*m+(p.w-1)*g,h=p.h*m+(p.h-1)*g;
-    s+=`<g class="piece" data-slot="${k}"${drag&&drag.k===k?' style="opacity:.22"':''}><rect x="${cx}" y="${CARD.y}" width="${CARD.w}" height="${CARD.w}" style="fill:transparent"/><g class="pw" transform="translate(${cx+(CARD.w-w)/2},${CARD.y+(CARD.w-h)/2})">${pieceHTML(p,m,g,false)}</g></g>`;
+    const m=TM,g=TG,w=p.w*m+(p.w-1)*g,h=p.h*m+(p.h-1)*g;
+    s+=`<g class="piece" data-slot="${k}"${drag&&drag.k===k?' style="opacity:.22"':''}><rect x="${cx}" y="${CARD.y}" width="${CARD.w}" height="${CARD.w}" style="fill:transparent"/>${p.cells.length>1?turnIco(cx+CARD.w-13,CARD.y+13):''}<g transform="translate(${cx+(CARD.w-w)/2},${CARD.y+(CARD.w-h)/2})">${pieceHTML(p,m,g,false)}</g></g>`;
   }
   trayG.innerHTML=s;
   if(popIn&&!RM)trayG.querySelectorAll('.piece').forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'translateY(0)'}],{duration:260,delay:i*70,easing:'ease-out',fill:'backwards'}));
+}
+/* касание фигуры в лотке: поворот. Клетки переезжают со старых мест на новые. */
+function turn(k){
+  const p=tray[k];if(!p||p.cells.length<2||over||modal)return;
+  const old=p.cells.map(q=>[q[0],q[1]]),ow=p.w,oh=p.h,st=TM+TG;
+  rotate(p);renderTray();
+  if(!RM)trayG.querySelectorAll(`[data-slot="${k}"] .pc`).forEach((el,i)=>{
+    const dx=(old[i][0]-p.cells[i][0])*st+(p.w-ow)*st/2,dy=(old[i][1]-p.cells[i][1])*st+(p.h-oh)*st/2;
+    el.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:'translate(0,0)'}],{duration:180,easing:'cubic-bezier(.3,.8,.3,1)'});});
+  if(tut){tut.turned=true;renderTut();}
 }
 function setScore(v,bump){
   score=v;const el=$('score');el.textContent=String(v).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
@@ -355,12 +369,46 @@ function burst(i,big){
     c.setAttribute('cx',cx);c.setAttribute('cy',cy);c.setAttribute('r',k%2?2.2:3.1);c.setAttribute('class','fxp');c.setAttribute('style',fill(cols[k%4]));fxG.appendChild(c);
     c.animate([{transform:'translate(0,0) scale(.5)',opacity:1},{transform:`translate(${f1(Math.cos(a)*d)}px,${f1(Math.sin(a)*d)}px) scale(.9)`,opacity:0}],{duration:big?620:460,easing:'cubic-bezier(.2,.7,.3,1)',fill:'forwards'});setTimeout(()=>c.remove(),big?680:520);}
 }
-function group(i){
-  const t=grid[i];if(!t)return [];
+function groupOf(g,i){
+  const t=g[i];if(!t)return [];
   const seen=new Set([i]),q=[i];
   while(q.length){const k=q.pop(),c=k%5,r=(k/5)|0;
-    [[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>{const c2=c+d[0],r2=r+d[1];if(c2<0||c2>4||r2<0||r2>4)return;const j=r2*5+c2;if(seen.has(j))return;const o=grid[j];if(o&&o.st===t.st&&(o.sp===t.sp||t.st===3)){seen.add(j);q.push(j);}});}
+    [[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>{const c2=c+d[0],r2=r+d[1];if(c2<0||c2>4||r2<0||r2>4)return;const j=r2*5+c2;if(seen.has(j))return;const o=g[j];if(o&&o.st===t.st&&(o.sp===t.sp||t.st===3)){seen.add(j);q.push(j);}});}
   return [...seen];
+}
+/* Считает ход наперёд на копии грядки: и подсветка до хода, и сам ход идут по одному списку шагов.
+   Правило одно: группа из трёх и больше стягивается в ту клетку, куда поставили фигуру. */
+function plan(g,placed){
+  const steps=[];
+  for(const i of placed){let combo=0;
+    while(g[i]){
+      const grp=groupOf(g,i);if(grp.length<3)break;combo++;
+      const t=g[i],others=grp.filter(k=>k!==i);others.forEach(k=>{g[k]=null;});
+      const res=t.st===4?null:t.st===3?{sp:'w',st:4}:{sp:t.sp,st:t.st+1};g[i]=res;
+      steps.push({i,others,res,combo,pts:res?Math.round([0,0,20,60,200][res.st]*combo*(grp.length>3?1.5:1)):600*combo});
+      if(!res)break;}}
+  return steps;
+}
+/* подсветка до хода: что исчезнет (пунктир) и что вырастет (сплошная рамка) */
+let preKey='',dimmed=[];
+function showPreview(p,c,r,ok){
+  const key=p&&ok?gv+':'+c+','+r+':'+p.cells.map(q=>q[0]+''+q[1]).join(''):'';
+  if(key===preKey)return;preKey=key;
+  dimmed.forEach(k=>{holders[k].style.opacity='';});dimmed=[];
+  if(!key){preG.innerHTML='';return;}
+  const g=grid.slice(),placed=p.cells.map(q=>{const i=(r+q[1])*5+c+q[0];g[i]={sp:q[2],st:q[3]};return i;});
+  const eaten=new Set(),made=new Set();
+  plan(g,placed).forEach(s=>{s.others.forEach(k=>eaten.add(k));made.add(s.i);});
+  const xy=i=>[BX+(i%5)*STEP,BY+((i/5)|0)*STEP];
+  let h='';
+  eaten.forEach(k=>{if(placed.indexOf(k)>=0)return;const [x,y]=xy(k);holders[k].style.opacity=.38;dimmed.push(k);
+    h+=`<rect class="eat" x="${x+1}" y="${y+1}" width="${CELL-2}" height="${CELL-2}" rx="12"/>`;});
+  placed.forEach(i=>{const [x,y]=xy(i),t=g[i],m=made.has(i);
+    h+=`<rect x="${x}" y="${y}" width="${CELL}" height="${CELL}" rx="13" style="fill:${u('soil')};stroke:var(--panel-line);stroke-width:1.1"/>`;
+    if(t)h+=`<g transform="translate(${x-1},${y-1})">${plant(t.sp,t.st)}</g>`;
+    else if(m)h+=`<g transform="translate(${x+30},${y+30}) scale(2.2)"><path d="${STAR}" style="${fill('gold')}"/></g>`;
+    h+=m?`<rect class="made" x="${x+1}" y="${y+1}" width="${CELL-2}" height="${CELL-2}" rx="12"/>`:t?'':`<rect class="eat" x="${x+1}" y="${y+1}" width="${CELL-2}" height="${CELL-2}" rx="12"/>`;});
+  preG.innerHTML=h;
 }
 function animMerge(others,i){
   if(RM)return Promise.resolve();
@@ -369,39 +417,30 @@ function animMerge(others,i){
   return Promise.race([wait(340),Promise.all(others.map(k=>{const el=holders[k].firstChild;if(!el)return null;
     return el.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${(c-k%5)*STEP}px,${(r-((k/5)|0))*STEP}px) scale(.45)`,opacity:0}],{duration:200,easing:'cubic-bezier(.5,0,.8,.4)',fill:'forwards'}).finished.catch(()=>{});}))]);
 }
-async function resolve(i){
-  let combo=0;
-  while(grid[i]){
-    const g=group(i);if(g.length<3)break;
-    combo++;
-    const t=grid[i],others=g.filter(k=>k!==i);
-    await animMerge(others,i);
-    others.forEach(k=>{grid[k]=null;renderCell(k);});
-    if(t.st===4){grid[i]=null;renderCell(i);const pts=600*combo;setScore(score+pts,true);popup(i,'+'+pts);burst(i,true);break;}
-    grid[i]=t.st===3?{sp:'w',st:4}:{sp:t.sp,st:t.st+1};
-    renderCell(i,true);
-    const pts=Math.round([0,0,20,60,200][grid[i].st]*combo*(g.length>3?1.5:1));
-    setScore(score+pts,true);popup(i,(combo>1?'×'+combo+' ':'')+'+'+pts);burst(i,grid[i].st===4);
-    await wait(280);
-  }
-}
 async function place(k,p,c,r){
-  busy=true;tray[k]=null;
+  busy=true;tray[k]=null;gv++;
   const placed=p.cells.map(q=>{const i=(r+q[1])*5+c+q[0];grid[i]={sp:q[2],st:q[3]};renderCell(i,true);return i;});
   setScore(score+placed.length);
   renderTray();
   await wait(150);
-  for(const i of placed){if(grid[i])await resolve(i);}
-  if(tray.every(t=>!t)){tray=[newPiece(),newPiece(),newPiece()];renderTray(true);}
+  for(const s of plan(grid.slice(),placed)){
+    await animMerge(s.others,s.i);
+    s.others.forEach(j=>{grid[j]=null;renderCell(j);});
+    grid[s.i]=s.res;gv++;renderCell(s.i,true);
+    setScore(score+s.pts,true);popup(s.i,(s.res&&s.combo>1?'×'+s.combo+' ':'')+'+'+s.pts);burst(s.i,!s.res||s.res.st===4);
+    await wait(280);
+  }
   busy=false;
+  if(tut){tutDone();return;}
+  if(tray.every(t=>!t)){tray=[newPiece(),newPiece(),newPiece()];renderTray(true);}
   if(!anyMove())gameOver();
 }
 function gameOver(){
-  over=true;
+  over=true;modal=null;
   const rec=score>best;if(rec){best=score;try{localStorage.setItem('orangery-best',String(best));}catch(e){}setBest();}
   overG.innerHTML=`<rect width="390" height="844" style="${fill('black')};opacity:.6"/>
     <rect x="50" y="286" width="290" height="252" rx="30" style="fill:${u('over')};stroke:var(--over-line);stroke-width:1.2"/>
-    <text x="195" y="336" text-anchor="middle" style="font-size:19px;font-weight:600;${fill('over-ink')}">Грядка заполнена</text>
+    <text x="195" y="336" text-anchor="middle" style="font-size:19px;font-weight:600;${fill('over-ink')}">Фигуры некуда ставить</text>
     <text x="195" y="398" text-anchor="middle" style="font-size:46px;font-weight:500;${fill('over-ink')}">${fmt(score)}</text>
     <text x="195" y="430" text-anchor="middle" style="font-size:14px;${fill(rec?'gold':'over-muted')}">${rec?'новый рекорд':'рекорд '+fmt(best)}</text>
     <g id="again" class="btn" role="button" tabindex="0" aria-label="Сыграть ещё раз"><rect class="ring" x="105" y="462" width="180" height="50" rx="25" style="${fill('b')}"/><text x="195" y="493" text-anchor="middle" style="font-size:17px;font-weight:600;${fill('dark')}">Ещё раз</text></g>`;
@@ -409,72 +448,171 @@ function gameOver(){
   if(!RM)overG.animate([{opacity:0},{opacity:1}],{duration:320,easing:'ease-out'});
 }
 function start(){
-  grid=Array(25).fill(null);score=0;tray=[newPiece(),newPiece(),newPiece()];busy=false;over=false;drag=null;
-  overG.style.display='none';overG.innerHTML='';dragG.innerHTML='';fxG.innerHTML='';
+  grid=Array(25).fill(null);score=0;tray=[newPiece(),newPiece(),newPiece()];busy=false;over=false;modal=null;drag=null;gv++;
+  overG.style.display='none';overG.innerHTML='';dragG.innerHTML='';fxG.innerHTML='';showPreview(null);
   for(let i=0;i<25;i++)renderCell(i);
   setScore(0);setBest();renderTray(true);
 }
+function renderLabel(){
+  labelG.innerHTML=tut
+    ?`<g id="skip" class="btn" role="button" tabindex="0" aria-label="Пропустить обучение"><rect class="ring" x="14" y="606" width="180" height="38" rx="19" style="fill:transparent"/><text class="link" x="24" y="630" style="${fill('muted-low')}">пропустить обучение</text></g>`
+    :`<text x="24" y="630" style="font-size:13px;${fill('muted-low')}">Тап по фигуре поворачивает её</text>`;
+}
+
+/* ---------- карточки поверх игры ---------- */
+const line=(y,size,tone,text,weight)=>`<text x="195" y="${y}" text-anchor="middle" style="font-size:${size}px;${weight?'font-weight:'+weight+';':''}${fill(tone)}">${text}</text>`;
+const button=(id,y,text,label)=>`<g id="${id}" class="btn" role="button" tabindex="0" aria-label="${label}"><rect class="ring" x="105" y="${y}" width="180" height="50" rx="25" style="${fill('b')}"/><text x="195" y="${y+31}" text-anchor="middle" style="font-size:17px;font-weight:600;${fill('dark')}">${text}</text></g>`;
+const mini=(x,y,sp,st)=>`<g transform="translate(${x},${y}) scale(.6)">${plant(sp,st)}</g>`;
+const chev=(x,y)=>`<path d="M${x},${y} l6,6 l-6,6" style="fill:none;stroke:var(--over-muted);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"/>`;
+function showCard(kind,y,h,html){
+  modal=kind;
+  overG.innerHTML=`<rect width="390" height="844" style="${fill('black')};opacity:.6"/><rect x="30" y="${y}" width="330" height="${h}" rx="30" style="fill:${u('over')};stroke:var(--over-line);stroke-width:1.2"/>${html}`;
+  overG.style.display='';
+  if(!RM)overG.animate([{opacity:0},{opacity:1}],{duration:220,easing:'ease-out'});
+}
+function closeCard(){modal=null;overG.style.display='none';overG.innerHTML='';}
 /* стартовая карточка: человек, которому прислали ссылку, должен понять игру без объяснений */
 function intro(){
-  over=true;
-  const mini=(x,sp,st)=>`<g transform="translate(${x},350) scale(.62)">${plant(sp,st)}</g>`;
-  const line=(y,size,tone,text)=>`<text x="195" y="${y}" text-anchor="middle" style="font-size:${size}px;${fill(tone)}">${text}</text>`;
-  overG.innerHTML=`<rect width="390" height="844" style="${fill('black')};opacity:.6"/>
-    <rect x="40" y="236" width="310" height="340" rx="30" style="fill:${u('over')};stroke:var(--over-line);stroke-width:1.2"/>
-    <text x="195" y="286" text-anchor="middle" style="font-size:23px;font-weight:600;${fill('over-ink')}">Оранжерея</text>
-    ${line(308,13,'over-muted','черновик игры на пару минут')}
-    ${mini(98,'r',1)}${mini(138,'r',1)}${mini(178,'r',1)}<path d="M224,366 l7,7 l-7,7" style="fill:none;stroke:var(--over-muted);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"/>${mini(246,'r',2)}
-    ${line(426,14.5,'over-ink','Тяните фигуры из лотка на грядку.')}
-    ${line(448,14.5,'over-ink','Три одинаковых рядом сливаются.')}
-    ${line(470,13.5,'over-muted','Нет места для фигуры: конец забега.')}
-    <g id="play" class="btn" role="button" tabindex="0" aria-label="Начать игру"><rect class="ring" x="105" y="498" width="180" height="50" rx="25" style="${fill('b')}"/><text x="195" y="529" text-anchor="middle" style="font-size:17px;font-weight:600;${fill('dark')}">Играть</text></g>`;
-  overG.style.display='';
+  showCard('intro',236,340,line(286,23,'over-ink','Оранжерея',600)+line(308,13,'over-muted','черновик игры на пару минут')
+    +mini(98,338,'r',1)+mini(138,338,'r',1)+mini(178,338,'r',1)+chev(224,352)+mini(246,338,'r',2)
+    +line(424,14.5,'over-ink','Собирайте одинаковые ростки по три:')+line(446,14.5,'over-ink','они сливаются в цветы.')
+    +line(472,13.5,'over-muted','Сначала три хода обучения.')+button('begin',498,'Начать','Начать обучение'));
+}
+/* правила: открываются кнопкой над лотком в любой момент */
+function rules(){
+  const row=(y,a,b,cap)=>a.map((q,i)=>mini(52+i*40,y,q[0],q[1])).join('')+chev(184,y+13)
+    +(b?mini(202,y,b[0],b[1]):`<g transform="translate(221,${y+19}) scale(1.7)"><path d="${STAR}" style="${fill('gold')}"/></g>`)
+    +`<text x="254" y="${y+24}" style="font-size:13.5px;${fill('over-ink')}">${cap}</text>`;
+  showCard('help',150,528,line(192,21,'over-ink','Правила',600)
+    +row(214,[['r',1],['r',1],['r',1]],['r',2],'бутон')
+    +row(268,[['y',2],['y',2],['y',2]],['y',3],'цветок')
+    +row(322,[['r',3],['y',3],['b',3]],['w',4],'редкий лотос')
+    +row(376,[['w',4],['w',4],['w',4]],null,'+600 очков')
+    +line(448,14,'over-ink','Новый цветок вырастает там,')+line(468,14,'over-ink','куда вы поставили фигуру.')
+    +line(496,14,'over-ink','Грядка заранее показывает результат.')
+    +line(520,14,'over-ink','Тап по фигуре в лотке поворачивает её.')
+    +line(544,14,'over-ink','Фигуры некуда ставить: конец забега.')
+    +button('ok',568,'Понятно','Закрыть правила')
+    +`<g id="retut" class="btn" role="button" tabindex="0" aria-label="Пройти обучение заново"><rect class="ring" x="60" y="630" width="270" height="34" rx="17" style="fill:transparent"/><text class="link" x="195" y="652" text-anchor="middle" style="${fill('over-muted')}">${score>0&&!tut?'пройти обучение (забег сбросится)':'пройти обучение заново'}</text></g>`);
+}
+
+/* ---------- обучение: три хода на живой грядке ---------- */
+const TUT=[
+  {board:[[11,'r',1],[12,'r',1]],piece:[[0,0,'r',1]],at:[3,2],want:[[0,0]],
+   hint:['Перетащите росток','к двум таким же'],done:['Три ростка слились в бутон.','Он вырос там, куда вы поставили.']},
+  {board:[[2,'y',1],[8,'y',1],[11,'r',1],[17,'r',1]],piece:[[0,0,'y',1],[1,0,'r',1]],at:[2,1],want:[[0,0],[0,1]],
+   turn:['Тапните по фигуре,','чтобы повернуть её'],again:['Поверните ещё раз:','янтарный росток должен быть сверху'],
+   hint:['Теперь поставьте фигуру','в отмеченные клетки'],done:['Каждый росток слился','со своими соседями.']},
+  {board:[[17,'r',1],[22,'r',1],[11,'r',2],[13,'r',2]],piece:[[0,0,'r',1]],at:[2,2],want:[[0,0]],
+   hint:['Поставьте росток','между двумя бутонами'],done:['Цепочка: бутоны дали цветок.','Три любых цветка дадут лотос.']}
+];
+function tutWant(){const p=tray&&tray[1];return !!p&&TUT[tut.n].want.every((w,i)=>p.cells[i]&&p.cells[i][0]===w[0]&&p.cells[i][1]===w[1]);}
+function renderTut(){
+  if(!tut){tutG.innerHTML='';return;}
+  const S=TUT[tut.n],done=tut.phase==='done',okRot=done||tutWant(),txt=done?S.done:okRot?S.hint:tut.turned?S.again:S.turn;
+  let h=`<rect x="36" y="122" width="318" height="104" rx="24" style="fill:${u('over')};stroke:var(--over-line);stroke-width:1.2"/>`
+    +line(148,12,'over-muted',`обучение, шаг ${tut.n+1} из ${TUT.length}`)+line(177,15.5,'over-ink',txt[0],500)+line(201,15.5,'over-ink',txt[1],500);
+  if(!done){
+    S.want.forEach(w=>{h+=`<rect class="made pulse" x="${BX+(S.at[0]+w[0])*STEP+2}" y="${BY+(S.at[1]+w[1])*STEP+2}" width="${CELL-4}" height="${CELL-4}" rx="11"/>`;});
+    if(!okRot)h+=`<rect class="made pulse" x="${CARD.xs[1]-4}" y="${CARD.y-4}" width="${CARD.w+8}" height="${CARD.w+8}" rx="24"/>`;
+    if(!RM&&!drag)h+=`<g id="hand" style="opacity:0"><circle r="13" style="${fill('white')};opacity:.85"/><circle r="13" style="fill:none;stroke:var(--dark);stroke-width:1;opacity:.35"/></g>`;
+  }
+  tutG.innerHTML=h;
+  const hand=$('hand');if(!hand)return;
+  const sx=CARD.xs[1]+CARD.w/2,sy=CARD.y+CARD.w/2,T=(x,y,k)=>`translate(${x}px,${y}px) scale(${k})`;
+  if(okRot){
+    const xs=S.want.map(w=>w[0]),ys=S.want.map(w=>w[1]);
+    const tx=BX+(S.at[0]+(Math.min(...xs)+Math.max(...xs))/2)*STEP+CELL/2,ty=BY+(S.at[1]+(Math.min(...ys)+Math.max(...ys))/2)*STEP+CELL/2;
+    hand.animate([{transform:T(sx,sy,1.3),opacity:0},{transform:T(sx,sy,1),opacity:1,offset:.18},{transform:T(tx,ty,1),opacity:1,offset:.78},{transform:T(tx,ty,1),opacity:0}],{duration:1800,iterations:Infinity,easing:'ease-in-out'});
+  }else{
+    hand.animate([{transform:T(sx,sy,1.6),opacity:0},{transform:T(sx,sy,1),opacity:1,offset:.35},{transform:T(sx,sy,1),opacity:1,offset:.55},{transform:T(sx,sy,1.6),opacity:0}],{duration:1200,iterations:Infinity,easing:'ease-out'});
+  }
+}
+function tutSet(){
+  const S=TUT[tut.n];tut.phase='do';tut.turned=false;
+  grid=Array(25).fill(null);gv++;S.board.forEach(b=>{grid[b[0]]={sp:b[1],st:b[2]};});
+  for(let i=0;i<25;i++)renderCell(i);
+  tray=[null,mkPiece(S.piece.map(q=>q.slice())),null];renderTray(true);renderTut();
+}
+function tutStart(){
+  closeCard();over=false;busy=false;drag=null;dragG.innerHTML='';fxG.innerHTML='';showPreview(null);
+  tut={n:0,phase:'do',turned:false};renderLabel();setScore(0);tutSet();
+}
+function tutDone(){
+  const t=tut;t.phase='done';renderTut();
+  setTimeout(()=>{if(tut!==t||t.phase!=='done')return;if(++t.n<TUT.length)tutSet();else tutEnd();},2400);
+}
+function tutFinish(){tut=null;try{localStorage.setItem('orangery-tut','1');}catch(e){}tutG.innerHTML='';renderLabel();}
+function tutEnd(){
+  tutFinish();start();
+  showCard('tutend',286,252,line(336,21,'over-ink','Дальше сами',600)
+    +line(372,14,'over-ink','Фигуры некуда ставить: конец забега.')
+    +line(398,14,'over-muted','Правила всегда рядом:')+line(418,14,'over-muted','кнопка «правила» над лотком.')
+    +button('play',454,'Играть','Начать игру'));
 }
 
 /* ---------- перетаскивание ---------- */
 function pt(e){const m=game.getScreenCTM();return {x:(e.clientX-m.e)/m.a,y:(e.clientY-m.f)/m.d};}
-function showGhost(p,c,r,ok){
-  ghosts.forEach((g,i)=>{const q=p&&ok?p.cells[i]:null;if(!q){g.classList.remove('on');return;}
-    g.setAttribute('x',BX+(c+q[0])*STEP);g.setAttribute('y',BY+(r+q[1])*STEP);g.classList.add('on');});
-}
 function moveDrag(e){
   const p=drag.p,q=pt(e),w=p.w*STEP-GAP,h=p.h*STEP-GAP;
   const x=q.x-w/2,y=q.y-(drag.touch?h+44:h/2);
   dragG.setAttribute('transform',`translate(${f1(x)},${f1(y)})`);
   const c=Math.round((x-BX)/STEP),r=Math.round((y-BY)/STEP);
   drag.c=c;drag.r=r;drag.ok=fits(p,c,r);
-  showGhost(p,c,r,drag.ok);
+  /* над свободным местом фигура бледнеет, а грядка показывает, что получится после хода */
+  dragG.style.opacity=drag.ok?.2:1;
+  showPreview(p,c,r,drag.ok);
+}
+function beginDrag(e){
+  const s=pend;clearTimeout(s.timer);pend=null;
+  drag={k:s.k,p:s.p,id:s.id,touch:s.touch,ok:false};
+  renderTray();dragG.innerHTML=pieceHTML(s.p,CELL,GAP,true);
+  const hand=$('hand');if(hand)hand.remove();
+  moveDrag(e);
 }
 function endDrag(commit){
   if(!drag)return;
-  const d=drag;drag=null;dragG.innerHTML='';showGhost(null);
+  const d=drag;drag=null;dragG.innerHTML='';dragG.style.opacity='';showPreview(null);
   try{game.releasePointerCapture(d.id);}catch(e){}
-  if(commit&&d.ok){queue=queue.then(()=>{if(!over&&tray[d.k]===d.p&&fits(d.p,d.c,d.r))return place(d.k,d.p,d.c,d.r);renderTray();}).catch(()=>{busy=false;renderTray();});}else{renderTray();}
+  if(commit&&d.ok){queue=queue.then(()=>{if(!over&&tray[d.k]===d.p&&fits(d.p,d.c,d.r))return place(d.k,d.p,d.c,d.r);renderTray();}).catch(()=>{busy=false;renderTray();});}
+  else{renderTray();if(tut)renderTut();}
 }
+/* короткое касание без сдвига поворачивает фигуру, сдвиг или задержка поднимают её */
 game.addEventListener('pointerdown',e=>{
   const el=e.target.closest('[data-slot]');
-  if(!el||over||drag)return;
+  if(!el||over||modal||drag||pend)return;
   const k=+el.dataset.slot,p=tray[k];if(!p)return;
   e.preventDefault();
   try{game.setPointerCapture(e.pointerId);}catch(err){}
-  drag={k,p,id:e.pointerId,touch:e.pointerType!=='mouse',ok:false};
-  el.style.opacity=.22;
-  dragG.innerHTML=pieceHTML(p,CELL,GAP,true);
-  moveDrag(e);
+  const q=pt(e);
+  pend={k,p,id:e.pointerId,touch:e.pointerType!=='mouse',x:q.x,y:q.y,e,timer:setTimeout(()=>{if(pend)beginDrag(pend.e);},230)};
 });
-game.addEventListener('pointermove',e=>{if(drag&&e.pointerId===drag.id){e.preventDefault();moveDrag(e);}});
-game.addEventListener('pointerup',e=>{if(drag&&e.pointerId===drag.id){moveDrag(e);endDrag(true);}});
-game.addEventListener('pointercancel',e=>{if(drag&&e.pointerId===drag.id)endDrag(false);});
+game.addEventListener('pointermove',e=>{
+  if(pend&&e.pointerId===pend.id){e.preventDefault();pend.e=e;const q=pt(e);if(Math.hypot(q.x-pend.x,q.y-pend.y)>7)beginDrag(e);return;}
+  if(drag&&e.pointerId===drag.id){e.preventDefault();moveDrag(e);}
+});
+game.addEventListener('pointerup',e=>{
+  if(pend&&e.pointerId===pend.id){const s=pend;clearTimeout(s.timer);pend=null;try{game.releasePointerCapture(s.id);}catch(err){}turn(s.k);return;}
+  if(drag&&e.pointerId===drag.id){moveDrag(e);endDrag(true);}
+});
+game.addEventListener('pointercancel',e=>{
+  if(pend&&e.pointerId===pend.id){clearTimeout(pend.timer);pend=null;return;}
+  if(drag&&e.pointerId===drag.id)endDrag(false);
+});
 
 /* ---------- кнопки ---------- */
 let armed=0;
 function act(el){
   if(!el)return;
   if(el.id==='again'){start();return;}
-  if(el.id==='play'){over=false;overG.style.display='none';overG.innerHTML='';return;}
+  if(el.id==='play'||el.id==='ok'){closeCard();return;}
+  if(el.id==='begin'){tutStart();return;}
+  if(el.id==='help'){if(!over&&!modal&&!drag)rules();return;}
+  if(el.id==='retut'){if(!busy)tutStart();return;}
+  if(el.id==='skip'){if(tut&&!busy){tutFinish();start();}return;}
   if(el.dataset.theme){setTheme(el.dataset.theme);return;}
   if(el.id==='restart'){
-    if(busy)return;
+    if(busy||tut)return;
     const t=$('restart-t');
     if(over||score===0||Date.now()<armed){armed=0;t.textContent='заново';start();return;}
     armed=Date.now()+2500;t.textContent='точно?';
@@ -487,10 +625,15 @@ window.addEventListener('hashchange',()=>{const h=location.hash.replace('#','');
 
 $('defs').innerHTML=`<defs><clipPath id="arch"><path d="${ARCH}"/></clipPath><filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7"/><feColorMatrix type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 0.2"/></filter></defs>`;
 setTheme(themeByClock());
+renderLabel();
 start();
-intro();
+/* обучение показываем один раз; #tutorial в адресе включает его снова */
+let seen=false;try{seen=localStorage.getItem('orangery-tut')==='1';}catch(e){}
+if(!seen||location.hash==='#tutorial')intro();
 /* для проверки из консоли */
-window.__orangery={state:()=>({grid,tray,score,best,busy,over,themeId}),start,place:(k,c,r)=>place(k,tray[k],c,r)};
+window.__orangery={state:()=>({grid,tray,score,best,busy,over,modal,themeId,tut:tut&&{n:tut.n,phase:tut.phase}}),start,turn,rules,tutStart,
+  place:(k,c,r)=>fits(tray[k],c,r)?place(k,tray[k],c,r):false,
+  preview:(k,c,r)=>{showPreview(tray[k],c,r,fits(tray[k],c,r));return preG.childNodes.length;}};
 })();
 </script>
 </body>
