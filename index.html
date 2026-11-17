@@ -64,7 +64,6 @@ html,body{height:100%;margin:0;overflow:clip;background:var(--page-bg);overscrol
 .screen{position:relative;height:min(100dvh,calc(100vw * 844 / 390));aspect-ratio:390/844;overflow:hidden;isolation:isolate;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 @media (min-width:600px){.screen{border-radius:11.3% / 5.2%}}
 .screen svg{position:absolute;inset:0;width:100%;height:100%;display:block}
-.screen svg.anim{will-change:transform}
 .screen svg.pass{pointer-events:none}
 .screen svg.grain{mix-blend-mode:overlay}
 .screen text{font-family:var(--font-game)}
@@ -102,11 +101,11 @@ noscript p{color:var(--over-ink);font-family:var(--font-game);padding:24px}
 @keyframes drift{from{transform:translateX(-18px)}to{transform:translateX(26px)}}
 .screen canvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
 .layer,.ghostscene{position:absolute;inset:0;pointer-events:none}
-.par{will-change:transform;transition:transform .3s ease-out}
+.par{transition:transform .3s ease-out}
 #lightc{animation:lpulse 3.6s ease-in-out infinite alternate}
 @keyframes lpulse{from{opacity:.74}to{opacity:1}}
 /* передний план не в фокусе: размытие считается один раз, качается весь слой целиком */
-#fgl{filter:blur(1.5px);transform-origin:50% 100%;will-change:transform;animation:fgsway 9s ease-in-out infinite alternate}
+#fgl{filter:blur(1.5px);transform-origin:50% 100%;animation:fgsway 9s ease-in-out infinite alternate}
 @keyframes fgsway{from{transform:rotate(-.5deg) translateX(-3px)}to{transform:rotate(.5deg) translateX(3px)}}
 .lite #fgl{filter:none}
 .lite #lightc{animation:none}
