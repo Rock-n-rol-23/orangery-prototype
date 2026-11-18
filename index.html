@@ -610,7 +610,7 @@ function renderTray(popIn){
 function turn(k){
   const p=tray[k];if(!p||p.cells.length<2||over||modal)return;
   const old=p.cells.map(q=>[q[0],q[1]]),ow=p.w,oh=p.h,st=TM+TG;
-  rotate(p);renderTray();SND.play('turn');
+  rotate(p);renderTray();SND.play('turn');save();
   if(!RM)trayG.querySelectorAll(`[data-slot="${k}"] .pc`).forEach((el,i)=>{
     const dx=(old[i][0]-p.cells[i][0])*st+(p.w-ow)*st/2,dy=(old[i][1]-p.cells[i][1])*st+(p.h-oh)*st/2;
     el.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:'translate(0,0)'}],{duration:180,easing:'cubic-bezier(.3,.8,.3,1)'});});
@@ -765,12 +765,12 @@ async function place(k,p,c,r){
   busy=false;
   if(tut){tutDone();return;}
   if(tray.every(t=>!t)){tray=[newPiece(),newPiece(),newPiece()];renderTray(true);}
-  mood();
+  mood();save();
   checkEnd();
 }
 /* конец забега: сад засыпает, потом появляется его снимок */
 async function gameOver(){
-  over=true;modal=null;swap=false;stuck=false;mood();renderLabel();
+  over=true;modal=null;swap=false;stuck=false;mood();renderLabel();forget();
   const id=runId,rec=score>best;if(rec){best=score;try{localStorage.setItem('orangery-best',String(best));}catch(e){}setBest();}
   SND.play('over');
   if(!RM){let n=0;for(let i=0;i<25;i++){const el=holders[i].firstChild;if(el)el.animate([{opacity:1,transform:'scale(1)'},{opacity:.55,transform:'scale(.96,.9)'}],{duration:360,delay:n++*28,easing:'ease-in-out',fill:'forwards'});}}
@@ -796,11 +796,42 @@ function share(el){
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text+' '+url).then(()=>say('текст и ссылка скопированы'),()=>say('скопировать не получилось'));
   else say('поделиться не получилось');
 }
+/* ---------- сохранение забега: закрыли вкладку и вернулись к тому же саду ---------- */
+function save(){
+  if(tut||over)return;
+  try{localStorage.setItem('orangery-run',JSON.stringify({v:1,grid,score,cans,stats,
+    tray:tray.map(p=>p&&{cells:p.cells,alt:p.alt?p.alt.map(a=>({cells:a.cells})):null})}));}catch(e){}
+}
+function forget(){try{localStorage.removeItem('orangery-run');}catch(e){}}
+/* сохранённое читается с проверкой: испорченная запись просто отбрасывается */
+function loadRun(raw){
+  try{
+    const d=JSON.parse(raw);
+    if(!d||d.v!==1||!Array.isArray(d.grid)||d.grid.length!==25||!Array.isArray(d.tray)||d.tray.length!==3)return null;
+    const one=(s,set)=>typeof s==='string'&&s.length===1&&set.indexOf(s)>=0;
+    const okCell=t=>t===null||(!!t&&one(t.sp,'rybw')&&[1,2,3,4].indexOf(t.st)>=0);
+    const okPiece=q=>!!q&&Array.isArray(q.cells)&&q.cells.length>=1&&q.cells.length<=3&&q.cells.every(c=>Array.isArray(c)&&c.length===4&&[0,1,2].indexOf(c[0])>=0&&[0,1,2].indexOf(c[1])>=0&&one(c[2],'ryb')&&(c[3]===1||c[3]===2));
+    if(!d.grid.every(okCell))return null;
+    const copy=q=>mkPiece(q.cells.map(c=>c.slice()));
+    const tr=d.tray.map(q=>{if(q===null)return null;if(!okPiece(q))throw new Error('piece');const t=copy(q);
+      if(Array.isArray(q.alt)&&q.alt.length===2&&q.alt.every(okPiece))t.alt=q.alt.map(copy);return t;});
+    if(tr.every(q=>!q))return null;
+    const st=d.stats||{},num=v=>Math.max(0,Math.floor(+v||0));
+    return {grid:d.grid.map(t=>t?{sp:t.sp,st:t.st}:null),tray:tr,score:num(d.score),cans:Math.min(3,num(d.cans)),stats:{moves:num(st.moves),lotus:num(st.lotus),combo:num(st.combo)}};
+  }catch(e){return null;}
+}
+function resume(d){
+  grid=d.grid;tray=d.tray;cans=d.cans;stats=d.stats;gv++;
+  /* уровень цветения ставится сразу: без фанфар и без подарочной лейки за уже пройденное */
+  level=LEVELS.filter(v=>d.score>=v).length;applyLevel();
+  for(let i=0;i<25;i++)renderCell(i);
+  setScore(d.score);renderTray(true);mood();renderLabel();toast('забег продолжается');checkEnd();
+}
 function start(){
   grid=Array(25).fill(null);score=0;tray=[newPiece(),newPiece(),newPiece()];busy=false;over=false;modal=null;drag=null;gv++;runId++;stats={moves:0,lotus:0,combo:0};cans=1;swap=false;stuck=false;
   overG.style.display='none';overG.innerHTML='';dragG.innerHTML='';fxG.innerHTML='';showPreview(null);
   for(let i=0;i<25;i++)renderCell(i);
-  setScore(0);setBest();renderTray(true);mood();renderLabel();
+  setScore(0);setBest();renderTray(true);mood();renderLabel();save();
 }
 const canIco=(x,y)=>`<g transform="translate(${x},${y})" style="fill:none;stroke:var(--ink-low);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><path d="M-3,-3.5 h8 v9.5 h-8z"/><path d="M-3,.5 l-5.4,-4.4 M-10,-5.4 l3.2,2.6"/><path d="M5,-1.5 q4.6,1.8 0,5.6"/></g>`;
 function renderLabel(){
@@ -920,6 +951,7 @@ function tutSet(){
   tray=[null,mkPiece(S.piece.map(q=>q.slice())),null];renderTray(true);renderTut();mood();
 }
 function tutStart(){
+  forget();
   closeCard();over=false;busy=false;drag=null;dragG.innerHTML='';fxG.innerHTML='';showPreview(null);
   tut={n:0,phase:'do',turned:false};renderLabel();setScore(0);tutSet();
 }
@@ -1004,7 +1036,7 @@ function act(el){
   if(el.dataset.alt){
     const p=tray[swapK],q=p&&p.alt&&p.alt[+el.dataset.alt];closeCard();swap=false;
     if(q){tray[swapK]=q;cans--;SND.play('level');buzz(10);}
-    renderLabel();renderTray(true);checkEnd();return;
+    renderLabel();renderTray(true);save();checkEnd();return;
   }
   if(el.id==='snd'){SND.toggle();sndIcon();toast(SNDNAME[SND.mode]);return;}
   if(el.id==='share'){share(el);return;}
@@ -1049,6 +1081,7 @@ wet=location.hash==='#rain'||(seen&&Math.random()<.18);
 manual=!!THEMES[location.hash.replace('#','')];
 setTheme(themeByClock());
 sndIcon();renderLabel();
+let savedRun=null;try{savedRun=localStorage.getItem('orangery-run');}catch(e){}
 start();
 par(0,0);resize();
 window.addEventListener('resize',resize);
@@ -1065,6 +1098,7 @@ setInterval(()=>{
   if(el)el.animate([{transform:'translateY(0) scale(1)'},{transform:'translateY(-5px) scale(1.06,1.1)',offset:.35},{transform:'translateY(0) scale(1.05,.94)',offset:.65},{transform:'translateY(0) scale(1)'}],{duration:520,easing:'ease-out'});
 },2800);
 if(!seen||location.hash==='#tutorial')intro();
+else if(savedRun){const d=loadRun(savedRun);if(d)resume(d);}
 /* для проверки из консоли */
 window.__orangery={setCans:n=>{cans=n;renderLabel();},checkEnd,state:()=>({cans,swap,stuck,grid,tray,score,best,busy,over,modal,themeId,level,lite,wet,tense,stats,parts:parts.length,K,tut:tut&&{n:tut.n,phase:tut.phase}}),start,turn,rules,tutStart,setTheme,gameOver,SND,FX,
   setScore:v=>setScore(v,true),set:(i,sp,st)=>{grid[i]=sp?{sp,st}:null;gv++;renderCell(i);},
