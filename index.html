@@ -119,6 +119,11 @@ noscript p{color:var(--over-ink);font-family:var(--font-game);padding:24px}
 .blo.on{opacity:1}
 .wdrop{animation:wdrop 1.5s ease-in infinite}
 @keyframes wdrop{0%{transform:translateY(-2px);opacity:0}25%{opacity:1}100%{transform:translateY(6px);opacity:0}}
+.bob{animation:bob 1.8s ease-in-out infinite alternate}
+@keyframes bob{from{transform:translateY(-2px)}to{transform:translateY(2.5px)}}
+.flap{transform-box:fill-box;animation:flap .32s ease-in-out infinite alternate}
+.fl{transform-origin:100% 50%}.fr{transform-origin:0% 50%}
+@keyframes flap{from{transform:scaleX(1)}to{transform:scaleX(.3)}}
 .drop{animation-name:dropf;animation-timing-function:linear;animation-iteration-count:infinite}
 @keyframes dropf{from{transform:translateY(-30px)}to{transform:translateY(240px)}}
 @media (prefers-reduced-motion:reduce){.screen *{animation:none!important;transition:none!important}}
@@ -359,10 +364,10 @@ ORDER.forEach((id,i)=>{const x=144+i*34;
   stat+=`<g class="btn" role="button" tabindex="0" data-theme="${id}" aria-label="Время суток: ${({dawn:'рассвет',day:'день',dusk:'закат',night:'ночь'})[id]}"><rect x="${x-15}" y="12" width="30" height="30" style="fill:transparent"/><circle cx="${x}" cy="27" r="5.5" class="sw-${id}"/><circle class="ring" cx="${x}" cy="27" r="9"/></g>`;});
 stat+=`<g id="herb" class="btn" role="button" tabindex="0" aria-label="Гербарий"><rect x="298" y="7" width="40" height="40" style="fill:transparent"/><circle class="ring" cx="318" cy="27" r="14" style="${fill('chip')};stroke:var(--chip-line);stroke-width:1"/><path d="M312.4,33 C311.6,25.4 316,20.6 324.4,20.4 C324.6,28 320.4,33.4 312.4,33Z M312.4,33 L320.4,24.6" style="fill:none;stroke:var(--ink-top);stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round"/><circle id="herb-dot" cx="328.5" cy="17" r="3.6" style="${fill('gold')};display:none"/></g>`;
 stat+=`<g id="snd" class="btn" role="button" tabindex="0" aria-label="Звук"><rect x="332" y="7" width="40" height="40" style="fill:transparent"/><circle class="ring" cx="352" cy="27" r="14" style="${fill('chip')};stroke:var(--chip-line);stroke-width:1"/><g id="snd-i"></g></g>`;
-stat+=`<g id="goals"></g><g id="tray"></g><g id="plants"></g><g id="pre" style="pointer-events:none"></g><g id="tutg" style="pointer-events:none"></g><g id="fx"></g><g id="drag" style="pointer-events:none"></g><g id="over" style="display:none"></g>`;
+stat+=`<g id="goals"></g><g id="tray"></g><g id="plants"></g><g id="pre" style="pointer-events:none"></g><g id="evt" style="pointer-events:none"></g><g id="tutg" style="pointer-events:none"></g><g id="fx"></g><g id="drag" style="pointer-events:none"></g><g id="over" style="display:none"></g>`;
 game.innerHTML=stat;
 const dotsEl=[...$('board').querySelectorAll('.dot')];
-const goalsG=$('goals'),trayG=$('tray'),plantsG=$('plants'),preG=$('pre'),tutG=$('tutg'),labelG=$('label'),fxG=$('fx'),dragG=$('drag'),overG=$('over');
+const goalsG=$('goals'),evtG=$('evt'),trayG=$('tray'),plantsG=$('plants'),preG=$('pre'),tutG=$('tutg'),labelG=$('label'),fxG=$('fx'),dragG=$('drag'),overG=$('over');
 const holders=[];
 for(let i=0;i<25;i++){const g=document.createElementNS(NS,'g');g.setAttribute('transform',`translate(${BX+(i%5)*STEP-1},${BY+((i/5)|0)*STEP-1})`);g.style.pointerEvents='none';plantsG.appendChild(g);holders.push(g);}
 
@@ -387,7 +392,7 @@ function drawLights(){
   if(!grid)return;
   lctx.setTransform(K,0,0,K,0,0);lctx.globalCompositeOperation='lighter';
   const gl=THEMES[themeId].glow;
-  for(let i=0;i<25;i++){const t=grid[i];if(!t)continue;const R=[0,46,60,80,104][t.st];
+  for(let i=0;i<25;i++){const t=grid[i];if(!t||t.sp==='x')continue;const R=[0,46,60,80,104][t.st];
     lctx.globalAlpha=[0,.22,.3,.42,.55][t.st]*gl;lctx.drawImage(sprite(t.v&&'ryb'.indexOf(t.v)>=0?t.v:t.sp,true),mx(i)-R,my(i)+4-R,R*2,R*2);}
   lctx.globalAlpha=1;
 }
@@ -564,6 +569,8 @@ const pick=a=>a[(grnd()*a.length)|0];
 let stats={moves:0,lotus:0,combo:0},runId=0,cans=1,swap=false,swapK=-1,stuck=false;
 /* режим: free обычный забег, daily семя дня. dealt считает розданные фигуры, rs хранит состояние генератора семени */
 let goals=null,gTier={},gIssued=0;
+/* события: next номер хода следующего события, idx их счётчик, bfly бабочка на клетке, gold ждёт ли подарок места в лотке */
+let ev={next:6,idx:0,bfly:null,gold:false};
 let mode='free',dealt=0,rs=0,daily={date:'',done:false,result:null,run:null},streak={last:'',n:0};
 const mkPiece=cells=>({cells,w:Math.max(...cells.map(q=>q[0]))+1,h:Math.max(...cells.map(q=>q[1]))+1});
 /* поворот на четверть оборота по часовой стрелке; растения остаются стоять прямо */
@@ -594,7 +601,7 @@ const anyMove=()=>tray.some(p=>p&&fitsAny(p));
 function renderCell(i,mode){
   const h=holders[i],t=grid[i];dotsEl[i].style.opacity=t?0:1;h.style.opacity='';lights();
   if(!t){h.innerHTML='';h._look=null;return;}
-  h.innerHTML=`<g class="pw">${plant(t.sp,t.st,t.v)}</g>`;h._look=h.querySelector('.look');
+  h.innerHTML=`<g class="pw">${cellArt(t)}</g>`;h._look=h.querySelector('.look');
   if(!mode||RM)return;
   /* pop: фигура села в землю и присела; bloom: растение выросло после слияния */
   h.firstChild.animate(mode==='bloom'
@@ -608,7 +615,7 @@ function renderCell(i,mode){
 function pieceHTML(p,size,gap,lifted){
   let s='';
   p.cells.forEach(q=>{const x=q[0]*(size+gap),y=q[1]*(size+gap);
-    s+=`<g class="pc"><rect x="${x}" y="${y}" width="${size}" height="${size}" rx="${f1(size*.22)}" style="fill:${u('soil')};stroke:var(--${lifted?'panel-line':'cell-line'});stroke-width:${lifted?1.1:.8}"/><g transform="translate(${x-1*size/62},${y-1*size/62}) scale(${(size/60).toFixed(3)})">${plant(q[2],q[3])}</g></g>`;});
+    s+=`<g class="pc"><rect x="${x}" y="${y}" width="${size}" height="${size}" rx="${f1(size*.22)}" style="fill:${u('soil')};stroke:var(--${lifted?'panel-line':'cell-line'});stroke-width:${lifted?1.1:.8}"/>${q[2]==='g'?seedArt(x+size/2,y+size/2+size*.05,size/30):`<g transform="translate(${x-1*size/62},${y-1*size/62}) scale(${(size/60).toFixed(3)})">${plant(q[2],q[3])}</g>`}</g>`;});
   return s;
 }
 const TM=36,TG=4;
@@ -717,14 +724,17 @@ function groupOf(g,i){
 /* Считает ход наперёд на копии грядки: и подсветка до хода, и сам ход идут по одному списку шагов.
    Правило одно: группа из трёх и больше стягивается в ту клетку, куда поставили фигуру. */
 function plan(g,placed){
-  const steps=[];
+  const steps=[];let bf=ev.bfly?ev.bfly.i:-1;
   for(const i of placed){let combo=0;
     while(g[i]){
       const grp=groupOf(g,i);if(grp.length<3)break;combo++;
       const t=g[i],others=grp.filter(k=>k!==i),same=grp.every(k=>g[k].sp===t.sp);others.forEach(k=>{g[k]=null;});
       /* редкие находки: четыре и больше бутонов дают махровый цветок; три одинаковых цветка дают лотос их цвета, четыре и больше дают королевский */
       const res=t.st===4?null:t.st===3?{sp:'w',st:4,v:grp.length>=4?'k':same?t.sp:'w'}:t.st===2&&grp.length>=4?{sp:t.sp,st:3,v:'d'}:{sp:t.sp,st:t.st+1};g[i]=res;
-      steps.push({i,others,res,combo,pts:res?Math.round([0,0,20,60,200][res.st]*combo*(grp.length>3?1.5:1)):600*combo});
+      /* бабочка на одном из слившихся растений удваивает очки; сорняки по соседству с точкой слияния пропадают */
+      const dbl=bf>=0&&grp.indexOf(bf)>=0,weeds=[];if(dbl)bf=-1;
+      [[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>{const c2=i%5+d[0],r2=((i/5)|0)+d[1];if(c2<0||c2>4||r2<0||r2>4)return;const j=r2*5+c2;if(g[j]&&g[j].sp==='x'){g[j]=null;weeds.push(j);}});
+      steps.push({i,others,res,combo,weeds,bf:dbl,pts:(res?Math.round([0,0,20,60,200][res.st]*combo*(grp.length>3?1.5:1)):600*combo)*(dbl?2:1)+weeds.length*15});
       if(!res)break;}}
   return steps;
 }
@@ -735,18 +745,19 @@ function showPreview(p,c,r,ok){
   if(key===preKey)return;preKey=key;
   dimmed.forEach(k=>{holders[k].style.opacity='';});dimmed=[];
   if(!key){preG.innerHTML='';return;}
-  const g=grid.slice(),placed=p.cells.map(q=>{const i=(r+q[1])*5+c+q[0];g[i]={sp:q[2],st:q[3]};return i;});
-  const eaten=new Set(),made=new Set();
-  plan(g,placed).forEach(s=>{s.others.forEach(k=>eaten.add(k));made.add(s.i);});
+  const g=grid.slice(),placed=p.cells.map(q=>{const i=(r+q[1])*5+c+q[0];g[i]=q[2]==='g'?wild(g,i):{sp:q[2],st:q[3]};return i;});
+  const eaten=new Set(),made=new Set(),steps=plan(g,placed);
+  steps.forEach(s=>{s.others.forEach(k=>eaten.add(k));s.weeds.forEach(k=>eaten.add(k));made.add(s.i);});
   const xy=i=>[BX+(i%5)*STEP,BY+((i/5)|0)*STEP];
   let h='';
   eaten.forEach(k=>{if(placed.indexOf(k)>=0)return;const [x,y]=xy(k);holders[k].style.opacity=.38;dimmed.push(k);
     h+=`<rect class="eat" x="${x+1}" y="${y+1}" width="${CELL-2}" height="${CELL-2}" rx="12"/>`;});
   placed.forEach(i=>{const [x,y]=xy(i),t=g[i],m=made.has(i);
     h+=`<rect x="${x}" y="${y}" width="${CELL}" height="${CELL}" rx="13" style="fill:${u('soil')};stroke:var(--panel-line);stroke-width:1.1"/>`;
-    if(t)h+=`<g transform="translate(${x-1},${y-1})">${plant(t.sp,t.st,t.v)}</g>`;
+    if(t)h+=`<g transform="translate(${x-1},${y-1})">${cellArt(t)}</g>`;
     else if(m)h+=`<g transform="translate(${x+30},${y+30}) scale(2.2)"><path d="${STAR}" style="${fill('gold')}"/></g>`;
     h+=m?`<rect class="made" x="${x+1}" y="${y+1}" width="${CELL-2}" height="${CELL-2}" rx="12"/>`:t?'':`<rect class="eat" x="${x+1}" y="${y+1}" width="${CELL-2}" height="${CELL-2}" rx="12"/>`;});
+  steps.forEach(s=>{if(s.bf){const [x,y]=xy(s.i);h+=`<text class="pop" x="${x+30}" y="${y-3}" text-anchor="middle">×2</text>`;}});
   preG.innerHTML=h;
 }
 /* одно слияние в три такта: замах, полёт, удар */
@@ -764,6 +775,8 @@ async function playStep(s){
   await wait(160*slow);
   s.others.forEach(j=>{grid[j]=null;renderCell(j);});
   grid[i]=s.res;gv++;renderCell(i,'bloom');
+  s.weeds.forEach(j=>{grid[j]=null;renderCell(j);FX.puff(j);});
+  if(s.bf){ev.bfly=null;renderEvt('away');}
   const power=big?3:Math.min(3,s.combo);
   FX.hit(i,s.res?(s.res.v&&'ryb'.indexOf(s.res.v)>=0?s.res.v:s.res.sp):'w',power);shove(i,power);buzz(big?[14,30,22]:10);
   if(!s.res){SND.play('clear');FX.rise(26);}
@@ -776,12 +789,12 @@ async function playStep(s){
   if(s.res)goalBump(s.res.st===2?'buds':s.res.st===3?'flowers':'lotus',1);
   if(s.others.length>=3)goalBump('big',1);
   goalBump('combo',s.combo);
-  setScore(score+s.pts,true);flyScore(i,(s.res&&s.combo>1?'×'+s.combo+' ':'')+'+'+s.pts);
+  setScore(score+s.pts,true);flyScore(i,(s.res&&s.combo>1?'×'+s.combo+' ':'')+'+'+s.pts+(s.bf?' ×2':''));
   await wait(250*slow);
 }
 async function place(k,p,c,r){
   busy=true;tray[k]=null;gv++;
-  const placed=p.cells.map(q=>{const i=(r+q[1])*5+c+q[0];grid[i]={sp:q[2],st:q[3]};renderCell(i,'pop');FX.puff(i);found({sp:q[2],st:q[3]},true);return i;});
+  const placed=p.cells.map(q=>{const i=(r+q[1])*5+c+q[0];grid[i]=q[2]==='g'?wild(grid,i):{sp:q[2],st:q[3]};renderCell(i,'pop');FX.puff(i);found(grid[i],true);return i;});
   SND.play('drop');buzz(8);stats.moves++;
   setScore(score+placed.length);
   renderTray();
@@ -793,7 +806,7 @@ async function place(k,p,c,r){
   busy=false;
   if(tut){tutDone();return;}
   if(tray.every(t=>!t)){tray=[newPiece(),newPiece(),newPiece()];renderTray(true);}
-  mood();save();
+  eventsTick();mood();save();
   checkEnd();
 }
 /* конец забега: сад засыпает, потом появляется его снимок */
@@ -808,7 +821,7 @@ async function gameOver(){
   if(id!==runId||!over)return;
   let photo='';
   for(let i=0;i<25;i++){const x=95+(i%5)*40,y=225+((i/5)|0)*40,t=grid[i];
-    photo+=t?`<g transform="translate(${x},${y}) scale(.6)">${plant(t.sp,t.st,t.v)}</g>`:`<circle cx="${x+18.6}" cy="${y+18.6}" r="1.2" style="${fill('cell-dot')}"/>`;}
+    photo+=t?`<g transform="translate(${x},${y}) scale(.6)">${cellArt(t)}</g>`:`<circle cx="${x+18.6}" cy="${y+18.6}" r="1.2" style="${fill('cell-dot')}"/>`;}
   const facts=[];if(stats.lotus)facts.push('лотосов '+stats.lotus);if(stats.combo>1)facts.push('цепочка ×'+stats.combo);facts.push('ходов '+stats.moves);
   const st=curStreak();
   showCard('over',160,520,line(196,isDaily?19:21,'over-ink',isDaily?'Семя дня, '+dateRu(daily.date):'Ваш сад',600)
@@ -831,6 +844,59 @@ function share(el){
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text+' '+url).then(()=>say('скопировано'),()=>say('не получилось'));
   else say('не получилось');
 }
+/* ---------- события на грядке: бабочка, сорняк, золотое семя ---------- */
+const weedArt=()=>{const lf=`fill:${u('leaf')};stroke:var(--edge);stroke-width:.9;stroke-linejoin:round`;
+  return `<g transform="translate(31 58) scale(1.15) translate(-31 -58)"><ellipse cx="31" cy="57.5" rx="13" ry="3.2" style="${fill('black')};opacity:var(--shade)"/><g class="idle" style="${dly(3,5)}"><path d="M31,56 L21,46 L25.5,46.5 L16,35 L22.5,37.5 L18.5,24 L31,43Z" style="${lf}"/><path d="M31,56 L41,46 L36.5,46.5 L46,35 L39.5,37.5 L43.5,24 L31,43Z" style="${lf}"/><path d="M31,56 L25.5,39 L29,41.5 L27,26 L31,32 L35,26 L33,41.5 L36.5,39Z" style="${lf}"/>
+    <circle cx="31" cy="49.5" r="7.6" style="${fill('leaf1')};stroke:var(--edge);stroke-width:.9"/>${dots(31,48.4,2.7,1)}${arc(31,53.6,4.6,-1.9,1.2)}</g></g>`;};
+const cellArt=t=>t.sp==='x'?weedArt():plant(t.sp,t.st,t.v);
+/* золотое семя подстраивается под соседей: становится тем растением, с которым получится самая большая группа */
+function wild(g,i){
+  let best=null;
+  [[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>{const c2=i%5+d[0],r2=((i/5)|0)+d[1];if(c2<0||c2>4||r2<0||r2>4)return;const t=g[r2*5+c2];if(!t||t.sp==='x')return;
+    const keep=g[i];g[i]={sp:t.sp,st:t.st};const n=groupOf(g,i).length;g[i]=keep;
+    if(!best||n>best.n||(n===best.n&&t.st>best.st))best={n,sp:t.sp,st:t.st};});
+  return best?(best.st===4?{sp:'w',st:4,v:'w'}:{sp:best.sp,st:best.st}):{sp:'r',st:1};
+}
+const BFLY=`<g class="bob"><g class="flap fl"><path d="M0,0 C-3,-10 -13,-11 -12,-3.5 C-11.4,1 -5,2 0,0Z" style="fill:${u('c-y')};stroke:var(--petal-rim);stroke-width:.6"/><path d="M0,0 C-4.5,2 -9.5,4.5 -8.4,8.6 C-7.2,11.6 -2,8.4 0,0Z" style="fill:${u('c-r')};stroke:var(--petal-rim);stroke-width:.6"/></g><g class="flap fr"><path d="M0,0 C3,-10 13,-11 12,-3.5 C11.4,1 5,2 0,0Z" style="fill:${u('c-y')};stroke:var(--petal-rim);stroke-width:.6"/><path d="M0,0 C4.5,2 9.5,4.5 8.4,8.6 C7.2,11.6 2,8.4 0,0Z" style="fill:${u('c-r')};stroke:var(--petal-rim);stroke-width:.6"/></g><path d="M0,-4.5 V5.5" style="fill:none;stroke:var(--dark);stroke-width:1.8;stroke-linecap:round"/></g>`;
+function renderEvt(how){
+  const old=evtG.firstChild;
+  if(!ev.bfly){
+    if(!old)return;
+    if(how==='away'&&!RM){old.animate([{transform:'translate(0,0)',opacity:1},{transform:'translate(-90px,-170px)',opacity:0}],{duration:900,easing:'ease-in',fill:'forwards'});setTimeout(()=>{if(old.parentNode)old.remove();},920);}
+    else old.remove();
+    return;
+  }
+  evtG.innerHTML=`<g><g transform="translate(${mx(ev.bfly.i)+17},${my(ev.bfly.i)-21})">${BFLY}</g></g>`;
+  if(how==='in'&&!RM)evtG.firstChild.animate([{transform:'translate(120px,-210px)',opacity:0},{transform:'translate(0,0)',opacity:1}],{duration:1000,easing:'cubic-bezier(.2,.8,.3,1)'});
+}
+function giveGold(){
+  const k=tray.findIndex(p=>!p);if(k<0)return;
+  tray[k]=mkPiece([[0,0,'g',0]]);tray[k].id=-1;ev.gold=false;renderTray();
+  const el=trayG.querySelector(`[data-slot="${k}"]`);if(el&&!RM)el.animate([{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'translateY(0)'}],{duration:300,easing:'ease-out'});
+}
+/* после каждого хода: бабочка ждёт шесть ходов, подарок ждёт свободного места в лотке, раз в 7–10 ходов случается новое событие */
+function eventsTick(){
+  if(tut)return;
+  if(ev.bfly){
+    const t=grid[ev.bfly.i];
+    if(!t||t.sp==='x'){ev.bfly=null;renderEvt();}
+    else if(--ev.bfly.left<=0){ev.bfly=null;renderEvt('away');toast('бабочка улетела');}
+  }
+  if(ev.gold)giveGold();
+  if(stats.moves<ev.next)return;
+  /* в семени дня время и вид событий одинаковы у всех: они зависят от даты и номера события */
+  const R=mode==='daily'?seeded(hashStr(daily.date)^Math.imul(ev.idx+3,97531)):Math.random;
+  ev.idx++;ev.next=stats.moves+7+((R()*4)|0);
+  const empties=[],plants=[];let weeds=0;
+  grid.forEach((t,i)=>{if(!t)empties.push(i);else if(t.sp==='x')weeds++;else if(t.st<4)plants.push(i);});
+  const order=R()<.4?['b','w','g']:R()<.58?['w','g','b']:['g','b','w'];
+  for(const type of order){
+    if(type==='b'&&!ev.bfly&&plants.length){ev.bfly={i:plants[(R()*plants.length)|0],left:6};renderEvt('in');toast('бабочка: её цветок даст ×2');SND.play('level');return;}
+    if(type==='w'&&weeds<2&&empties.length>=8){const i=empties[(R()*empties.length)|0];grid[i]={sp:'x',st:0};gv++;renderCell(i,'pop');toast('сорняк: уберите слиянием рядом');SND.play('back');return;}
+    if(type==='g'&&!ev.gold&&!tray.some(p=>p&&p.cells[0][2]==='g')){ev.gold=true;giveGold();toast('подарок: золотое семя');SND.play('level');return;}
+  }
+}
+
 /* ---------- гербарий: альбом всего, что игрок вырастил, с редкими находками ---------- */
 const HERB={
   r1:{name:'росток мака',hint:'приходит в фигурах'},r2:{name:'бутон мака',hint:'три ростка мака'},r3:{name:'мак',hint:'три бутона мака'},r3d:{name:'махровый мак',hint:'четыре бутона мака за раз'},
@@ -921,7 +987,7 @@ function goalsCard(){
 
 /* ---------- сохранение забега: закрыли вкладку и вернулись к тому же саду ---------- */
 const store=(k,v)=>{try{if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));}catch(e){}};
-const snap=()=>({v:1,goals:goals&&{list:goals,tier:gTier,issued:gIssued},grid,score,cans,stats,dealt,rs,tray:tray.map(p=>p&&{cells:p.cells,id:p.id,alt:p.alt?p.alt.map(a=>({cells:a.cells})):null})});
+const snap=()=>({v:1,ev,goals:goals&&{list:goals,tier:gTier,issued:gIssued},grid,score,cans,stats,dealt,rs,tray:tray.map(p=>p&&{cells:p.cells,id:p.id,alt:p.alt?p.alt.map(a=>({cells:a.cells})):null})});
 function save(){
   if(tut||over)return;
   if(mode==='daily'){daily.run=snap();store('orangery-daily',daily);}else store('orangery-run',snap());
@@ -940,8 +1006,8 @@ function loadRun(raw){
     const d=typeof raw==='string'?JSON.parse(raw):raw;
     if(!d||d.v!==1||!Array.isArray(d.grid)||d.grid.length!==25||!Array.isArray(d.tray)||d.tray.length!==3)return null;
     const one=(s,set)=>typeof s==='string'&&s.length===1&&set.indexOf(s)>=0;
-    const okCell=t=>t===null||(!!t&&one(t.sp,'rybw')&&[1,2,3,4].indexOf(t.st)>=0);
-    const okPiece=q=>!!q&&Array.isArray(q.cells)&&q.cells.length>=1&&q.cells.length<=3&&q.cells.every(c=>Array.isArray(c)&&c.length===4&&[0,1,2].indexOf(c[0])>=0&&[0,1,2].indexOf(c[1])>=0&&one(c[2],'ryb')&&(c[3]===1||c[3]===2));
+    const okCell=t=>t===null||(!!t&&((one(t.sp,'rybw')&&[1,2,3,4].indexOf(t.st)>=0)||(t.sp==='x'&&t.st===0)));
+    const okPiece=q=>!!q&&Array.isArray(q.cells)&&q.cells.length>=1&&q.cells.length<=3&&q.cells.every(c=>Array.isArray(c)&&c.length===4&&[0,1,2].indexOf(c[0])>=0&&[0,1,2].indexOf(c[1])>=0&&((one(c[2],'ryb')&&(c[3]===1||c[3]===2))||(c[2]==='g'&&c[3]===0)));
     if(!d.grid.every(okCell))return null;
     const num=v=>Math.max(0,Math.floor(+v||0)),copy=q=>mkPiece(q.cells.map(c=>c.slice()));
     const tr=d.tray.map(q=>{if(q===null)return null;if(!okPiece(q))throw new Error('piece');const t=copy(q);t.id=num(q.id);
@@ -952,7 +1018,9 @@ function loadRun(raw){
       gl=G.list.map(g=>({type:g.type,n:num(g.n),cur:num(g.cur),done:!!g.done}));
       GTYPES.forEach(t=>{gt[t]=num((G.tier||{})[t]);});
     }
-    return {goals:gl,tier:gt,issued:num(G&&G.issued),grid:d.grid.map(t=>t?(one(t.v,'rybkd')?{sp:t.sp,st:t.st,v:t.v}:{sp:t.sp,st:t.st}):null),tray:tr,score:num(d.score),cans:Math.min(3,num(d.cans)),dealt:num(d.dealt),rs:(+d.rs||0)|0,stats:{moves:num(st.moves),lotus:num(st.lotus),combo:num(st.combo)}};
+    const E=d.ev||{},eb=E.bfly,bi=eb?num(eb.i):-1;
+    const evv={next:num(E.next)||6,idx:num(E.idx),gold:!!E.gold,bfly:eb&&bi<25&&d.grid[bi]&&d.grid[bi].sp!=='x'?{i:bi,left:Math.max(1,num(eb.left))}:null};
+    return {ev:evv,goals:gl,tier:gt,issued:num(G&&G.issued),grid:d.grid.map(t=>t?(one(t.v,'rybkd')?{sp:t.sp,st:t.st,v:t.v}:{sp:t.sp,st:t.st}):null),tray:tr,score:num(d.score),cans:Math.min(3,num(d.cans)),dealt:num(d.dealt),rs:(+d.rs||0)|0,stats:{moves:num(st.moves),lotus:num(st.lotus),combo:num(st.combo)}};
   }catch(e){return null;}
 }
 function clearUI(){
@@ -962,17 +1030,17 @@ function clearUI(){
 function resume(d,msg){
   clearUI();grid=d.grid;tray=d.tray;cans=d.cans;stats=d.stats;dealt=d.dealt;rs=d.rs;score=d.score;
   /* цели: из сохранения, а выполненные перед закрытием сразу сменяются новыми */
-  gTier=d.tier||{};gIssued=d.issued||0;
+  ev=d.ev||{next:6,idx:0,bfly:null,gold:false};gTier=d.tier||{};gIssued=d.issued||0;
   if(d.goals){goals=d.goals;goals.forEach((g,i)=>{if(g.done)goals[i]=newGoal(i);});}else initGoals();
   /* уровень цветения ставится сразу: без фанфар и без подарочной лейки за уже пройденное */
   level=LEVELS.filter(v=>d.score>=v).length;applyLevel();
   for(let i=0;i<25;i++)renderCell(i);
-  setScore(d.score);renderTray(true);mood();renderLabel();renderSeed();renderGoals();toast(msg||'забег продолжается');checkEnd();
+  setScore(d.score);renderTray(true);mood();renderLabel();renderSeed();renderGoals();renderEvt();toast(msg||'забег продолжается');checkEnd();
 }
 function startRun(){
   clearUI();
   if(mode==='daily')rs=hashStr(daily.date);
-  dealt=0;grid=Array(25).fill(null);score=0;tray=[newPiece(),newPiece(),newPiece()];stats={moves:0,lotus:0,combo:0};cans=1;gTier={};gIssued=0;initGoals();
+  dealt=0;grid=Array(25).fill(null);score=0;tray=[newPiece(),newPiece(),newPiece()];stats={moves:0,lotus:0,combo:0};cans=1;gTier={};gIssued=0;initGoals();ev={next:6,idx:0,bfly:null,gold:false};renderEvt();
   for(let i=0;i<25;i++)renderCell(i);
   setScore(0);renderTray(true);mood();renderLabel();renderSeed();renderGoals();save();
 }
@@ -1093,7 +1161,9 @@ function altsFor(p){
   return p.alt=out;
 }
 function openSwap(k){
-  const p=tray[k];if(!p)return;swapK=k;
+  const p=tray[k];if(!p)return;
+  if(p.cells[0][2]==='g'){toast('золотое семя менять незачем');return;}
+  swapK=k;
   const alts=altsFor(p),opt=(q,i)=>{const x=i?211:75,w=q.w*TM+(q.w-1)*TG,h=q.h*TM+(q.h-1)*TG;
     return `<g class="btn" role="button" tabindex="0" data-alt="${i}" aria-label="Вариант ${i+1}"><rect class="ring" x="${x}" y="372" width="104" height="104" rx="20" style="fill:var(--over-soil1);stroke:var(--over-line);stroke-width:1.2"/><g transform="translate(${x+(104-w)/2},${372+(104-h)/2})">${pieceHTML(q,TM,TG,false)}</g></g>`;};
   showCard('swap',300,262,line(346,20,'over-ink','На что заменить?',600)+opt(alts[0],0)+opt(alts[1],1)
@@ -1120,12 +1190,25 @@ function intro(){
     +line(472,13.5,'over-muted','Сначала три хода обучения.')+button('begin',498,'Начать','Начать обучение'));
 }
 /* правила: открываются кнопкой над лотком в любой момент */
-function rules(){
+function rules(page){
+  if(page){
+    const item=(y,name,text)=>line(y,14.5,'over-ink',name,600)+line(y+18,12.5,'over-muted',text);
+    showCard('help',146,470,line(190,21,'over-ink','Ещё в игре',600)
+      +item(226,'Лейка','меняет фигуру; дают за лотос и цели')
+      +item(270,'Цели','три задачи над грядкой, за каждую лейка')
+      +item(314,'Бабочка','слейте её цветок: очки за слияние удвоятся')
+      +item(358,'Сорняк','занимает клетку; его убирает слияние рядом')
+      +item(402,'Золотое семя','становится тем, что растёт по соседству')
+      +item(446,'Гербарий','альбом находок, редкие растения по рецептам')
+      +item(490,'Семя дня','одна раздача на всех, одна попытка в день')
+      +button('ok',538,'Понятно','Закрыть правила'),true);
+    return;
+  }
   const row=(y,a,b,cap)=>a.map((q,i)=>mini(52+i*40,y,q[0],q[1])).join('')+chev(184,y+13)
     +(b?mini(202,y,b[0],b[1]):`<g transform="translate(221,${y+19}) scale(1.7)"><path d="${STAR}" style="${fill('gold')}"/></g>`)
     +`<text x="254" y="${y+24}" style="font-size:13.5px;${fill('over-ink')}">${cap}</text>`;
   const lk=(id,y,label,text)=>`<g id="${id}" class="btn" role="button" tabindex="0" aria-label="${label}"><rect class="ring" x="60" y="${y-22}" width="270" height="32" rx="16" style="fill:transparent"/><text class="link" x="195" y="${y}" text-anchor="middle" style="${fill('over-muted')}">${text}</text></g>`;
-  showCard('help',104,608,line(146,21,'over-ink','Правила',600)
+  showCard('help',104,560,line(146,21,'over-ink','Правила',600)
     +row(166,[['r',1],['r',1],['r',1]],['r',2],'бутон')
     +row(218,[['y',2],['y',2],['y',2]],['y',3],'цветок')
     +row(270,[['r',3],['y',3],['b',3]],['w',4],'редкий лотос')
@@ -1133,11 +1216,10 @@ function rules(){
     +line(392,14,'over-ink','Новый цветок вырастает там,')+line(412,14,'over-ink','куда вы поставили фигуру.')
     +line(438,14,'over-ink','Грядка заранее показывает результат.')
     +line(462,14,'over-ink','Тап по фигуре в лотке поворачивает её.')
-    +line(488,14,'over-ink','Лейка меняет фигуру на одну из двух.')+line(508,14,'over-ink','Лейки дают за лотос и за цели забега.')
-    +line(534,14,'over-ink','Фигуры некуда ставить: конец забега.')
-    +button('ok',556,'Понятно','Закрыть правила')
-    +lk('retut',640,'Пройти обучение заново',score>0&&!tut?'пройти обучение (забег сбросится)':'пройти обучение заново')
-    +lk('gfx',672,'Переключить качество графики',lite?'графика: лёгкая':'графика: полная'));
+    +line(486,14,'over-ink','Фигуры некуда ставить: конец забега.')
+    +button('rnext',508,'Дальше','Вторая страница правил')
+    +lk('retut',594,'Пройти обучение заново',score>0&&!tut?'пройти обучение (забег сбросится)':'пройти обучение заново')
+    +lk('gfx',626,'Переключить качество графики',lite?'графика: лёгкая':'графика: полная'));
 }
 
 /* ---------- обучение: три хода на живой грядке ---------- */
@@ -1181,7 +1263,7 @@ function tutSet(){
 function tutStart(){
   mode='free';store('orangery-run',null);
   closeCard();over=false;busy=false;drag=null;dragG.innerHTML='';fxG.innerHTML='';showPreview(null);
-  tut={n:0,phase:'do',turned:false};renderLabel();renderGoals();setScore(0);tutSet();
+  tut={n:0,phase:'do',turned:false};ev={next:6,idx:0,bfly:null,gold:false};renderEvt();renderLabel();renderGoals();setScore(0);tutSet();
 }
 function tutDone(){
   const t=tut;t.phase='done';renderTut();
@@ -1270,6 +1352,7 @@ function act(el){
   if(el.id==='share'){share(el);return;}
   if(el.id==='gfx'){lite=!lite;try{localStorage.setItem('orangery-lite',lite?'1':'0');}catch(e){}scr.classList.toggle('lite',lite);par(0,0);resize();rules();return;}
   if(el.id==='play'||el.id==='ok'||el.id==='dclose'){closeCard();return;}
+  if(el.id==='rnext'){rules(1);return;}
   if(el.id==='herb'){if(!busy&&!drag&&!tut&&!over&&!modal)herbCard();return;}
   if(el.dataset.herb){herbCard(el.dataset.herb,true);return;}
   if(el.dataset.goal){if(!busy&&!drag&&!over&&!modal&&goals)goalsCard();return;}
@@ -1341,7 +1424,7 @@ else{
   if(savedMode==='daily'&&!daily.done&&daily.run)startDaily();
 }
 /* для проверки из консоли */
-window.__orangery={setCans:n=>{cans=n;renderLabel();},goals:()=>goals,herb:()=>herb,herbCard,found,goalBump,checkGoals,goalsCard,checkEnd,startDaily,exitDaily,dailyCard,loadDaily,state:()=>({mode,dealt,daily,streak,cans,swap,stuck,grid,tray,score,best,busy,over,modal,themeId,level,lite,wet,tense,stats,parts:parts.length,K,tut:tut&&{n:tut.n,phase:tut.phase}}),start,turn,rules,tutStart,setTheme,gameOver,SND,FX,
+window.__orangery={setCans:n=>{cans=n;renderLabel();},goals:()=>goals,ev:()=>ev,eventsTick,renderEvt,herb:()=>herb,herbCard,found,goalBump,checkGoals,goalsCard,checkEnd,startDaily,exitDaily,dailyCard,loadDaily,state:()=>({mode,dealt,daily,streak,cans,swap,stuck,grid,tray,score,best,busy,over,modal,themeId,level,lite,wet,tense,stats,parts:parts.length,K,tut:tut&&{n:tut.n,phase:tut.phase}}),start,turn,rules,tutStart,setTheme,gameOver,SND,FX,
   setScore:v=>setScore(v,true),set:(i,sp,st,v)=>{grid[i]=sp?(v?{sp,st,v}:{sp,st}):null;gv++;renderCell(i);},
   place:(k,c,r)=>fits(tray[k],c,r)?place(k,tray[k],c,r):false,
   preview:(k,c,r)=>{showPreview(tray[k],c,r,fits(tray[k],c,r));return preG.childNodes.length;}};
