@@ -553,7 +553,7 @@ const SHAPES=[[[0,0]],[[0,0],[1,0]],[[0,0],[1,0],[0,1]]];
 let grid,tray,score,best=0,busy,over,modal=null,tut=null,drag=null,pend=null,gv=0,grnd=Math.random,queue=Promise.resolve();
 try{best=+localStorage.getItem('orangery-best')||0;}catch(e){}
 const pick=a=>a[(grnd()*a.length)|0];
-let stats={moves:0,lotus:0,combo:0},runId=0;
+let stats={moves:0,lotus:0,combo:0},runId=0,cans=1,swap=false,swapK=-1,stuck=false;
 const mkPiece=cells=>({cells,w:Math.max(...cells.map(q=>q[0]))+1,h:Math.max(...cells.map(q=>q[1]))+1});
 /* поворот на четверть оборота по часовой стрелке; растения остаются стоять прямо */
 function rotate(p){const h=p.h;p.cells=p.cells.map(q=>[h-1-q[1],q[0],q[2],q[3]]);p.h=p.w;p.w=h;}
@@ -568,7 +568,8 @@ function newPiece(){
 const wait=ms=>new Promise(r=>setTimeout(r,RM?0:ms));
 const fitsRaw=(p,c,r)=>p.cells.every(q=>{const cc=c+q[0],rr=r+q[1];return cc>=0&&cc<5&&rr>=0&&rr<5&&!grid[rr*5+cc];});
 const fits=(p,c,r)=>fitsRaw(p,c,r)&&(!tut||(tut.phase==='do'&&c===TUT[tut.n].at[0]&&r===TUT[tut.n].at[1]&&tutWant()));
-const anyMove=()=>tray.some(p=>{if(!p)return false;const t=mkPiece(p.cells);for(let o=0;o<4;o++){for(let r=0;r<5;r++)for(let c=0;c<5;c++)if(fitsRaw(t,c,r))return true;rotate(t);}return false;});
+const fitsAny=p=>{const t=mkPiece(p.cells);for(let o=0;o<4;o++){for(let r=0;r<5;r++)for(let c=0;c<5;c++)if(fitsRaw(t,c,r))return true;rotate(t);}return false;};
+const anyMove=()=>tray.some(p=>p&&fitsAny(p));
 
 function renderCell(i,mode){
   const h=holders[i],t=grid[i];dotsEl[i].style.opacity=t?0:1;h.style.opacity='';lights();
@@ -598,6 +599,7 @@ function renderTray(popIn){
     const cx=CARD.xs[k],p=tray[k];
     s+=`<rect x="${cx}" y="${CARD.y}" width="${CARD.w}" height="${CARD.w}" rx="20" style="${fill('card')};stroke:var(--card-line);stroke-width:1"/>`;
     if(!p)continue;
+    if(swap)s+=`<rect class="made pulse" x="${cx-3}" y="${CARD.y-3}" width="${CARD.w+6}" height="${CARD.w+6}" rx="23"/>`;
     const m=TM,g=TG,w=p.w*m+(p.w-1)*g,h=p.h*m+(p.h-1)*g;
     s+=`<g class="piece" data-slot="${k}"${drag&&drag.k===k?' style="opacity:.22"':''}><rect x="${cx}" y="${CARD.y}" width="${CARD.w}" height="${CARD.w}" style="fill:transparent"/>${p.cells.length>1?turnIco(cx+CARD.w-13,CARD.y+13):''}<g transform="translate(${cx+(CARD.w-w)/2},${CARD.y+(CARD.w-h)/2})">${pieceHTML(p,m,g,false)}</g></g>`;
   }
@@ -683,7 +685,7 @@ function applyLevel(){document.querySelectorAll('#bg1 .bl,#fgl .bl,#fg .blo').fo
 function setLevel(){
   const l=tut?0:LEVELS.filter(v=>score>=v).length;if(l===level)return;
   const up=l>level;level=l;applyLevel();
-  if(up){SND.play('level');FX.rise(16);}
+  if(up){SND.play('level');FX.rise(16);gainCan();}
 }
 function groupOf(g,i){
   const t=g[i];if(!t)return [];
@@ -744,7 +746,7 @@ async function playStep(s){
   const power=big?3:Math.min(3,s.combo);
   FX.hit(i,s.res?s.res.sp:'w',power);shove(i,power);buzz(big?[14,30,22]:10);
   if(!s.res){SND.play('clear');FX.rise(26);}
-  else if(s.res.st===4){SND.play('lotus');stats.lotus++;FX.rise(22);cheer(i);}
+  else if(s.res.st===4){SND.play('lotus');stats.lotus++;FX.rise(22);cheer(i);gainCan();}
   else SND.play('merge',s.res.st,s.combo);
   if(!RM&&big)scr.animate([{transform:'translate(0,0)'},{transform:'translate(-4px,2px)'},{transform:'translate(3px,-3px)'},{transform:'translate(-3px,-1px)'},{transform:'translate(2px,2px)'},{transform:'translate(0,0)'}],{duration:340,easing:'ease-out'});
   else if(!RM&&s.combo>=3)scr.animate([{transform:'scale(1)'},{transform:'scale(1.022)'},{transform:'scale(1)'}],{duration:380,easing:'ease-out'});
@@ -764,11 +766,11 @@ async function place(k,p,c,r){
   if(tut){tutDone();return;}
   if(tray.every(t=>!t)){tray=[newPiece(),newPiece(),newPiece()];renderTray(true);}
   mood();
-  if(!anyMove())gameOver();
+  checkEnd();
 }
 /* конец забега: сад засыпает, потом появляется его снимок */
 async function gameOver(){
-  over=true;modal=null;mood();
+  over=true;modal=null;swap=false;stuck=false;mood();renderLabel();
   const id=runId,rec=score>best;if(rec){best=score;try{localStorage.setItem('orangery-best',String(best));}catch(e){}setBest();}
   SND.play('over');
   if(!RM){let n=0;for(let i=0;i<25;i++){const el=holders[i].firstChild;if(el)el.animate([{opacity:1,transform:'scale(1)'},{opacity:.55,transform:'scale(.96,.9)'}],{duration:360,delay:n++*28,easing:'ease-in-out',fill:'forwards'});}}
@@ -795,15 +797,48 @@ function share(el){
   else say('поделиться не получилось');
 }
 function start(){
-  grid=Array(25).fill(null);score=0;tray=[newPiece(),newPiece(),newPiece()];busy=false;over=false;modal=null;drag=null;gv++;runId++;stats={moves:0,lotus:0,combo:0};
+  grid=Array(25).fill(null);score=0;tray=[newPiece(),newPiece(),newPiece()];busy=false;over=false;modal=null;drag=null;gv++;runId++;stats={moves:0,lotus:0,combo:0};cans=1;swap=false;stuck=false;
   overG.style.display='none';overG.innerHTML='';dragG.innerHTML='';fxG.innerHTML='';showPreview(null);
   for(let i=0;i<25;i++)renderCell(i);
-  setScore(0);setBest();renderTray(true);mood();
+  setScore(0);setBest();renderTray(true);mood();renderLabel();
 }
+const canIco=(x,y)=>`<g transform="translate(${x},${y})" style="fill:none;stroke:var(--ink-low);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><path d="M-3,-3.5 h8 v9.5 h-8z"/><path d="M-3,.5 l-5.4,-4.4 M-10,-5.4 l3.2,2.6"/><path d="M5,-1.5 q4.6,1.8 0,5.6"/></g>`;
 function renderLabel(){
-  labelG.innerHTML=tut
-    ?`<g id="skip" class="btn" role="button" tabindex="0" aria-label="Пропустить обучение"><rect class="ring" x="14" y="606" width="180" height="38" rx="19" style="fill:transparent"/><text class="link" x="24" y="630" style="${fill('muted-low')}">пропустить обучение</text></g>`
-    :`<text x="24" y="630" style="font-size:13px;${fill('muted-low')}">Тап по фигуре поворачивает её</text>`;
+  if(tut){labelG.innerHTML=`<g id="skip" class="btn" role="button" tabindex="0" aria-label="Пропустить обучение"><rect class="ring" x="14" y="606" width="180" height="38" rx="19" style="fill:transparent"/><text class="link" x="24" y="630" style="${fill('muted-low')}">пропустить обучение</text></g>`;return;}
+  let pips='';for(let i=0;i<3;i++)pips+=`<circle cx="${59+i*12}" cy="625" r="4" style="${i<cans?fill('b'):'fill:none'};stroke:var(--ink-low);stroke-width:1;stroke-opacity:${i<cans?0:.5}"/>`;
+  const hot=swap||stuck;
+  labelG.innerHTML=`<g id="can" class="btn fxp" role="button" tabindex="0" aria-label="Лейка: заменить фигуру. Осталось ${cans} из 3"${cans?'':' style="opacity:.6"'}><rect x="21" y="603" width="78" height="44" style="fill:transparent"/><rect class="ring${stuck?' pulse':''}" x="21" y="609" width="78" height="32" rx="16" style="${fill('card')};stroke:var(--${hot?'gold':'card-line'});stroke-width:${hot?2:1}"/>${canIco(40,625)}${pips}</g>`
+    +(stuck?`<g id="giveup" class="btn" role="button" tabindex="0" aria-label="Закончить забег"><rect class="ring" x="104" y="606" width="150" height="38" rx="19" style="fill:transparent"/><text class="link" x="110" y="630" style="${fill('muted-low')}">закончить забег</text></g>`
+      :`<text x="110" y="630" style="font-size:12.5px;${fill('muted-low')}">${swap?'какую фигуру заменить?':'тап по фигуре: поворот'}</text>`);
+}
+/* лейка: заменить неудобную фигуру на одну из двух. Одна в начале забега, ещё дают за лотос и за новый уровень цветения, больше трёх не копится */
+function gainCan(){
+  if(tut||cans>=3)return;
+  cans++;renderLabel();toast('+1 лейка');
+  const el=$('can');if(el&&!RM)el.animate([{transform:'scale(1)'},{transform:'scale(1.2)'},{transform:'scale(1)'}],{duration:340,easing:'ease-out'});
+}
+/* конец забега наступает, только когда не помочь и лейкой */
+function checkEnd(){
+  if(anyMove()){if(stuck){stuck=false;renderLabel();}return;}
+  if(cans>0&&grid.some(t=>!t)){if(!stuck){stuck=true;renderLabel();toast('фигуры не помещаются: поможет лейка');}return;}
+  stuck=false;gameOver();
+}
+/* два варианта замены запоминаются за фигурой: отмена бесплатна, но перебирать варианты нельзя */
+function altsFor(p){
+  if(p.alt)return p.alt;
+  const sig=q=>q.cells.map(c=>c[2]+c[3]).sort().join(''),seen={},out=[];seen[sig(p)]=1;
+  for(let i=0;i<40&&out.length<2;i++){const q=newPiece();if(!seen[sig(q)]){seen[sig(q)]=1;out.push(q);}}
+  while(out.length<2)out.push(newPiece());
+  /* лейка должна выручать: если ни один вариант не помещается, первый становится одной клеткой */
+  if(!out.some(fitsAny))out[0]=mkPiece([[0,0,pick((score||0)>=1500?['r','y','b']:['r','y']),grnd()<.15?2:1]]);
+  return p.alt=out;
+}
+function openSwap(k){
+  const p=tray[k];if(!p)return;swapK=k;
+  const alts=altsFor(p),opt=(q,i)=>{const x=i?211:75,w=q.w*TM+(q.w-1)*TG,h=q.h*TM+(q.h-1)*TG;
+    return `<g class="btn" role="button" tabindex="0" data-alt="${i}" aria-label="Вариант ${i+1}"><rect class="ring" x="${x}" y="372" width="104" height="104" rx="20" style="fill:var(--over-soil1);stroke:var(--over-line);stroke-width:1.2"/><g transform="translate(${x+(104-w)/2},${372+(104-h)/2})">${pieceHTML(q,TM,TG,false)}</g></g>`;};
+  showCard('swap',300,262,line(346,20,'over-ink','На что заменить?',600)+opt(alts[0],0)+opt(alts[1],1)
+    +`<g id="keep" class="btn" role="button" tabindex="0" aria-label="Оставить как есть"><rect class="ring" x="95" y="500" width="200" height="36" rx="18" style="fill:transparent"/><text class="link" x="195" y="523" text-anchor="middle" style="${fill('over-muted')}">оставить как есть</text></g>`);
 }
 
 /* ---------- карточки поверх игры ---------- */
@@ -830,18 +865,20 @@ function rules(){
   const row=(y,a,b,cap)=>a.map((q,i)=>mini(52+i*40,y,q[0],q[1])).join('')+chev(184,y+13)
     +(b?mini(202,y,b[0],b[1]):`<g transform="translate(221,${y+19}) scale(1.7)"><path d="${STAR}" style="${fill('gold')}"/></g>`)
     +`<text x="254" y="${y+24}" style="font-size:13.5px;${fill('over-ink')}">${cap}</text>`;
-  showCard('help',150,556,line(192,21,'over-ink','Правила',600)
-    +row(214,[['r',1],['r',1],['r',1]],['r',2],'бутон')
-    +row(268,[['y',2],['y',2],['y',2]],['y',3],'цветок')
-    +row(322,[['r',3],['y',3],['b',3]],['w',4],'редкий лотос')
-    +row(376,[['w',4],['w',4],['w',4]],null,'+600 очков')
-    +line(448,14,'over-ink','Новый цветок вырастает там,')+line(468,14,'over-ink','куда вы поставили фигуру.')
-    +line(496,14,'over-ink','Грядка заранее показывает результат.')
-    +line(520,14,'over-ink','Тап по фигуре в лотке поворачивает её.')
-    +line(544,14,'over-ink','Фигуры некуда ставить: конец забега.')
-    +button('ok',568,'Понятно','Закрыть правила')
-    +`<g id="retut" class="btn" role="button" tabindex="0" aria-label="Пройти обучение заново"><rect class="ring" x="60" y="630" width="270" height="34" rx="17" style="fill:transparent"/><text class="link" x="195" y="652" text-anchor="middle" style="${fill('over-muted')}">${score>0&&!tut?'пройти обучение (забег сбросится)':'пройти обучение заново'}</text></g>
-      <g id="gfx" class="btn" role="button" tabindex="0" aria-label="Переключить качество графики"><rect class="ring" x="60" y="660" width="270" height="34" rx="17" style="fill:transparent"/><text class="link" x="195" y="682" text-anchor="middle" style="${fill('over-muted')}">${lite?'графика: лёгкая':'графика: полная'}</text></g>`);
+  const lk=(id,y,label,text)=>`<g id="${id}" class="btn" role="button" tabindex="0" aria-label="${label}"><rect class="ring" x="60" y="${y-22}" width="270" height="32" rx="16" style="fill:transparent"/><text class="link" x="195" y="${y}" text-anchor="middle" style="${fill('over-muted')}">${text}</text></g>`;
+  showCard('help',104,608,line(146,21,'over-ink','Правила',600)
+    +row(166,[['r',1],['r',1],['r',1]],['r',2],'бутон')
+    +row(218,[['y',2],['y',2],['y',2]],['y',3],'цветок')
+    +row(270,[['r',3],['y',3],['b',3]],['w',4],'редкий лотос')
+    +row(322,[['w',4],['w',4],['w',4]],null,'+600 очков')
+    +line(392,14,'over-ink','Новый цветок вырастает там,')+line(412,14,'over-ink','куда вы поставили фигуру.')
+    +line(438,14,'over-ink','Грядка заранее показывает результат.')
+    +line(462,14,'over-ink','Тап по фигуре в лотке поворачивает её.')
+    +line(488,14,'over-ink','Лейка меняет фигуру на одну из двух.')+line(508,14,'over-ink','Лейки дают за лотос и цветение теплицы.')
+    +line(534,14,'over-ink','Фигуры некуда ставить: конец забега.')
+    +button('ok',556,'Понятно','Закрыть правила')
+    +lk('retut',640,'Пройти обучение заново',score>0&&!tut?'пройти обучение (забег сбросится)':'пройти обучение заново')
+    +lk('gfx',672,'Переключить качество графики',lite?'графика: лёгкая':'графика: полная'));
 }
 
 /* ---------- обучение: три хода на живой грядке ---------- */
@@ -893,10 +930,11 @@ function tutDone(){
 function tutFinish(){tut=null;try{localStorage.setItem('orangery-tut','1');}catch(e){}tutG.innerHTML='';renderLabel();}
 function tutEnd(){
   tutFinish();start();
-  showCard('tutend',286,252,line(336,21,'over-ink','Дальше сами',600)
-    +line(372,14,'over-ink','Фигуры некуда ставить: конец забега.')
-    +line(398,14,'over-muted','Правила всегда рядом:')+line(418,14,'over-muted','кнопка «правила» над лотком.')
-    +button('play',454,'Играть','Начать игру'));
+  showCard('tutend',276,276,line(326,21,'over-ink','Дальше сами',600)
+    +line(362,14,'over-ink','Фигуры некуда ставить: конец забега.')
+    +line(386,14,'over-ink','Лейка заменит неудобную фигуру.')
+    +line(414,14,'over-muted','Правила всегда рядом:')+line(434,14,'over-muted','кнопка «правила» над лотком.')
+    +button('play',470,'Играть','Начать игру'));
 }
 
 /* ---------- перетаскивание ---------- */
@@ -932,6 +970,7 @@ game.addEventListener('pointerdown',e=>{
   if(!el||over||modal||drag||pend)return;
   const k=+el.dataset.slot,p=tray[k];if(!p)return;
   e.preventDefault();
+  if(swap){openSwap(k);return;}
   try{game.setPointerCapture(e.pointerId);}catch(err){}
   const q=pt(e);
   pend={k,p,id:e.pointerId,touch:e.pointerType!=='mouse',x:q.x,y:q.y,e,timer:setTimeout(()=>{if(pend)beginDrag(pend.e);},230)};
@@ -955,6 +994,18 @@ function act(el){
   if(!el)return;
   SND.play('ui');
   if(el.id==='again'){start();return;}
+  if(el.id==='can'){
+    if(busy||over||modal||tut||drag)return;
+    if(!cans){toast('леек нет: их дают за лотос и цветение');return;}
+    swap=!swap;renderLabel();renderTray();return;
+  }
+  if(el.id==='giveup'){if(!busy&&!over&&!modal){stuck=false;gameOver();}return;}
+  if(el.id==='keep'){closeCard();swap=false;renderLabel();renderTray();return;}
+  if(el.dataset.alt){
+    const p=tray[swapK],q=p&&p.alt&&p.alt[+el.dataset.alt];closeCard();swap=false;
+    if(q){tray[swapK]=q;cans--;SND.play('level');buzz(10);}
+    renderLabel();renderTray(true);checkEnd();return;
+  }
   if(el.id==='snd'){SND.toggle();sndIcon();toast(SNDNAME[SND.mode]);return;}
   if(el.id==='share'){share(el);return;}
   if(el.id==='gfx'){lite=!lite;try{localStorage.setItem('orangery-lite',lite?'1':'0');}catch(e){}scr.classList.toggle('lite',lite);par(0,0);resize();rules();return;}
@@ -1015,7 +1066,7 @@ setInterval(()=>{
 },2800);
 if(!seen||location.hash==='#tutorial')intro();
 /* для проверки из консоли */
-window.__orangery={state:()=>({grid,tray,score,best,busy,over,modal,themeId,level,lite,wet,tense,stats,parts:parts.length,K,tut:tut&&{n:tut.n,phase:tut.phase}}),start,turn,rules,tutStart,setTheme,gameOver,SND,FX,
+window.__orangery={setCans:n=>{cans=n;renderLabel();},checkEnd,state:()=>({cans,swap,stuck,grid,tray,score,best,busy,over,modal,themeId,level,lite,wet,tense,stats,parts:parts.length,K,tut:tut&&{n:tut.n,phase:tut.phase}}),start,turn,rules,tutStart,setTheme,gameOver,SND,FX,
   setScore:v=>setScore(v,true),set:(i,sp,st)=>{grid[i]=sp?{sp,st}:null;gv++;renderCell(i);},
   place:(k,c,r)=>fits(tray[k],c,r)?place(k,tray[k],c,r):false,
   preview:(k,c,r)=>{showPreview(tray[k],c,r,fits(tray[k],c,r));return preG.childNodes.length;}};
