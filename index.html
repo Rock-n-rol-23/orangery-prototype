@@ -355,10 +355,10 @@ stat+=`<g id="seed" class="btn" role="button" tabindex="0" aria-label="Семя 
 ORDER.forEach((id,i)=>{const x=144+i*34;
   stat+=`<g class="btn" role="button" tabindex="0" data-theme="${id}" aria-label="Время суток: ${({dawn:'рассвет',day:'день',dusk:'закат',night:'ночь'})[id]}"><rect x="${x-15}" y="12" width="30" height="30" style="fill:transparent"/><circle cx="${x}" cy="27" r="5.5" class="sw-${id}"/><circle class="ring" cx="${x}" cy="27" r="9"/></g>`;});
 stat+=`<g id="snd" class="btn" role="button" tabindex="0" aria-label="Звук"><rect x="332" y="7" width="40" height="40" style="fill:transparent"/><circle class="ring" cx="352" cy="27" r="14" style="${fill('chip')};stroke:var(--chip-line);stroke-width:1"/><g id="snd-i"></g></g>`;
-stat+=`<g id="tray"></g><g id="plants"></g><g id="pre" style="pointer-events:none"></g><g id="tutg" style="pointer-events:none"></g><g id="fx"></g><g id="drag" style="pointer-events:none"></g><g id="over" style="display:none"></g>`;
+stat+=`<g id="goals"></g><g id="tray"></g><g id="plants"></g><g id="pre" style="pointer-events:none"></g><g id="tutg" style="pointer-events:none"></g><g id="fx"></g><g id="drag" style="pointer-events:none"></g><g id="over" style="display:none"></g>`;
 game.innerHTML=stat;
 const dotsEl=[...$('board').querySelectorAll('.dot')];
-const trayG=$('tray'),plantsG=$('plants'),preG=$('pre'),tutG=$('tutg'),labelG=$('label'),fxG=$('fx'),dragG=$('drag'),overG=$('over');
+const goalsG=$('goals'),trayG=$('tray'),plantsG=$('plants'),preG=$('pre'),tutG=$('tutg'),labelG=$('label'),fxG=$('fx'),dragG=$('drag'),overG=$('over');
 const holders=[];
 for(let i=0;i<25;i++){const g=document.createElementNS(NS,'g');g.setAttribute('transform',`translate(${BX+(i%5)*STEP-1},${BY+((i/5)|0)*STEP-1})`);g.style.pointerEvents='none';plantsG.appendChild(g);holders.push(g);}
 
@@ -559,6 +559,7 @@ try{best=+localStorage.getItem('orangery-best')||0;}catch(e){}
 const pick=a=>a[(grnd()*a.length)|0];
 let stats={moves:0,lotus:0,combo:0},runId=0,cans=1,swap=false,swapK=-1,stuck=false;
 /* режим: free обычный забег, daily семя дня. dealt считает розданные фигуры, rs хранит состояние генератора семени */
+let goals=null,gTier={},gIssued=0;
 let mode='free',dealt=0,rs=0,daily={date:'',done:false,result:null,run:null},streak={last:'',n:0};
 const mkPiece=cells=>({cells,w:Math.max(...cells.map(q=>q[0]))+1,h:Math.max(...cells.map(q=>q[1]))+1});
 /* поворот на четверть оборота по часовой стрелке; растения остаются стоять прямо */
@@ -638,7 +639,7 @@ function setScore(v,bump){
   clearInterval(cntT);
   const put=x=>{shown=x;el.textContent=fmt(x);};
   if(steps===1)put(v);else cntT=setInterval(()=>{n++;put(Math.round(from+(v-from)*n/steps));if(n>=steps)clearInterval(cntT);},32);
-  setLevel();
+  setLevel();goalBump('score',v);
 }
 function setBest(){$('best').textContent=mode==='daily'?'серия '+curStreak():'рекорд '+fmt(best);}
 /* очки взлетают над цветком и улетают в счётчик */
@@ -700,7 +701,7 @@ function applyLevel(){document.querySelectorAll('#bg1 .bl,#fgl .bl,#fg .blo').fo
 function setLevel(){
   const l=tut?0:LEVELS.filter(v=>score>=v).length;if(l===level)return;
   const up=l>level;level=l;applyLevel();
-  if(up){SND.play('level');FX.rise(16);gainCan();}
+  if(up){SND.play('level');FX.rise(16);}
 }
 function groupOf(g,i){
   const t=g[i];if(!t)return [];
@@ -766,6 +767,9 @@ async function playStep(s){
   if(!RM&&big)scr.animate([{transform:'translate(0,0)'},{transform:'translate(-4px,2px)'},{transform:'translate(3px,-3px)'},{transform:'translate(-3px,-1px)'},{transform:'translate(2px,2px)'},{transform:'translate(0,0)'}],{duration:340,easing:'ease-out'});
   else if(!RM&&s.combo>=3)scr.animate([{transform:'scale(1)'},{transform:'scale(1.022)'},{transform:'scale(1)'}],{duration:380,easing:'ease-out'});
   stats.combo=Math.max(stats.combo,s.combo);
+  if(s.res)goalBump(s.res.st===2?'buds':s.res.st===3?'flowers':'lotus',1);
+  if(s.others.length>=3)goalBump('big',1);
+  goalBump('combo',s.combo);
   setScore(score+s.pts,true);flyScore(i,(s.res&&s.combo>1?'×'+s.combo+' ':'')+'+'+s.pts);
   await wait(250*slow);
 }
@@ -776,7 +780,10 @@ async function place(k,p,c,r){
   setScore(score+placed.length);
   renderTray();
   await wait(170);
-  for(const s of plan(grid.slice(),placed))await playStep(s);
+  const steps=plan(grid.slice(),placed);
+  for(const s of steps)await playStep(s);
+  if(steps.filter(s=>s.combo===1).length>=2)goalBump('double',1);
+  checkGoals();
   busy=false;
   if(tut){tutDone();return;}
   if(tray.every(t=>!t)){tray=[newPiece(),newPiece(),newPiece()];renderTray(true);}
@@ -818,9 +825,56 @@ function share(el){
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text+' '+url).then(()=>say('скопировано'),()=>say('не получилось'));
   else say('не получилось');
 }
+/* ---------- цели забега: три небольшие задачи, за каждую лейка; выполненную сменяет новая, труднее ---------- */
+const GTYPES=['buds','flowers','lotus','combo','score','big','double'];
+const GT={buds:[4,7,10,14,18],flowers:[2,4,6,8,10],lotus:[1,2,3,4,5],combo:[2,3,3,3],score:[300,800,1500,2500,4000,6000],big:[1,2,3,5,7],double:[1,2,3,5,7]};
+function newGoal(slot,pool){
+  /* в семени дня цели тоже одинаковы у всех: выбор зависит от даты и порядкового номера цели */
+  const R=mode==='daily'?seeded(hashStr(daily.date)^Math.imul(gIssued+7,40503)):Math.random;gIssued++;
+  const busyT=goals.map((g,i)=>i!==slot&&g?g.type:null),was=goals[slot]&&goals[slot].type;
+  const opts=(pool||GTYPES).filter(t=>busyT.indexOf(t)<0&&t!==was),list=opts.length?opts:GTYPES;
+  const type=list[(R()*list.length)|0],tb=GT[type];
+  let n=tb[Math.min(gTier[type]||0,tb.length-1)];
+  if(type==='score')n=tb.find(v=>v>=score+150)||Math.ceil(score*1.4/500)*500;
+  return {type,n,cur:type==='score'?score:0,done:false};
+}
+function initGoals(){
+  goals=[null,null,null];
+  goals[0]=newGoal(0,['buds','flowers']);goals[1]=newGoal(1,['combo','big','double']);goals[2]=newGoal(2,['score','lotus']);
+}
+function goalBump(type,v){
+  if(!goals||tut)return;
+  goals.forEach(g=>{if(g.done||g.type!==type)return;if(type==='combo')g.cur=Math.max(g.cur,v);else if(type==='score')g.cur=v;else g.cur+=v;});
+}
+function checkGoals(){
+  if(!goals||tut)return;
+  goals.forEach((g,i)=>{
+    if(g.done||g.cur<g.n)return;
+    g.done=true;gTier[g.type]=(gTier[g.type]||0)+1;
+    const had=cans,id=runId;gainCan();toast(cans>had?'цель выполнена: +1 лейка':'цель выполнена');SND.play('level');FX.rise(10);
+    setTimeout(()=>{if(id!==runId||goals[i]!==g)return;goals[i]=newGoal(i);renderGoals();save();},1500);
+  });
+  renderGoals();
+}
+const goalPill=g=>{const c=Math.min(g.cur,g.n);return g.type==='buds'?`бутоны ${c}/${g.n}`:g.type==='flowers'?`цветки ${c}/${g.n}`:g.type==='lotus'?`лотосы ${c}/${g.n}`:g.type==='combo'?`цепочка ×${g.n}`:g.type==='score'?`до ${fmt(g.n)} очков`:g.type==='big'?`4 за раз ${c}/${g.n}`:`двойной ход ${c}/${g.n}`;};
+const goalText=g=>{const n=g.n,times=n>1?': '+n+' '+plural(n,['раз','раза','раз']):'';
+  return g.type==='buds'?`Вырастите ${n} ${plural(n,['бутон','бутона','бутонов'])}`:g.type==='flowers'?`Вырастите ${n} ${plural(n,['цветок','цветка','цветков'])}`
+    :g.type==='lotus'?`Вырастите ${n} ${plural(n,['лотос','лотоса','лотосов'])}`:g.type==='combo'?`Соберите цепочку ×${n} за один ход`
+    :g.type==='score'?`Наберите ${fmt(n)} очков`:g.type==='big'?`Слейте четыре и больше за раз${times}`:`Два слияния одним ходом${times}`;};
+function renderGoals(){
+  if(tut||!goals){goalsG.innerHTML='';return;}
+  goalsG.innerHTML=goals.map((g,i)=>{const x=CARD.xs[i],p=Math.min(1,g.cur/g.n);
+    return `<g class="btn" role="button" tabindex="0" data-goal="${i}" aria-label="Цель: ${goalText(g)}. ${g.done?'Выполнена':'Сделано '+Math.min(g.cur,g.n)+' из '+g.n}"><rect x="${x}" y="218" width="104" height="38" style="fill:transparent"/><rect class="ring" x="${x}" y="224" width="104" height="26" rx="13" style="${fill('chip')};stroke:var(--${g.done?'gold':'chip-line'});stroke-width:1"/>${p>0?`<rect x="${x+1}" y="225" width="${f1(Math.max(24,102*p))}" height="24" rx="12" style="${fill('gold')};opacity:${g.done?.5:.26}"/>`:''}<text x="${x+52}" y="241.5" text-anchor="middle" style="font-size:12px;font-weight:500;${fill('ink-top')}">${g.done?'готово':goalPill(g)}</text></g>`;}).join('');
+}
+function goalsCard(){
+  const rows=goals.map((g,i)=>{const y=338+i*46;
+    return line(y,14.5,'over-ink',goalText(g))+line(y+19,12.5,g.done?'gold':'over-muted',g.done?'выполнено':g.type==='combo'?(g.cur>1?'лучшая пока: ×'+g.cur:'пока ни одной'):fmt(Math.min(g.cur,g.n))+' из '+fmt(g.n));}).join('');
+  showCard('goals',250,346,line(298,21,'over-ink','Цели забега',600)+rows+line(494,13,'over-muted','За каждую выполненную цель: лейка.')+button('ok',516,'Понятно','Закрыть цели'));
+}
+
 /* ---------- сохранение забега: закрыли вкладку и вернулись к тому же саду ---------- */
 const store=(k,v)=>{try{if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));}catch(e){}};
-const snap=()=>({v:1,grid,score,cans,stats,dealt,rs,tray:tray.map(p=>p&&{cells:p.cells,id:p.id,alt:p.alt?p.alt.map(a=>({cells:a.cells})):null})});
+const snap=()=>({v:1,goals:goals&&{list:goals,tier:gTier,issued:gIssued},grid,score,cans,stats,dealt,rs,tray:tray.map(p=>p&&{cells:p.cells,id:p.id,alt:p.alt?p.alt.map(a=>({cells:a.cells})):null})});
 function save(){
   if(tut||over)return;
   if(mode==='daily'){daily.run=snap();store('orangery-daily',daily);}else store('orangery-run',snap());
@@ -846,8 +900,12 @@ function loadRun(raw){
     const tr=d.tray.map(q=>{if(q===null)return null;if(!okPiece(q))throw new Error('piece');const t=copy(q);t.id=num(q.id);
       if(Array.isArray(q.alt)&&q.alt.length===2&&q.alt.every(okPiece))t.alt=q.alt.map(copy);return t;});
     if(tr.every(q=>!q))return null;
-    const st=d.stats||{};
-    return {grid:d.grid.map(t=>t?{sp:t.sp,st:t.st}:null),tray:tr,score:num(d.score),cans:Math.min(3,num(d.cans)),dealt:num(d.dealt),rs:(+d.rs||0)|0,stats:{moves:num(st.moves),lotus:num(st.lotus),combo:num(st.combo)}};
+    const st=d.stats||{},G=d.goals;let gl=null,gt={};
+    if(G&&Array.isArray(G.list)&&G.list.length===3&&G.list.every(g=>!!g&&GTYPES.indexOf(g.type)>=0&&num(g.n)>0)){
+      gl=G.list.map(g=>({type:g.type,n:num(g.n),cur:num(g.cur),done:!!g.done}));
+      GTYPES.forEach(t=>{gt[t]=num((G.tier||{})[t]);});
+    }
+    return {goals:gl,tier:gt,issued:num(G&&G.issued),grid:d.grid.map(t=>t?{sp:t.sp,st:t.st}:null),tray:tr,score:num(d.score),cans:Math.min(3,num(d.cans)),dealt:num(d.dealt),rs:(+d.rs||0)|0,stats:{moves:num(st.moves),lotus:num(st.lotus),combo:num(st.combo)}};
   }catch(e){return null;}
 }
 function clearUI(){
@@ -855,18 +913,21 @@ function clearUI(){
   overG.style.display='none';overG.innerHTML='';dragG.innerHTML='';fxG.innerHTML='';showPreview(null);
 }
 function resume(d,msg){
-  clearUI();grid=d.grid;tray=d.tray;cans=d.cans;stats=d.stats;dealt=d.dealt;rs=d.rs;
+  clearUI();grid=d.grid;tray=d.tray;cans=d.cans;stats=d.stats;dealt=d.dealt;rs=d.rs;score=d.score;
+  /* цели: из сохранения, а выполненные перед закрытием сразу сменяются новыми */
+  gTier=d.tier||{};gIssued=d.issued||0;
+  if(d.goals){goals=d.goals;goals.forEach((g,i)=>{if(g.done)goals[i]=newGoal(i);});}else initGoals();
   /* уровень цветения ставится сразу: без фанфар и без подарочной лейки за уже пройденное */
   level=LEVELS.filter(v=>d.score>=v).length;applyLevel();
   for(let i=0;i<25;i++)renderCell(i);
-  setScore(d.score);renderTray(true);mood();renderLabel();renderSeed();toast(msg||'забег продолжается');checkEnd();
+  setScore(d.score);renderTray(true);mood();renderLabel();renderSeed();renderGoals();toast(msg||'забег продолжается');checkEnd();
 }
 function startRun(){
   clearUI();
   if(mode==='daily')rs=hashStr(daily.date);
-  dealt=0;grid=Array(25).fill(null);score=0;tray=[newPiece(),newPiece(),newPiece()];stats={moves:0,lotus:0,combo:0};cans=1;
+  dealt=0;grid=Array(25).fill(null);score=0;tray=[newPiece(),newPiece(),newPiece()];stats={moves:0,lotus:0,combo:0};cans=1;gTier={};gIssued=0;initGoals();
   for(let i=0;i<25;i++)renderCell(i);
-  setScore(0);renderTray(true);mood();renderLabel();renderSeed();save();
+  setScore(0);renderTray(true);mood();renderLabel();renderSeed();renderGoals();save();
 }
 function start(){mode='free';startRun();}
 
@@ -1025,7 +1086,7 @@ function rules(){
     +line(392,14,'over-ink','Новый цветок вырастает там,')+line(412,14,'over-ink','куда вы поставили фигуру.')
     +line(438,14,'over-ink','Грядка заранее показывает результат.')
     +line(462,14,'over-ink','Тап по фигуре в лотке поворачивает её.')
-    +line(488,14,'over-ink','Лейка меняет фигуру на одну из двух.')+line(508,14,'over-ink','Лейки дают за лотос и цветение теплицы.')
+    +line(488,14,'over-ink','Лейка меняет фигуру на одну из двух.')+line(508,14,'over-ink','Лейки дают за лотос и за цели забега.')
     +line(534,14,'over-ink','Фигуры некуда ставить: конец забега.')
     +button('ok',556,'Понятно','Закрыть правила')
     +lk('retut',640,'Пройти обучение заново',score>0&&!tut?'пройти обучение (забег сбросится)':'пройти обучение заново')
@@ -1073,7 +1134,7 @@ function tutSet(){
 function tutStart(){
   mode='free';store('orangery-run',null);
   closeCard();over=false;busy=false;drag=null;dragG.innerHTML='';fxG.innerHTML='';showPreview(null);
-  tut={n:0,phase:'do',turned:false};renderLabel();setScore(0);tutSet();
+  tut={n:0,phase:'do',turned:false};renderLabel();renderGoals();setScore(0);tutSet();
 }
 function tutDone(){
   const t=tut;t.phase='done';renderTut();
@@ -1148,7 +1209,7 @@ function act(el){
   if(el.id==='again'){start();return;}
   if(el.id==='can'){
     if(busy||over||modal||tut||drag)return;
-    if(!cans){toast('леек нет: их дают за лотос и цветение');return;}
+    if(!cans){toast('леек нет: их дают за лотос и цели');return;}
     swap=!swap;renderLabel();renderTray();return;
   }
   if(el.id==='giveup'){if(!busy&&!over&&!modal){stuck=false;gameOver();}return;}
@@ -1162,6 +1223,7 @@ function act(el){
   if(el.id==='share'){share(el);return;}
   if(el.id==='gfx'){lite=!lite;try{localStorage.setItem('orangery-lite',lite?'1':'0');}catch(e){}scr.classList.toggle('lite',lite);par(0,0);resize();rules();return;}
   if(el.id==='play'||el.id==='ok'||el.id==='dclose'){closeCard();return;}
+  if(el.dataset.goal){if(!busy&&!drag&&!over&&!modal&&goals)goalsCard();return;}
   if(el.id==='seed'){if(!busy&&!drag&&!tut&&!over&&(!modal||modal==='daily'))dailyCard();return;}
   if(el.id==='dplay'){startDaily();return;}
   if(el.id==='free'){exitDaily();return;}
@@ -1229,7 +1291,7 @@ else{
   if(savedMode==='daily'&&!daily.done&&daily.run)startDaily();
 }
 /* для проверки из консоли */
-window.__orangery={setCans:n=>{cans=n;renderLabel();},checkEnd,startDaily,exitDaily,dailyCard,loadDaily,state:()=>({mode,dealt,daily,streak,cans,swap,stuck,grid,tray,score,best,busy,over,modal,themeId,level,lite,wet,tense,stats,parts:parts.length,K,tut:tut&&{n:tut.n,phase:tut.phase}}),start,turn,rules,tutStart,setTheme,gameOver,SND,FX,
+window.__orangery={setCans:n=>{cans=n;renderLabel();},goals:()=>goals,goalBump,checkGoals,goalsCard,checkEnd,startDaily,exitDaily,dailyCard,loadDaily,state:()=>({mode,dealt,daily,streak,cans,swap,stuck,grid,tray,score,best,busy,over,modal,themeId,level,lite,wet,tense,stats,parts:parts.length,K,tut:tut&&{n:tut.n,phase:tut.phase}}),start,turn,rules,tutStart,setTheme,gameOver,SND,FX,
   setScore:v=>setScore(v,true),set:(i,sp,st)=>{grid[i]=sp?{sp,st}:null;gv++;renderCell(i);},
   place:(k,c,r)=>fits(tray[k],c,r)?place(k,tray[k],c,r):false,
   preview:(k,c,r)=>{showPreview(tray[k],c,r,fits(tray[k],c,r));return preG.childNodes.length;}};
