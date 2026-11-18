@@ -117,6 +117,8 @@ noscript p{color:var(--over-ink);font-family:var(--font-game);padding:24px}
 .bl.on{opacity:1;transform:scale(1)}
 .blo{opacity:0;transition:opacity 1.2s ease-out}
 .blo.on{opacity:1}
+.wdrop{animation:wdrop 1.5s ease-in infinite}
+@keyframes wdrop{0%{transform:translateY(-2px);opacity:0}25%{opacity:1}100%{transform:translateY(6px);opacity:0}}
 .drop{animation-name:dropf;animation-timing-function:linear;animation-iteration-count:infinite}
 @keyframes dropf{from{transform:translateY(-30px)}to{transform:translateY(240px)}}
 @media (prefers-reduced-motion:reduce){.screen *{animation:none!important;transition:none!important}}
@@ -233,6 +235,7 @@ function scene(T){
   <radialGradient id="g-core" cx=".45" cy=".4" r=".75">${st(0,'core0')}${st(1,'core1')}</radialGradient>
   <radialGradient id="g-lamp">${st(0,'lamp-c',.85)}${st(.25,'lamp-c',.3)}${st(1,'lamp-c',0)}</radialGradient>
   <radialGradient id="g-fly">${st(0,'mote',.75)}${st(.3,'mote',.22)}${st(1,'mote',0)}</radialGradient>
+  <linearGradient id="g-can" x1="0" y1="0" x2="1" y2="1">${st(0,'white')}${st(.3,'b')}${st(1,'b2')}</linearGradient>
   <radialGradient id="g-pshadow">${st(0,'black',.5)}${st(1,'black',0)}</radialGradient>`;
   ['r','y','b','w'].forEach(s=>{defs+=`<radialGradient id="g-halo-${s}">${st(0,s,.62)}${st(.45,s,.2)}${st(1,s,0)}</radialGradient>
   <linearGradient id="g-p-${s}" x1="0" y1="1" x2="0" y2="0">${st(0,'white')}${st(.34,s)}${st(1,s+'2')}</linearGradient>
@@ -833,14 +836,34 @@ function start(){
   for(let i=0;i<25;i++)renderCell(i);
   setScore(0);setBest();renderTray(true);mood();renderLabel();save();
 }
-const canIco=(x,y)=>`<g transform="translate(${x},${y})" style="fill:none;stroke:var(--ink-low);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round"><path d="M-3,-3.5 h8 v9.5 h-8z"/><path d="M-3,.5 l-5.4,-4.4 M-10,-5.4 l3.2,2.6"/><path d="M5,-1.5 q4.6,1.8 0,5.6"/></g>`;
+/* лейка нарисована тем же языком, что и растения: эмаль с градиентом, светлая кромка, мягкое свечение */
+const DROP='M0,-5.2 C2.6,-1.6 4,.6 4,2.4 A4,4 0 0 1 -4,2.4 C-4,.6 -2.6,-1.6 0,-5.2Z';
+function canArt(x,y,k,pour,dry){
+  const rim='stroke:var(--petal-rim);stroke-width:.7;stroke-linejoin:round',en=`fill:${u('can')};${rim}`;
+  const drip=(dx,dy,d)=>`<g transform="translate(${dx},${dy}) scale(.36)"><path${pour?` class="wdrop" style="${fill('b')};animation-delay:-${d}s"`:` style="${fill('b')};opacity:.9"`} d="${DROP}"/></g>`;
+  return `<g transform="translate(${x},${y}) scale(${k})">
+    <g style="opacity:var(--glow)"><circle cx="-2" cy="1" r="19" style="fill:${u('halo-b')};opacity:.7"/></g>
+    <path d="M7.4,-4.6 C15.8,-5.6 16.8,5.2 8.6,6.6" style="fill:none;stroke:var(--b2);stroke-width:2.8;stroke-linecap:round"/>
+    <path d="M8.6,-4.4 C14.4,-4.6 15.2,3.6 9.6,5.6" style="fill:none;stroke:var(--white);stroke-width:.8;stroke-linecap:round;opacity:.45"/>
+    <path d="M-7.6,2 L-17.4,-7 L-19.8,-4.6 L-7.9,7.4Z" style="${en}"/>
+    <path d="M-6.5,-7 L7,-7 L8.6,7.2 Q8.8,10 6,10 L-5.4,10 Q-8.2,10 -8,7.2Z" style="${en}"/>
+    <ellipse cx=".25" cy="-7" rx="6.75" ry="2.1" style="${fill('b2')};${rim}"/>
+    <path d="M-7.7,3.6 Q.4,5.8 8.3,3.6" style="fill:none;stroke:var(--b2);stroke-width:1;opacity:.55"/>
+    <path d="M-3.7,-3.4 Q-4.6,2 -4.3,6.6" style="fill:none;stroke:var(--white);stroke-width:1.6;stroke-linecap:round;opacity:.6"/>
+    <ellipse cx="-18.7" cy="-5.9" rx="1.6" ry="4" transform="rotate(45 -18.7 -5.9)" style="${fill('b2')};${rim}"/>
+    ${dry?'':drip(-22,-1.2,0)+drip(-24.2,2.6,.5)+drip(-20.2,3.4,1)}
+  </g>`;
+}
 function renderLabel(){
   if(tut){labelG.innerHTML=`<g id="skip" class="btn" role="button" tabindex="0" aria-label="Пропустить обучение"><rect class="ring" x="14" y="606" width="180" height="38" rx="19" style="fill:transparent"/><text class="link" x="24" y="630" style="${fill('muted-low')}">пропустить обучение</text></g>`;return;}
-  let pips='';for(let i=0;i<3;i++)pips+=`<circle cx="${59+i*12}" cy="625" r="4" style="${i<cans?fill('b'):'fill:none'};stroke:var(--ink-low);stroke-width:1;stroke-opacity:${i<cans?0:.5}"/>`;
+  /* запас показан каплями воды: полная капля есть, пустая потрачена */
+  let pips='';for(let i=0;i<3;i++)pips+=`<g transform="translate(${83+i*13.5},626)">`+(i<cans
+    ?`<path d="${DROP}" style="fill:${u('can')};stroke:var(--petal-rim);stroke-width:.7"/><circle cx="-1.4" cy="1.9" r=".95" style="${fill('white')};opacity:.8"/>`
+    :`<path d="${DROP}" style="fill:none;stroke:var(--ink-low);stroke-width:1.1;opacity:.4"/>`)+'</g>';
   const hot=swap||stuck;
-  labelG.innerHTML=`<g id="can" class="btn fxp" role="button" tabindex="0" aria-label="Лейка: заменить фигуру. Осталось ${cans} из 3"${cans?'':' style="opacity:.6"'}><rect x="21" y="603" width="78" height="44" style="fill:transparent"/><rect class="ring${stuck?' pulse':''}" x="21" y="609" width="78" height="32" rx="16" style="${fill('card')};stroke:var(--${hot?'gold':'card-line'});stroke-width:${hot?2:1}"/>${canIco(40,625)}${pips}</g>`
-    +(stuck?`<g id="giveup" class="btn" role="button" tabindex="0" aria-label="Закончить забег"><rect class="ring" x="104" y="606" width="150" height="38" rx="19" style="fill:transparent"/><text class="link" x="110" y="630" style="${fill('muted-low')}">закончить забег</text></g>`
-      :`<text x="110" y="630" style="font-size:12.5px;${fill('muted-low')}">${swap?'какую фигуру заменить?':'тап по фигуре: поворот'}</text>`);
+  labelG.innerHTML=`<g id="can" class="btn fxp" role="button" tabindex="0" aria-label="Лейка: заменить фигуру. Осталось ${cans} из 3"><rect x="21" y="603" width="104" height="44" style="fill:transparent"/><rect class="ring${stuck?' pulse':''}" x="21" y="606" width="104" height="38" rx="19" style="${fill('card')};stroke:var(--${hot?'gold':'card-line'});stroke-width:${hot?2:1}"/><g${cans?'':' style="opacity:.42"'}>${canArt(53,625,1.05,hot&&cans>0,!cans)}</g>${pips}</g>`
+    +(stuck?`<g id="giveup" class="btn" role="button" tabindex="0" aria-label="Закончить забег"><rect class="ring" x="128" y="606" width="140" height="38" rx="19" style="fill:transparent"/><text class="link" x="134" y="630" style="${fill('muted-low')}">закончить забег</text></g>`
+      :`<text x="134" y="630" style="font-size:12.5px;${fill('muted-low')}">${swap?'какую заменить?':'тап по фигуре: поворот'}</text>`);
 }
 /* лейка: заменить неудобную фигуру на одну из двух. Одна в начале забега, ещё дают за лотос и за новый уровень цветения, больше трёх не копится */
 function gainCan(){
