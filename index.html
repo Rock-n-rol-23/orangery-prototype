@@ -104,10 +104,6 @@ noscript p{color:var(--over-ink);font-family:var(--font-game);padding:24px}
 .par{transition:transform .3s ease-out}
 #lightc{animation:lpulse 3.6s ease-in-out infinite alternate}
 @keyframes lpulse{from{opacity:.74}to{opacity:1}}
-/* передний план не в фокусе: размытие считается один раз, качается весь слой целиком */
-#fgl{filter:blur(1.5px);transform-origin:50% 100%;animation:fgsway 9s ease-in-out infinite alternate}
-@keyframes fgsway{from{transform:rotate(-.5deg) translateX(-3px)}to{transform:rotate(.5deg) translateX(3px)}}
-.lite #fgl{filter:none}
 .lite #lightc{animation:none}
 .look{transition:transform .14s ease-out}
 .want .pw{animation:hop .46s ease-in-out infinite alternate}
@@ -287,10 +283,30 @@ function scene(T){
     fg+=T.fire?`<g transform="translate(${x},${y})"><g class="fly f${i%3}" style="${dly(10,18)}"><circle r="10" style="fill:${u('fly')}"/><circle class="flick" r="1.7" style="${fill('mote')};animation-delay:-${(rnd()*2).toFixed(2)}s"/></g></g>`
       :`<g transform="translate(${x},${y})"><circle class="fly f${i%3}" r="${(.8+rnd()*.9).toFixed(1)}" style="${fill('mote')};opacity:${(.35+rnd()*.4).toFixed(2)};${dly(16,28)}"/></g>`;}
   for(let i=0;i<12;i++){fg+=`<g class="blo" data-lv="${1+i%6}" transform="translate(${(20+rnd()*350).toFixed(0)},${(110+rnd()*600).toFixed(0)})"><g class="fly f${i%3}" style="${dly(9,16)}"><circle r="9" style="fill:${u('fly')}"/><circle class="flick" r="1.6" style="${fill('mote')};animation-delay:-${(rnd()*2).toFixed(2)}s"/></g></g>`;}
-  const big=(x,L,W,rot,tone)=>{let v='';[.28,.46,.64].forEach(t=>{v+=`M0,${f1(-L*t)} L${f1(W*.6)},${f1(-L*(t+.13))} M0,${f1(-L*t)} L${f1(-W*.6)},${f1(-L*(t+.13))} `;});
-    return `<g transform="translate(${x},862)"><g><g transform="rotate(${rot})"><path d="M0,0 C${W},${f1(-L*.2)} ${f1(W*.95)},${f1(-L*.72)} 0,${-L} C${f1(-W*.95)},${f1(-L*.72)} ${-W},${f1(-L*.2)} 0,0Z" style="${fill(tone)};stroke:var(--rim);stroke-width:.7;stroke-opacity:.55"/><path d="M0,0 V${f1(-L*.94)} ${v}" style="fill:none;stroke:var(--rim);stroke-width:.6;stroke-linecap:round;opacity:.32"/></g></g></g>`;};
-  const fgl=big(-4,150,36,-16,'fol2')+big(78,92,26,-26,'fol2')+big(166,74,22,-9,'fol2')+big(256,86,24,-15,'fol2')+big(344,128,31,-7,'fol2')
-     +big(34,104,30,9,'fol0')+big(120,82,24,15,'fol0')+big(212,78,22,11,'fol0')+big(300,100,27,23,'fol0')+big(394,150,36,15,'fol0')
+  /* листья переднего плана: две половины разного тона, изогнутые жилки, световая кромка, капли росы */
+  const big=(x,L,W,rot,tone,bend,dew)=>{
+    const b=bend*W,tip=`${f1(b)},${-L}`,mid=`Q${f1(b*.2)},${f1(-L*.5)}`;
+    const R=`C${W},${f1(-L*.18)} ${f1(W*.9+b*.5)},${f1(-L*.72)} ${tip}`,Lf=`C${f1(-W*.9+b*.5)},${f1(-L*.72)} ${-W},${f1(-L*.18)} 0,0`;
+    const ribx=t=>2*(1-t)*t*b*.2+t*t*b,wid=t=>W*.72*Math.pow(Math.sin(Math.PI*t),.7);
+    let v='';
+    [.16,.3,.44,.58,.72].forEach(t=>{const sx=ribx(t),sy=-L*t,w=wid(Math.min(.9,t+.12))*.86,ex=ribx(t+.15),ey=-L*(t+.15);
+      v+=`M${f1(sx)},${f1(sy)} Q${f1(sx+w*.55)},${f1(sy-L*.03)} ${f1(ex+w)},${f1(ey)} M${f1(sx)},${f1(sy)} Q${f1(sx-w*.55)},${f1(sy-L*.03)} ${f1(ex-w)},${f1(ey)} `;});
+    const lit=rot<0?1:-1,half=k=>k>0?`M0,0 ${R} Q${f1(b*.2)},${f1(-L*.5)} 0,0Z`:`M${tip} ${Lf} ${mid} ${tip}Z`;
+    let s=`<path d="M0,0 ${R} ${Lf}Z" style="${fill(tone)}"/>`
+      +`<path d="${half(lit)}" style="${fill('white')};opacity:.07"/><path d="${half(-lit)}" style="${fill('black')};opacity:.16"/>`
+      +`<path d="${v}" style="fill:none;stroke:var(--rim);stroke-width:.7;stroke-linecap:round;opacity:.34"/>`
+      +`<path d="M0,0 ${mid} ${tip}" style="fill:none;stroke:var(--rim);stroke-width:1.3;stroke-linecap:round;opacity:.5"/>`
+      +`<path d="${lit>0?`M0,0 ${R}`:`M${tip} ${Lf}`}" style="fill:none;stroke:var(--rim);stroke-width:1.1;stroke-linecap:round;opacity:.8"/>`;
+    if(dew){const dx=ribx(dew)+lit*wid(dew)*.45,dy=-L*dew;
+      s+=`<ellipse cx="${f1(dx)}" cy="${f1(dy)}" rx="2.6" ry="3.2" style="${fill('white')};opacity:.22"/><circle cx="${f1(dx-.8)}" cy="${f1(dy-1.1)}" r=".9" style="${fill('white')};opacity:.85"/>`;}
+    return `<g transform="translate(${x},862)"><g class="vsway" style="${dly(5,9)}"><g transform="rotate(${rot})">${s}</g></g></g>`;
+  };
+  /* тонкие травинки между листьями */
+  const blade=(x,h,bx,tone)=>`<g class="vsway" style="transform-origin:${x}px 856px;${dly(4,7)}"><path d="M${x-2.4},856 Q${f1(x+bx*.2-2)},${f1(856-h*.55)} ${x+bx},${856-h} Q${f1(x+bx*.2+2.6)},${f1(856-h*.55)} ${x+2.4},856Z" style="${fill(tone)};stroke:var(--rim);stroke-width:.6;stroke-opacity:.5"/></g>`;
+  const fgl=blade(52,96,14,'fol1')+blade(142,70,-12,'fol1')+blade(232,84,10,'fol1')+blade(322,74,-14,'fol1')
+     +big(-4,150,36,-16,'fol2',.25,.5)+big(78,92,26,-26,'fol2',-.2)+big(166,74,22,-9,'fol2',.3,.45)+big(256,86,24,-15,'fol2',-.25)+big(344,128,31,-7,'fol2',.2,.55)
+     +blade(98,58,-9,'fol0')+blade(186,64,11,'fol0')+blade(276,54,-8,'fol0')+blade(366,66,9,'fol0')
+     +big(34,104,30,9,'fol0',-.3)+big(120,82,24,15,'fol0',.25,.5)+big(212,78,22,11,'fol0',-.2)+big(300,100,27,23,'fol0',.3)+big(394,150,36,15,'fol0',-.25,.4)
      +bl(30,794,2.6,3,'r')+bl(357,786,2.4,4,'y')+bl(118,824,2,5,'b')+bl(270,820,2.2,6,'r');
   return {l0,l1,fg,fgl};
 }
@@ -421,21 +437,37 @@ const buzz=v=>{try{if(navigator.vibrate&&(!navigator.userActivation||navigator.u
 
 /* ---------- звук: всё синтезируется на месте, файлов нет ---------- */
 const SND=(()=>{
-  let ac=null,B=null,on=true,ambT=0,bed=null;
-  try{on=localStorage.getItem('orangery-snd')!=='0';}catch(e){}
-  /* пентатоника: любые ноты подряд звучат согласно, цепочка просто идёт вверх */
-  const PENTA=[0,2,4,7,9],freq=n=>523.25*Math.pow(2,(PENTA[((n%5)+5)%5]+12*Math.floor(n/5))/12);
+  /* режимы: 2 звук и музыка, 1 только звуки, 0 тишина */
+  let ac=null,B=null,mode=2,musT=0,nextT=0,stepN=0,bed=null;
+  try{const m=localStorage.getItem('orangery-snd2');if(m!==null)mode=Math.max(0,Math.min(2,+m||0));}catch(e){}
+  const hz=m=>440*Math.pow(2,(m-69)/12);
+  /* пентатоника от до первой октавы: любые её ноты согласны со всеми аккордами фона */
+  const PENTA=[0,2,4,7,9],note=n=>60+PENTA[((n%5)+5)%5]+12*Math.floor(n/5);
   function build(c){
-    const m=c.createGain();m.gain.value=.8;m.connect(c.destination);
-    const rev=c.createConvolver(),len=(c.sampleRate*1.5)|0,buf=c.createBuffer(2,len,c.sampleRate);
-    for(let ch=0;ch<2;ch++){const d=buf.getChannelData(ch);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.8);}
-    rev.buffer=buf;const w=c.createGain();w.gain.value=.2;rev.connect(w);w.connect(m);
+    const m=c.createGain(),comp=c.createDynamicsCompressor();m.gain.value=.8;m.connect(comp);comp.connect(c.destination);
+    /* мягкое длинное эхо: затухающий шум без верхов */
+    const rev=c.createConvolver(),len=(c.sampleRate*2.6)|0,buf=c.createBuffer(2,len,c.sampleRate);
+    for(let ch=0;ch<2;ch++){const d=buf.getChannelData(ch);let y=0;for(let i=0;i<len;i++){y=y*.72+(Math.random()*2-1)*.28;d[i]=y*Math.pow(1-i/len,3);}}
+    rev.buffer=buf;const w=c.createGain();w.gain.value=.5;rev.connect(w);w.connect(m);
     const nb=c.createBuffer(1,c.sampleRate,c.sampleRate),nd=nb.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
-    return {c,m,rev,nb};
+    const padf=c.createBiquadFilter();padf.type='lowpass';padf.frequency.value=950;padf.connect(m);padf.connect(rev);
+    return {c,m,rev,nb,padf,pl:{},deg:7,rest:false};
   }
+  /* щипок струны (алгоритм Карплуса и Стронга): звучит как калимба или арфа, считается один раз на ноту */
+  function pluckBuf(b,m){
+    if(b.pl[m])return b.pl[m];
+    const sr=b.c.sampleRate,N=Math.max(2,Math.round(sr/hz(m))),len=(sr*1.9)|0,buf=b.c.createBuffer(1,len,sr),d=buf.getChannelData(0),ring=new Float32Array(N);
+    let y=0;for(let k=0;k<2;k++)for(let i=0;i<N;i++){const r=k?ring[i]:Math.random()*2-1;y=y*.5+r*.5;ring[i]=y;}
+    let idx=0,pk=0;
+    for(let i=0;i<len;i++){const cur=ring[idx],nx=ring[(idx+1)%N];ring[idx]=(cur+nx)*.498;d[i]=cur;if(Math.abs(cur)>pk)pk=Math.abs(cur);idx=(idx+1)%N;}
+    const fin=(sr*.003)|0,fout=(len*.3)|0;
+    for(let i=0;i<len;i++){let g=1/(pk||1);if(i<fin)g*=i/fin;if(i>len-fout)g*=(len-i)/fout;d[i]*=g;}
+    return b.pl[m]=buf;
+  }
+  function pluck(b,t,m,vol){const s=b.c.createBufferSource(),g=b.c.createGain();s.buffer=pluckBuf(b,m);g.gain.value=vol;s.connect(g);g.connect(b.m);g.connect(b.rev);s.start(t);}
   function bell(b,t,f,vol,dur){
-    [[1,1],[2,.3],[3.01,.11],[4.17,.04]].forEach(h=>{const o=b.c.createOscillator(),g=b.c.createGain(),d=dur/Math.sqrt(h[0]);
-      o.type='sine';o.frequency.value=f*h[0];g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol*h[1],t+.006);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    [[1,1],[2,.3],[3.01,.11]].forEach(h=>{const o=b.c.createOscillator(),g=b.c.createGain(),d=dur/Math.sqrt(h[0]);
+      o.type='sine';o.frequency.value=f*h[0];g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol*h[1],t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+d);
       o.connect(g);g.connect(b.m);g.connect(b.rev);o.start(t);o.stop(t+d+.05);});
   }
   function blip(b,t,f0,f1,dur,vol){
@@ -446,52 +478,71 @@ const SND=(()=>{
     const s=b.c.createBufferSource(),f=b.c.createBiquadFilter(),g=b.c.createGain();s.buffer=b.nb;s.loop=true;f.type=type||'lowpass';f.frequency.value=fc;
     g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(f);f.connect(g);g.connect(b.m);s.start(t);s.stop(t+dur+.05);
   }
-  const S={
-    pick:(b,t)=>blip(b,t,560,700,.05,.09),
-    turn:(b,t)=>{blip(b,t,480,640,.06,.09);blip(b,t+.05,640,560,.05,.05);},
-    drop:(b,t)=>{blip(b,t,170,72,.13,.28);hiss(b,t,.08,.08,1100);},
-    back:(b,t)=>blip(b,t,300,210,.09,.06),
-    merge:(b,t,st,combo)=>{const n=((st||2)-2)*2+((combo||1)-1)*2;bell(b,t,freq(n),.2,1.1);bell(b,t+.06,freq(n+2),.1,.9);},
-    lotus:(b,t)=>{[5,7,9,10,12].forEach((n,i)=>bell(b,t+i*.08,freq(n),.14,1.7));hiss(b,t,.9,.03,6000,'highpass');},
-    clear:(b,t)=>{for(let i=0;i<8;i++)bell(b,t+i*.045,freq(10+i),.08,.8);},
-    level:(b,t)=>{bell(b,t,freq(7),.09,1.5);bell(b,t+.14,freq(9),.09,1.6);bell(b,t+.28,freq(12),.08,1.8);},
-    over:(b,t)=>{bell(b,t,freq(2),.15,1.8);bell(b,t+.3,freq(0),.15,2.2);bell(b,t+.62,freq(-3),.13,2.6);},
-    ui:(b,t)=>blip(b,t,760,760,.025,.05)
-  };
-  /* фон: сверчки ночью, птицы днём, редкие голоса на закате */
-  function ambient(){
-    clearTimeout(ambT);ambT=0;if(!on||!ac||ac.state!=='running')return;
-    const t=ac.currentTime+.05,night=themeId==='night',dusk=themeId==='dusk';
-    if(night||(dusk&&Math.random()<.5)){const f=4100+Math.random()*500;for(let i=0;i<3+((Math.random()*3)|0);i++)blip(B,t+i*.07,f,f*1.01,.035,.012);}
-    else{let f=2300+Math.random()*1500;for(let i=0;i<2+((Math.random()*3)|0);i++){const f2=f*(.8+Math.random()*.5);blip(B,t+i*.13,f,f2,.09,.016);f=f2;}}
-    ambT=setTimeout(ambient,(night?900:2600)+Math.random()*(night?2200:5200));
+  /* фон: медленные мягкие аккорды, каждый тянется восемь секунд и перетекает в следующий */
+  function pad(b,t,notes,dur){
+    notes.forEach(m=>[-5,6].forEach(det=>{const o=b.c.createOscillator(),g=b.c.createGain();o.type='triangle';o.frequency.value=hz(m);o.detune.value=det;
+      g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.015,t+2.4);g.gain.setValueAtTime(.015,t+dur-.4);g.gain.linearRampToValueAtTime(.0001,t+dur+2.6);
+      o.connect(g);g.connect(b.padf);o.start(t);o.stop(t+dur+2.7);}));
   }
+  function bass(b,t,m,dur){
+    const o=b.c.createOscillator(),g=b.c.createGain();o.type='triangle';o.frequency.value=hz(m);
+    g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.045,t+.25);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(b.padf);o.start(t);o.stop(t+dur+.05);
+  }
+  /* фа, до, ля минор, соль: круг из четырёх аккордов по восемь секунд */
+  const CH=[{p:[53,57,60,64],b:41},{p:[55,59,60,64],b:48},{p:[55,57,60,64],b:45},{p:[55,59,62,64],b:43}],STEP=.5;
+  /* один шаг музыки (восьмая доля): аккорд в начале, бас, редкие ноты мелодии случайной прогулкой */
+  function musStep(b,t,s){
+    const bar=((s%64)/16)|0,k=s%16;
+    if(k===0){pad(b,t,CH[bar].p,8);bass(b,t,CH[bar].b,3.6);}
+    if(k===8)bass(b,t,CH[bar].b,3);
+    const p=k%4===0?.5:k%2===0?.28:.1;
+    if(!b.rest&&Math.random()<p){b.deg=Math.max(3,Math.min(11,b.deg+[-2,-1,-1,1,1,2][(Math.random()*6)|0]));pluck(b,t+Math.random()*.012,note(b.deg),.045+Math.random()*.03);}
+    if(k===15)b.rest=Math.random()<.25;
+  }
+  function tick(){
+    if(mode<2||!ac||ac.state!=='running')return;
+    if(nextT<ac.currentTime)nextT=ac.currentTime+.08;
+    while(nextT<ac.currentTime+.7){musStep(B,nextT,stepN++);nextT+=STEP;}
+  }
+  const S={
+    pick:(b,t)=>blip(b,t,520,640,.045,.06),
+    turn:(b,t)=>{blip(b,t,470,600,.05,.06);blip(b,t+.045,600,540,.04,.035);},
+    drop:(b,t)=>{blip(b,t,170,72,.13,.26);hiss(b,t,.08,.07,1100);},
+    back:(b,t)=>blip(b,t,280,200,.09,.05),
+    merge:(b,t,st,combo)=>{const n=5+((st||2)-2)*2+((combo||1)-1)*2;pluck(b,t,note(n),.2);pluck(b,t+.07,note(n+2),.13);if(st>=3)pluck(b,t+.14,note(n+4),.1);},
+    lotus:(b,t)=>{[5,7,9,10,12,14].forEach((n,i)=>pluck(b,t+i*.075,note(n),.15));bell(b,t+.3,hz(note(14)),.05,2.2);},
+    clear:(b,t)=>{for(let i=0;i<8;i++)pluck(b,t+i*.05,note(8+i),.1);},
+    level:(b,t)=>{pluck(b,t,note(7),.11);pluck(b,t+.13,note(9),.11);pluck(b,t+.26,note(12),.1);},
+    over:(b,t)=>{pluck(b,t,note(7),.14);pluck(b,t+.32,note(5),.14);pluck(b,t+.68,note(2),.13);},
+    ui:(b,t)=>blip(b,t,700,700,.02,.035)
+  };
   function bedOn(){
     if(!wet||bed||!ac||ac.state!=='running')return;
-    const s=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();s.buffer=B.nb;s.loop=true;f.type='bandpass';f.frequency.value=2600;f.Q.value=.6;g.gain.value=.03;
+    const s=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();s.buffer=B.nb;s.loop=true;f.type='bandpass';f.frequency.value=2600;f.Q.value=.6;g.gain.value=.025;
     s.connect(f);f.connect(g);g.connect(B.m);s.start();bed=s;
   }
-  function wake(){if(!ambT)ambient();bedOn();}
+  function wake(){bedOn();clearInterval(musT);musT=0;if(mode===2){musT=setInterval(tick,200);tick();}}
   function ensure(){
-    if(!on)return false;
+    if(!mode)return false;
     if(!ac){const C=window.AudioContext||window.webkitAudioContext;if(!C)return false;try{ac=new C();B=build(ac);}catch(e){ac=null;return false;}}
     if(ac.state==='suspended')ac.resume().then(wake).catch(()=>{});
     return true;
   }
   return {
-    get on(){return on;},
+    get mode(){return mode;},
     play(name,a,b){if(!ensure()||ac.state!=='running')return;try{S[name](B,ac.currentTime+.004,a,b);}catch(e){}},
-    unlock(){if(ensure()&&ac.state==='running')wake();},
-    retheme(){if(ac&&ac.state==='running'&&on){clearTimeout(ambT);ambT=setTimeout(ambient,600);}},
-    toggle(){on=!on;try{localStorage.setItem('orangery-snd',on?'1':'0');}catch(e){}
-      if(on)this.unlock();else{clearTimeout(ambT);ambT=0;if(ac)ac.suspend().catch(()=>{});}return on;},
-    hidden(h){if(!ac)return;if(h)ac.suspend().catch(()=>{});else if(on)ac.resume().then(wake).catch(()=>{});},
-    /* проверка без динамиков: каждый звук считается в память, возвращаются пик и средняя громкость */
+    unlock(){if(ensure()&&ac.state==='running'&&!musT)wake();},
+    retheme(){},
+    toggle(){mode=(mode+2)%3;try{localStorage.setItem('orangery-snd2',String(mode));}catch(e){}
+      if(!mode){clearInterval(musT);musT=0;if(ac)ac.suspend().catch(()=>{});}
+      else if(ensure()&&ac.state==='running')wake();
+      return mode;},
+    hidden(h){if(!ac)return;if(h)ac.suspend().catch(()=>{});else if(mode)ac.resume().then(wake).catch(()=>{});},
+    /* проверка без динамиков: звуки и 32 секунды музыки считаются в память, возвращаются пик и средняя громкость */
     async test(){
-      const C=window.OfflineAudioContext||window.webkitOfflineAudioContext,out={};
-      for(const name of Object.keys(S)){const oc=new C(1,44100*3,44100),b=build(oc);S[name](b,.01,3,2);
-        const d=(await oc.startRendering()).getChannelData(0);let pk=0,sq=0;for(let i=0;i<d.length;i++){const v=Math.abs(d[i]);if(v>pk)pk=v;sq+=v*v;}
-        out[name]=[+pk.toFixed(3),+Math.sqrt(sq/d.length).toFixed(4)];}
+      const C=window.OfflineAudioContext||window.webkitOfflineAudioContext,out={},meas=d=>{let pk=0,sq=0,bad=0;for(let i=0;i<d.length;i++){const v=Math.abs(d[i]);if(!(v>=0))bad++;if(v>pk)pk=v;sq+=v*v;}return [+pk.toFixed(3),+Math.sqrt(sq/d.length).toFixed(4),bad];};
+      for(const name of Object.keys(S)){const oc=new C(1,44100*3,44100),b=build(oc);S[name](b,.01,3,2);out[name]=meas((await oc.startRendering()).getChannelData(0));}
+      const oc=new C(1,44100*34,44100),b=build(oc);for(let s=0;s<64;s++)musStep(b,.05+s*STEP,s);out.music=meas((await oc.startRendering()).getChannelData(0));
       return out;
     }
   };
@@ -904,7 +955,7 @@ function act(el){
   if(!el)return;
   SND.play('ui');
   if(el.id==='again'){start();return;}
-  if(el.id==='snd'){SND.toggle();sndIcon();return;}
+  if(el.id==='snd'){SND.toggle();sndIcon();toast(SNDNAME[SND.mode]);return;}
   if(el.id==='share'){share(el);return;}
   if(el.id==='gfx'){lite=!lite;try{localStorage.setItem('orangery-lite',lite?'1':'0');}catch(e){}scr.classList.toggle('lite',lite);par(0,0);resize();rules();return;}
   if(el.id==='play'||el.id==='ok'){closeCard();return;}
@@ -925,12 +976,19 @@ game.addEventListener('click',e=>act(e.target.closest('.btn')));
 game.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const el=e.target.closest&&e.target.closest('.btn');if(el){e.preventDefault();act(el);}}});
 window.addEventListener('hashchange',()=>{const h=location.hash.replace('#','');if(THEMES[h]){manual=true;setTheme(h,true);}});
 
-$('defs').innerHTML=`<defs><clipPath id="arch"><path d="${ARCH}"/></clipPath><clipPath id="photo"><rect x="91" y="221" width="208" height="208" rx="5"/></clipPath><filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7"/><feColorMatrix type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 0.2"/></filter></defs>`;
+$('defs').innerHTML=`<defs><clipPath id="arch"><path d="${ARCH}"/></clipPath><clipPath id="photo"><rect x="91" y="221" width="208" height="208" rx="5"/></clipPath><filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7"/><feColorMatrix type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 0.1"/></filter></defs>`;
 function sndIcon(){
-  const st='fill:none;stroke:var(--ink-top);stroke-width:1.4;stroke-linecap:round';
+  const st='fill:none;stroke:var(--ink-top);stroke-width:1.4;stroke-linecap:round',m=SND.mode;
   $('snd-i').innerHTML=`<path d="M343.5,24.6 h3.4 l4.4,-3.7 v12.2 l-4.4,-3.7 h-3.4z" style="${fill('ink-top')}"/>`
-    +(SND.on?`<path d="M355,23.6 q2.3,3.4 0,6.8 M358,21 q4.2,6 0,12" style="${st}"/>`:`<path d="M355.2,24 l5.2,6 M360.4,24 l-5.2,6" style="${st}"/>`);
-  $('snd').setAttribute('aria-label',SND.on?'Выключить звук':'Включить звук');
+    +(m===2?`<path d="M355,23.6 q2.3,3.4 0,6.8 M358,21 q4.2,6 0,12" style="${st}"/>`:m===1?`<path d="M355,23.6 q2.3,3.4 0,6.8" style="${st}"/>`:`<path d="M355.2,24 l5.2,6 M360.4,24 l-5.2,6" style="${st}"/>`);
+  $('snd').setAttribute('aria-label','Звук: '+SNDNAME[m]+'. Нажмите, чтобы переключить');
+}
+const SNDNAME=['тишина','только звуки','звук и музыка'];
+/* короткая подпись под кнопкой: что именно сейчас включено */
+function toast(text){
+  const old=$('toast');if(old)old.remove();
+  const t=document.createElementNS(NS,'text');t.id='toast';t.setAttribute('x',369);t.setAttribute('y',108);t.setAttribute('text-anchor','end');t.setAttribute('class','pop');t.setAttribute('style','font-size:14px');t.textContent=text;fxG.appendChild(t);
+  t.animate([{opacity:0},{opacity:1,offset:.12},{opacity:1,offset:.75},{opacity:0}],{duration:1500,fill:'forwards'});setTimeout(()=>{if(t.parentNode)t.remove();},1550);
 }
 /* обучение показываем один раз; #tutorial в адресе включает его снова */
 let seen=false;try{seen=localStorage.getItem('orangery-tut')==='1';lite=localStorage.getItem('orangery-lite')==='1';}catch(e){}
