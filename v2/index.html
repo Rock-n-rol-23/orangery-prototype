@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Оранжерея: прототип забега</title>
+<meta name="orangery-build" content="45ec2a2 2026-11-22T19:39:13Z">
 <style>
 /* «Оранжерея», черновой прототип забега. Стиль по orangery/design.md, эталон mockups/styles-v2.html. */
 :root{
@@ -81,26 +82,35 @@ html,body{height:100%;margin:0;overflow:clip;background:var(--page-bg);overscrol
 .desktop .desk-only{display:inline}
 .desktop #play-surface{inset:auto;z-index:1}
 .desk-panel{fill:var(--chip);stroke:var(--chip-line);stroke-width:1}
-.desk-heading{fill:var(--ink-top);text-anchor:middle;font-size:15px;font-weight:500}
-.desktop #best-chip{transform:translate(-168px,256px)}
-.desktop #score-group{transform:translateY(150px)}
-.desktop #seed{transform:translate(412px,187px)}
-.desktop #restart{transform:translate(-372px,458px)}
-.desktop #help{transform:translate(-467px,-99px)}
+.desk-heading{fill:var(--ink-top);text-anchor:middle;font-size:13px;font-weight:500}
+/* Десктоп: сетка из docs/superpowers/specs/2026-11-22-desktop-sign-layout-design.md, в единицах поля.
+   Колонки −187…−3, 21…369 (грядка), 393…577; все от 256 до 604. Шапка на 204…240. Кнопки 36, цели 28, отступ в панели 16, шаг 8.
+   Элементы шапки и панели — те же, что на телефоне: их переносят сдвиг и масштаб, а размеры подправляют свойства x, y, width, height. */
+.desktop #seed{transform:translate(-165px,195px)}
+.desktop #seed-c>.ring{x:-22px;y:9px;width:184px;height:36px;rx:18px}
+.desktop #seed>rect{x:-22px;y:5px;width:184px;height:44px}
+.desktop #theme-picker{transform:translate(269.4px,200.4px) scale(.8)}
+.desktop #theme-picker>rect{y:4.5px;height:45px;rx:22.5px;stroke-width:1.5px!important}
+.desktop #herb>.ring,.desktop #snd>.ring{stroke-width:.933px!important}
+.desktop #herb{transform:translate(106.14px,187.29px) scale(1.2857)}
+.desktop #snd{transform:translate(106.43px,187.29px) scale(1.2857)}
+.desktop #herb>rect,.desktop #snd>rect{y:10px;width:34px;height:34px}
+.desktop #herb>rect{x:301px}
+.desktop #snd>rect{x:335px}
+.desktop #score-group{transform:translate(-329px,212px) scale(1.2)}
+.desktop #best-chip{transform:translate(-168px,271px)}
+.desktop #best-chip>.ring{display:none}
+.desktop #best{font-size:13px!important}
+.desktop #restart{transform:translate(-372px,502px)}
+.desktop #restart>.ring{x:281px;width:72px}
+.desktop #help{transform:translate(-467px,-55px)}
+.desktop #help>.ring{x:296px;y:607px;width:72px;height:36px;rx:18px}
+.desktop #help>rect:not(.ring){x:296px;y:603px;width:72px;height:44px}
+.desktop #help>.ring{fill:var(--chip)!important;stroke:var(--chip-line)!important}
+.desktop #help text{font-size:14px!important;fill:var(--ink-top)!important}
 .desktop #label,.desktop #goals{transform:none}
-/* Правая панель: поля 16, между рядами 12, между соседними кнопками 8. */
-.desktop #seed-c>.ring,.desktop #seed>rect,.desktop #best-chip>.ring{ x:-3px;width:152px }
-.desktop #seed-c>.ring,.desktop #seed>rect{y:9px;height:36px;rx:18px}
-.desktop #restart>.ring{ x:281px;y:48px;width:72px;height:40px;rx:20px }
-.desktop #help>rect{ x:296px;y:605px;width:72px;height:40px;rx:20px }
-.desktop #theme-picker{transform:translate(-274px,555px) scale(.6666667)}
-.desktop #theme-picker>rect{y:4.5px;height:45px;rx:22.5px}
-.desktop #herb{transform:translate(-387px,546px)}
-.desktop #snd{transform:translate(-385px,546px)}
-.desktop #herb>rect,.desktop #snd>rect{y:12px;width:28px;height:30px}
-.desktop #herb>rect{x:304px}
-.desktop #snd>rect{x:338px}
-.desktop .tut-active #score-group,.desktop .tut-active #desk-goal-title{visibility:hidden}
+/* в обучении на месте вывески стоит подсказка, а целей ещё нет */
+.desktop .tut-active #desk-sign,.desktop .tut-active #desk-goal-title{visibility:hidden}
 .piece{cursor:grab}
 .btn{cursor:pointer;outline:none}
 .btn:focus-visible .ring{stroke:var(--focus);stroke-width:2.5}
@@ -379,6 +389,8 @@ function scene(T,V){
 
   /* ореол под счётом и подписью «очки»: буквы обведены мягкой размытой подложкой цвета стекла */
   defs+=`<filter id="g-tsh" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB"><feMorphology in="SourceAlpha" operator="dilate" radius="1.4" result="d"/><feGaussianBlur in="d" stdDeviation="3.4" result="b"/><feFlood style="flood-color:var(--halo-top);flood-opacity:.72"/><feComposite in2="b" operator="in" result="s"/><feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+  /* ореол для вывески: плотнее, чем у счёта, — буквы крупные и стоят прямо на небе */
+  defs+=`<filter id="g-tsh2" x="-30%" y="-60%" width="160%" height="220%" color-interpolation-filters="sRGB"><feMorphology in="SourceAlpha" operator="dilate" radius="2.2" result="d"/><feGaussianBlur in="d" stdDeviation="4.6" result="b"/><feFlood style="flood-color:var(--halo-top);flood-opacity:.88"/><feComposite in2="b" operator="in" result="s"/><feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
   let l0=`<defs>${defs}</defs><rect x="${XA}" y="-3000" width="${XW}" height="3001" style="fill:var(--sky0)"/><rect x="${XA}" y="0" width="${XW}" height="300" style="fill:${u('sky')}"/>`;
   for(let i=0;i<46;i++){l0+=`<circle cx="${f1(rnd()*390)}" cy="${f1(Math.pow(rnd(),1.5)*230)}" r="${(.4+rnd()*.8).toFixed(2)}" style="${fill('white')};opacity:calc(var(--stars)*${(.25+rnd()*.7).toFixed(2)})"/>`;}
   l0+='<!--STARSX-->';
@@ -502,13 +514,13 @@ function scene(T,V){
 let LAY={s:1,top:0,bot:0,gap:0,left:0,y:0},VIEW=null,viewKey='',leafDy=0,sceneOn=false;
 let desktop=false,classicDesktop=new URLSearchParams(location.search).get('layout')==='classic';
 let desktopHeight=0,rightMenuOffset=0;
-const slotBox=k=>desktop?{x:409,y:316+89*k,w:152,h:77}:{x:CARD.xs[k],y:CARD.y,w:CARD.w,h:CARD.w};
-const canBox=()=>desktop?{x:409,y:244,w:152,h:36}:{x:21,y:606+LROW,w:104,h:38};
+const slotBox=k=>desktop?{x:409,y:320+92*k,w:152,h:84}:{x:CARD.xs[k],y:CARD.y,w:CARD.w,h:CARD.w};
+const canBox=()=>desktop?{x:409,y:272,w:152,h:36}:{x:21,y:606+LROW,w:104,h:38};
 /* карточка, которая в срезанном окне оказалась бы выше видимой области, опускается под верхний край */
 function cardPosition(y,h){
   if(!desktop)return `translate(0,${f1(Math.max(0,LAY.top+10-y))})`;
   const scale=Math.min(1,(desktopHeight-22)/h);
-  return `translate(195,397) scale(${scale}) translate(-195,${-y-h/2})`;
+  return `translate(195,390) scale(${scale}) translate(-195,${-y-h/2})`;
 }
 /* верхняя панель опускается на срез; в обучении, когда на её месте стоит подсказка, она прячется */
 function placeHud(){
@@ -520,6 +532,16 @@ function placeHud(){
   }
   const c=$('cardg');if(c)c.setAttribute('transform',cardPosition(+c.dataset.y,+c.dataset.h));
 }
+/* росток на вывеске: стебель и два листа над первой буквой, повёрнутые по дуге */
+function placeSprout(){
+  const t=$('sign-t'),g=$('sign-sprout');
+  if(!t||!g||!desktop)return;
+  let a,b,rot;
+  try{if(!t.getNumberOfChars())return;a=t.getStartPositionOfChar(0);b=t.getEndPositionOfChar(0);rot=t.getRotationOfChar(0);}catch(e){return;}
+  const k=Math.PI/180*rot,cx=(a.x+b.x)/2,cy=(a.y+b.y)/2,lift=25;
+  g.setAttribute('transform',`translate(${f1(cx+Math.sin(k)*lift)},${f1(cy-Math.cos(k)*lift)}) rotate(${f1(rot)}) scale(1.6)`);
+  if(!g.firstChild)g.innerHTML=`<path d="M0,1 C0,-4 1,-8 3,-11" style="fill:none;stroke:var(--ink-top);stroke-width:1.5;stroke-linecap:round"/><path d="M3,-11 C3,-17 8,-20 14,-20 C14,-14 10,-11 3,-11Z" style="fill:${u('leaf')};stroke:var(--ink-top);stroke-width:1;stroke-linejoin:round"/><path d="M1.6,-6.5 C-2,-10.5 -7.5,-10.5 -10.5,-7.5 C-7.5,-4 -2.6,-4 1.6,-6.5Z" style="fill:${u('leaf')};stroke:var(--ink-top);stroke-width:1;stroke-linejoin:round"/>`;
+}
 /* считает раскладку по размеру окна и ставит колонку на место. Возвращает true, если сцену надо перерисовать */
 function fitView(){
   const r=stage.getBoundingClientRect(),f=LAY=PURE.fit(r.width,r.height),st=scr.style;
@@ -530,28 +552,26 @@ function fitView(){
   stage.classList.toggle('desktop',desktop);
   if(wasDesktop!==desktop){
     if(desktop){
-      $('menu-can').before($('seed'));
       $('right-menu').append(trayG,labelG);
     }else{
-      $('hud2').prepend($('seed'));
       $('menu-can').replaceChildren();
       $('plants').before(trayG);
       $('help').before(labelG);
     }
   }
   if(desktop){
-    // Сцена заполняет окно по-прежнему. Грядка, лоток и меню масштабируются вместе.
-    const scale=Math.min(r.width/834,r.height/454);
+    // Сцена заполняет окно по-прежнему. Композиция (−211…601 × 152…628 в единицах поля) масштабируется целиком и стоит по центру окна:
+    // поля слева и справа равны, середина композиции (195, 390) совпадает с серединой окна.
+    const scale=Math.min(r.width/820,r.height/476);
     desktopHeight=r.height/scale;
-    // На сверхшироком экране лоток остаётся у правого края окна.
-    const rightInset=Math.min(32,22*scale);
-    rightMenuOffset=(r.width/2-rightInset)/scale+182-577;
-    $('right-menu').setAttribute('transform',`translate(${rightMenuOffset} 0)`);
+    rightMenuOffset=0;
+    $('right-menu').removeAttribute('transform');
     Object.assign(playSurface.style,{
-      left:(r.width/2-182*scale-f.left)+'px',top:(r.height/2-397*scale-f.y)+'px',
+      left:(r.width/2-195*scale-f.left)+'px',top:(r.height/2-390*scale-f.y)+'px',
       width:(390*scale)+'px',height:(844*scale)+'px'
     });
   }else if(wasDesktop){rightMenuOffset=0;playSurface.removeAttribute('style');}
+  if(desktop)placeSprout();
   VIEW={x0:f.x0,x1:f.x1,y0:f.y0,y1:f.y1,top:f.top,big:-f.x0>=24};
   /* листья переднего плана стоят на 16 единиц ниже, чем нарисованы: лоток опущен, и они не должны закрывать фигуры. В высоком окне они опускаются ещё, к нижнему краю окна */
   leafDy=(f.gap+16)*f.s;
@@ -597,12 +617,16 @@ for(let r=0;r<5;r++)for(let c=0;c<5;c++){const x=BX+c*STEP,y=BY+r*STEP;
   stat+=`<rect x="${x}" y="${y}" width="${CELL}" height="${CELL}" rx="13" style="${fill('cell')};stroke:var(--cell-line);stroke-width:.9"/><path d="M${x+13},${y+CELL-.6} H${x+CELL-13}" style="fill:none;stroke:var(--white);stroke-width:.8;stroke-linecap:round;opacity:.12"/><circle class="dot" cx="${x+30}" cy="${y+30}" r="1.6" style="${fill('cell-dot')}"/>`;}
 $('board').innerHTML=stat;stat='';
 const chip=x=>`<rect class="ring" x="${x}" y="50" width="104" height="36" rx="18" style="${fill('chip')};stroke:var(--chip-line);stroke-width:1"/>`;
+/* десктоп: левая панель (счёт, рекорд, цели, кнопки) и вывеска «Оранжерея» дугой над грядкой */
 stat+=`<g class="desk-only" aria-hidden="true" pointer-events="none">
-  <text x="-95" y="258" text-anchor="middle" style="font-size:26px;font-weight:500;fill:var(--ink-top);filter:url(#g-tsh)">Оранжерея</text>
-  <path d="M-143,266 Q-96,260 -48,265" fill="none" stroke="var(--gold-ui)" stroke-width="1.2" stroke-linecap="round"/>
-  <rect class="desk-panel" x="-187" y="290" width="184" height="314" rx="24"/>
-  <g id="desk-goal-title"><rect x="-171" y="354" width="152" height="140" rx="18" fill="var(--cell)" stroke="var(--cell-line)"/>
-  <text class="desk-heading" x="-95" y="375">Цели</text></g>
+  <rect id="desk-left" class="desk-panel" x="-187" y="256" width="184" height="348" rx="24"/>
+  <g id="desk-goal-title"><path d="M-171,364 H-19" style="fill:none;stroke:var(--chip-line);stroke-width:1"/><text class="desk-heading" x="-95" y="388">Цели</text></g>
+  <g id="desk-sign">
+    <path id="sign-arc" d="M40,222 Q195,186 350,222" style="fill:none"/>
+    <g style="filter:url(#g-tsh2)"><text id="sign-t" style="font-size:40px;font-weight:600;letter-spacing:.4px;${fill('ink-top')}"><textPath href="#sign-arc" startOffset="50%" text-anchor="middle">Оранжерея</textPath></text></g>
+    <path d="M122,232 Q195,224 268,232" style="fill:none;stroke:var(--gold-ui);stroke-width:1.6;stroke-linecap:round"/>
+    <g id="sign-sprout" style="filter:url(#g-tsh2)"></g>
+  </g>
   </g>`;
 stat+='<g id="hud"><g id="best-chip">'+chip(21)+`<text id="best" x="73" y="73" text-anchor="middle" style="font-size:14px;font-weight:500;${fill('ink-top')}">рекорд 0</text></g>
   <g id="restart" class="btn" role="button" tabindex="0" aria-label="Начать забег заново">${chip(265)}<text id="restart-t" x="317" y="73" text-anchor="middle" style="font-size:14px;font-weight:500;${fill('ink-top')}">заново</text></g>
@@ -619,8 +643,8 @@ stat+='</g>';
 stat+=`<g id="herb" class="btn" role="button" tabindex="0" aria-label="Гербарий"><rect x="295" y="5" width="40" height="44" style="fill:transparent"/><circle class="ring" cx="318" cy="27" r="14" style="${fill('chip')};stroke:var(--chip-line);stroke-width:1"/><path d="M312.4,33 C311.6,25.4 316,20.6 324.4,20.4 C324.6,28 320.4,33.4 312.4,33Z M312.4,33 L320.4,24.6" style="fill:none;stroke:var(--ink-top);stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round"/><circle id="herb-dot" cx="328.5" cy="17" r="3.6" style="${fill('gold-ui')};display:none"/></g>`;
 stat+=`<g id="snd" class="btn" role="button" tabindex="0" aria-label="Звук"><rect x="335" y="5" width="40" height="44" style="fill:transparent"/><circle class="ring" cx="352" cy="27" r="14" style="${fill('chip')};stroke:var(--chip-line);stroke-width:1"/><g id="snd-i"></g></g>`;
 stat+=`</g><g id="right-menu" class="desk-only" role="group" aria-label="Выбор фигур">
-  <rect class="desk-panel" x="393" y="180" width="184" height="424" rx="24" pointer-events="none"/>
-  <text class="desk-heading" x="485" y="305">Фигуры</text><g id="menu-can"></g></g>
+  <rect id="desk-right" class="desk-panel" x="393" y="256" width="184" height="348" rx="24" pointer-events="none"/>
+  <g id="menu-can"></g></g>
   <g id="goals" transform="translate(0,-4)"></g><g id="tray"></g><g id="plants"></g><g id="pre" style="pointer-events:none"></g><g id="evt" style="pointer-events:none"></g><g id="tutg" style="pointer-events:none"></g><g id="fx"></g><g id="drag" style="pointer-events:none"></g><g id="over" style="display:none"></g>`;
 game.innerHTML=stat;
 const dotsEl=[...$('board').querySelectorAll('.dot')];
@@ -1008,7 +1032,7 @@ function pieceHTML(p,size,gap,lifted){
   return s;
 }
 const TM=36,TG=4;
-const trayCellSize=()=>desktop?29:TM;
+const trayCellSize=()=>desktop?34:TM;
 const turnIco=(x,y)=>`<g transform="translate(${x},${y}) scale(.85)" style="fill:none;stroke:var(--muted-low);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M-5.5,1.5 A5.5,5.5 0 0 1 5.5,1.5"/><path d="M2.6,.4 L5.6,3.6 L8.4,.2"/></g>`;
 function renderTray(popIn){
   let s='';
@@ -1038,7 +1062,7 @@ const fmt=v=>String(v).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
 function setScore(v,bump){
   score=v;const el=$('score'),from=shown,steps=bump&&!RM?10:1;let n=0;
   clearInterval(cntT);
-  const put=x=>{shown=x;el.textContent=fmt(x);};
+  const put=x=>{shown=x;const t=fmt(x);el.textContent=t;el.style.fontSize=(desktop&&t.length>7?33*7/t.length:33).toFixed(1)+'px';};
   if(steps===1)put(v);else cntT=setInterval(()=>{n++;put(Math.round(from+(v-from)*n/steps));if(n>=steps)clearInterval(cntT);},32);
   setLevel();goalBump('score',v);
 }
@@ -1048,7 +1072,7 @@ function flyScore(i,text){
   const x=mx(i),y=my(i)-20,t=document.createElementNS(NS,'text');
   t.setAttribute('x',x);t.setAttribute('y',y);t.setAttribute('text-anchor','middle');t.setAttribute('class','pop fxp');t.textContent=text;fxG.appendChild(t);
   t.animate(RM?[{opacity:1},{opacity:1,offset:.8},{opacity:0}]
-    :[{transform:'translate(0,0) scale(.6)',opacity:0},{transform:'translate(0,-16px) scale(1.2)',opacity:1,offset:.16},{transform:'translate(0,-24px) scale(1)',opacity:1,offset:.5},{transform:`translate(${f1((195-x)*.92)}px,${f1((desktop?230:80+LAY.top)-y)}px) scale(.5)`,opacity:.25}],
+    :[{transform:'translate(0,0) scale(.6)',opacity:0},{transform:'translate(0,-16px) scale(1.2)',opacity:1,offset:.16},{transform:'translate(0,-24px) scale(1)',opacity:1,offset:.5},{transform:`translate(${f1(((desktop?-95:195)-x)*.92)}px,${f1((desktop?315:80+LAY.top)-y)}px) scale(.5)`,opacity:.25}],
     {duration:840,easing:'cubic-bezier(.4,0,.6,1)',fill:'forwards'});
   setTimeout(()=>{t.remove();if(!RM)$('score').animate([{transform:'scale(1)'},{transform:'scale(1.16)'},{transform:'scale(1)'}],{duration:240,easing:'ease-out'});},850);
 }
@@ -1370,9 +1394,9 @@ const goalText=g=>{const n=g.n,times=n>1?': '+n+' '+plural(n,['раз','раза
     :g.type==='score'?`Наберите ${fmt(n)} очков`:g.type==='big'?`Слейте четыре и больше за раз${times}`:`Два слияния одним ходом${times}`;};
 function renderGoals(){
   if(tut||!goals){goalsG.innerHTML='';return;}
-  goalsG.innerHTML=goals.map((g,i)=>{const x=desktop?-159:CARD.xs[i],y=desktop?384+34*i:224,w=desktop?128:104;
+  goalsG.innerHTML=goals.map((g,i)=>{const x=desktop?-171:CARD.xs[i],y=desktop?400+36*i:224,w=desktop?152:104,gh=desktop?28:26;
     const p=Math.min(1,g.cur/g.n),bar=w-28;
-    return `<g class="btn" role="button" tabindex="0" data-goal="${i}" aria-label="Цель: ${goalText(g)}. ${g.done?'Выполнена':'Сделано '+Math.min(g.cur,g.n)+' из '+g.n}"><rect x="${x}" y="${desktop?y:y-6}" width="${w}" height="${desktop?26:38}" style="fill:transparent"/><rect class="ring" x="${x}" y="${y}" width="${w}" height="26" rx="13" style="${fill('chip')};stroke:var(--${g.done?'gold-ui':'chip-line'});stroke-width:${g.done?1.4:1}"/><rect x="${x+14}" y="${y+21}" width="${bar}" height="2" rx="1" style="${fill('ink-top')};opacity:.16"/>${p>0?`<rect x="${x+14}" y="${y+21}" width="${f1(Math.max(4,bar*p))}" height="2" rx="1" style="${fill('gold-ui')}"/>`:''}<text x="${x+w/2}" y="${y+16}" text-anchor="middle" style="font-size:12px;font-weight:500;${fill('ink-top')}">${g.done?'готово':goalPill(g)}</text></g>`;}).join('');
+    return `<g class="btn" role="button" tabindex="0" data-goal="${i}" aria-label="Цель: ${goalText(g)}. ${g.done?'Выполнена':'Сделано '+Math.min(g.cur,g.n)+' из '+g.n}"><rect x="${x}" y="${desktop?y:y-6}" width="${w}" height="${desktop?gh:38}" style="fill:transparent"/><rect class="ring" x="${x}" y="${y}" width="${w}" height="${gh}" rx="${gh/2}" style="${fill('chip')};stroke:var(--${g.done?'gold-ui':'chip-line'});stroke-width:${g.done?1.4:1}"/><rect x="${x+14}" y="${y+gh-5}" width="${bar}" height="2" rx="1" style="${fill('ink-top')};opacity:.16"/>${p>0?`<rect x="${x+14}" y="${y+gh-5}" width="${f1(Math.max(4,bar*p))}" height="2" rx="1" style="${fill('gold-ui')}"/>`:''}<text x="${x+w/2}" y="${y+gh/2+4}" text-anchor="middle" style="font-size:12px;font-weight:500;${fill('ink-top')}">${g.done?'готово':goalPill(g)}</text></g>`;}).join('');
 }
 function goalsCard(){
   const rows=goals.map((g,i)=>{const y=338+i*46;
@@ -1589,18 +1613,20 @@ function renderLabel(){
   const hot=swap||stuck;
   const chip=`<g id="can" class="btn fxp" role="button" tabindex="0" aria-label="Лейка: заменить фигуру. Осталось ${cans} из 3">
     <rect x="${x}" y="${cy-tapHeight/2}" width="${w}" height="${tapHeight}" style="fill:transparent"/>
-    <rect class="ring${stuck?' pulse':''}" x="${x}" y="${rowY}" width="${w}" height="${h}" rx="${h/2}" style="${fill('card')};stroke:var(--${hot?'gold':'card-line'});stroke-width:${hot?2:1}"/>
+    <rect class="ring${stuck?' pulse':''}" x="${x}" y="${rowY}" width="${w}" height="${h}" rx="${h/2}" style="${fill('card')};stroke:var(--${hot?'gold-ui':'card-line'});stroke-width:${hot?2:1}"/>
     <g${cans?'':' style="opacity:.42"'}>${canArt(x+(desktop?29:32),cy,desktop ? 0.8 : 1.05,hot&&cans>0,!cans)}</g>
-    ${desktop?`<text x="${x+49}" y="${cy+5}" style="font-size:14px;font-weight:500;${fill('ink-low')}">Лейка</text>`:''}${pips}</g>`;
+    ${desktop?`<text x="${x+49}" y="${cy+(swap?4.5:5)}" style="font-size:${swap?12.5:14}px;font-weight:500;${fill('ink-low')}">${swap?'какую заменить?':'Лейка'}</text>`:''}${desktop&&swap?'':pips}</g>`;
   const skip=x=>`<g id="skip" class="btn" role="button" tabindex="0" aria-label="Пропустить обучение"><rect class="ring" x="${x-10}" y="606" width="152" height="38" rx="19" style="fill:transparent"/><text class="link" x="${x}" y="630" style="${fill('muted-low')}">пропустить обучение</text></g>`;
   if(desktop){
-    const hint=swap?'Какую фигуру заменить?':TAP+' по фигуре — поворот';
+    /* в левой панели между целями и кнопками: что сделать, если обучение или тупик; при выборе замены — какую фигуру */
     const action=tut?'skip':stuck?'giveup':null;
-    const caption=tut?'Пропустить обучение':stuck?'Закончить забег':hint;
-    const label=`<text x="485" y="591" text-anchor="middle" style="font-size:11.5px;${fill('ink-top')}">${caption}</text>`;
-    $('menu-can').innerHTML=tut&&!TUT[tut.n].can?'':chip;
+    const caption=tut?'пропустить обучение':stuck?'закончить забег':'';
+    /* лейка видна и в обучении, чтобы в правой панели не было дыры; пока шаг её не просит, она приглушена и не нажимается */
+    $('menu-can').innerHTML=tut&&!TUT[tut.n].can?`<g style="opacity:.4;pointer-events:none">${chip}</g>`:chip;
+    /* в обучении целей ещё нет: ссылка встаёт сразу под рекордом, иначе — между целями и кнопками */
+    const ly=tut?376:508;
     labelG.innerHTML=action
-      ?`<g class="btn" id="${action}" role="button" tabindex="0" aria-label="${caption}"><rect class="ring" x="409" y="575" width="152" height="26" rx="13" fill="transparent"/>${label}</g>`:label;
+      ?`<g class="btn" id="${action}" role="button" tabindex="0" aria-label="${caption[0].toUpperCase()+caption.slice(1)}"><rect class="ring" x="-171" y="${ly}" width="152" height="28" rx="14" style="fill:transparent"/><text class="link" x="-95" y="${ly+18.5}" text-anchor="middle" style="font-size:13px;${fill('ink-top')}">${caption}</text></g>`:'';
     return;
   }
   if(tut){labelG.innerHTML=TUT[tut.n].can?chip+skip(134):skip(24);return;}
@@ -1761,7 +1787,7 @@ function renderTut(){
   const slot=slotBox(1),can=canBox();
   // Подсказка рисуется в координатах грядки, а лоток привязан к краю окна.
   slot.x+=rightMenuOffset;can.x+=rightMenuOffset;
-  const hintPosition=desktop?'translate(195,248) scale(.80) translate(-195,-226)':`translate(0,${f1(Math.max(0,LAY.top+8-122))})`;
+  const hintPosition=desktop?'translate(195,201) scale(.75) translate(-195,-174)':`translate(0,${f1(Math.max(0,LAY.top+8-122))})`;
   let h=`<g transform="${hintPosition}"><rect x="36" y="122" width="318" height="104" rx="24" style="fill:${u('over')};stroke:var(--over-line);stroke-width:1.2"/>`
     +line(148,12,'over-muted',`обучение, шаг ${tut.n+1} из ${TUT.length}`)+line(177,15.5,'over-ink',txt[0],500)+line(201,15.5,'over-ink',txt[1],500)+'</g>';
   if(!done){
