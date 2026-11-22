@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Оранжерея: прототип забега</title>
-<meta name="orangery-build" content="45ec2a2 2026-11-22T19:39:13Z">
+<meta name="orangery-build" content="563dc08 2026-11-22T19:46:52Z">
 <style>
 /* «Оранжерея», черновой прототип забега. Стиль по orangery/design.md, эталон mockups/styles-v2.html. */
 :root{
@@ -2021,5 +2021,20 @@ window.__orangery={LS,localRec,PF,adState,setLastAd:v=>{lastAdAt=v;},setAdFails:
 /*</debug>*/
 })();
 </script>
+<!--orangery-build-->
+<div id="orangery-build-label" aria-hidden="true" style="position:fixed;left:8px;bottom:6px;z-index:50;pointer-events:none;font:11px/1.4 system-ui,sans-serif;color:rgba(255,255,255,.85);background:rgba(0,0,0,.38);padding:1px 7px;border-radius:8px"></div>
+<script>/*orangery-update*/(function(){
+var cur='563dc08',at='2026-11-22T19:46:52Z',el=document.getElementById('orangery-build-label');
+try{var d=new Date(at),z=function(v){return String(v).padStart(2,'0')};el.textContent='сборка '+cur+' · '+z(d.getDate())+'.'+z(d.getMonth()+1)+' '+z(d.getHours())+':'+z(d.getMinutes());}catch(e){el.textContent='сборка '+cur;}
+function check(){
+  fetch(location.pathname+'?build-check='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
+    var m=t.match(/name="orangery-build" content="(\w+)/);if(!m||m[1]===cur)return;
+    var key='orangery-reloaded-'+m[1];try{if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1');}catch(e){return;}
+    fetch(location.href,{cache:'reload'}).catch(function(){}).then(function(){location.reload();});
+  }).catch(function(){});
+}
+check();document.addEventListener('visibilitychange',function(){if(!document.hidden)check();});
+})();</script>
+<!--/orangery-build-->
 </body>
 </html>
