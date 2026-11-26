@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Оранжерея: прототип забега</title>
-<meta name="orangery-build" content="0bfa2ff 2026-11-23T20:07:06Z">
+<meta name="orangery-build" content="d394afe 2026-11-26T05:33:27Z">
 <style>
 /* «Оранжерея», черновой прототип забега. Стиль по orangery/design.md, эталон mockups/styles-v2.html. */
 :root{
@@ -274,6 +274,9 @@ const PURE=(()=>{
     const can=s.cans>0&&!!s.hasEmpty,sh=s.shovels>0&&s.digs<=s.shovels;
     return can&&sh?'either':can?'can':sh?'shovel':s.cans>0&&s.shovels>0?'both':null;
   }
+  /* отмена: шаг назад на одно последнее действие (ход, лопатка, замена лейкой). Бесплатна и без запаса, но только пока идёт игра:
+     не во время хода, не под карточкой, не в обучении и не после конца забега */
+  const canUndo=s=>!!s.has&&!s.busy&&!s.over&&!s.modal&&!s.drag&&!s.tut&&!s.paused;
   /* ролик за инструмент: те же условия, что у лейки, предел общий на оба инструмента */
   const adOpen=s=>!!s.on&&s.mode==='free'&&!s.tut&&s.adCans<AD_CANS&&s.fails<AD_FAILS;
   /* какой инструмент предложить за ролик: только если один он вместе с тем, что в руках, спасёт. Два ролика подряд не предлагаются */
@@ -300,7 +303,7 @@ const PURE=(()=>{
   const shareText=r=>(r.daily?`Оранжерея, семя дня ${r.date}: ${r.score} очков`:`Мой сад в «Оранжерее»: ${r.score} очков`)+(r.lotus?', лотосов '+r.lotus:'')+'.';
   /* запись более новой версии формата: её оставила более новая сборка игры, старой сборке её нельзя ни читать, ни затирать */
   const foreign=r=>obj(r)&&typeof r.v==='number'&&r.v>1;
-  return {mergeSaves,foreign,adGate,canOffer,AD_GAP,AD_CANS,AD_FAILS,fit,shareText,SHOVEL_MAX,SHOVEL_CHAIN,earnsShovel,shovelsOf,digsNeeded,rescue,adOpen,adTool};
+  return {mergeSaves,foreign,adGate,canOffer,AD_GAP,AD_CANS,AD_FAILS,fit,shareText,SHOVEL_MAX,SHOVEL_CHAIN,earnsShovel,shovelsOf,digsNeeded,rescue,adOpen,adTool,canUndo};
 })();
 /*</pure>*/
 /* хранилище данных игрока: память и зеркало в localStorage. Если localStorage недоступен, игра живёт на памяти и облаке */
@@ -556,14 +559,14 @@ let LAY={s:1,top:0,bot:0,gap:0,left:0,y:0},VIEW=null,viewKey='',leafDy=0,sceneOn
 let desktop=false,classicDesktop=new URLSearchParams(location.search).get('layout')==='classic';
 let desktopHeight=0,rightMenuOffset=0;
 const slotBox=k=>desktop?{x:409,y:320+92*k,w:152,h:84}:{x:CARD.xs[k],y:CARD.y,w:CARD.w,h:CARD.w};
-/* плашки инструментов: лейка и лопатка рядом. Включённый инструмент растягивается на место обеих и несёт вопрос, вторая плашка на это время скрыта.
-   В обучении лопатки нет, лейка прежнего размера */
+/* плашки инструментов: лейка и лопатка рядом. Включённая лопатка растягивается на место обеих и несёт вопрос, лейка на это время скрыта.
+   Лейка не растягивается: её вопрос задаёт карточка замены. В обучении лопатки нет, лейка прежнего размера */
 function toolBoxes(){
   const y=desktop?272:606+LROW,h=desktop?36:38,x=desktop?409:21,wide=desktop?152:172;
-  if(tut)return {can:{x,y,w:desktop?152:104,h},shovel:null};
-  if(swap)return {can:{x,y,w:wide,h},shovel:null};
-  if(dig)return {can:null,shovel:{x,y,w:wide,h}};
-  return desktop?{can:{x,y,w:72,h},shovel:{x:489,y,w:72,h}}:{can:{x,y,w:96,h},shovel:{x:125,y,w:68,h}};
+  if(tut)return {can:{x,y,w:desktop?152:104,h},shovel:null,undo:null};
+  if(dig)return {can:null,shovel:{x,y,w:wide,h},undo:null};
+  /* на телефоне третьей в ряду стоит круглая кнопка отмены; на десктопе отмена живёт в левой панели, под целями */
+  return desktop?{can:{x,y,w:72,h},shovel:{x:489,y,w:72,h},undo:null}:{can:{x,y,w:88,h},shovel:{x:115,y,w:62,h},undo:{x:183,y,w:38,h}};
 }
 const canBox=()=>{const b=toolBoxes();return b.can||b.shovel;};
 /* карточка, которая в срезанном окне оказалась бы выше видимой области, опускается под верхний край */
@@ -1030,12 +1033,14 @@ function setPaused(v,why){
   syncPlay();
 }
 const pick=a=>a[(grnd()*a.length)|0];
-let stats={moves:0,lotus:0,combo:0},runId=0,cans=1,shovels=0,dig=false,swap=false,swapK=-1,stuck=false;
-/* режим: free обычный забег, daily семя дня. dealt считает розданные фигуры, rs хранит состояние генератора семени */
+let stats={moves:0,lotus:0,combo:0},runId=0,cans=1,shovels=0,dig=false,swap=false,swapK=-1,stuck=false,undoRec=null,giveArm=0;
+/* режим: free обычный забег, daily семя дня. dealt считает розданные фигуры, rs хранит состояние генератора раздачи.
+   У каждого забега есть зерно: в семени дня это дата, в свободной игре случайное число runSeed. От зерна и порядковых номеров
+   зависят фигуры, события, цели и варианты замены, поэтому после отмены хода игра выдаёт то же самое: перебирать удачу отменой нельзя */
 let goals=null,gTier={},gIssued=0;
 /* события: next номер хода следующего события, idx их счётчик, bfly бабочка на клетке, gold ждёт ли подарок места в лотке */
 let ev={next:6,idx:0,bfly:null,gold:false};
-let mode='free',dealt=0,rs=0,daily={date:'',done:false,result:null,run:null},streak={last:'',n:0};
+let mode='free',dealt=0,rs=0,runSeed=0,daily={date:'',done:false,result:null,run:null},streak={last:'',n:0};
 const mkPiece=cells=>({cells,w:Math.max(...cells.map(q=>q[0]))+1,h:Math.max(...cells.map(q=>q[1]))+1});
 /* поворот на четверть оборота по часовой стрелке; растения остаются стоять прямо */
 function rotate(p){const h=p.h;p.cells=p.cells.map(q=>[h-1-q[1],q[0],q[2],q[3]]);p.h=p.w;p.w=h;}
@@ -1044,12 +1049,13 @@ const mix=a=>{let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;
 const srnd=()=>{rs=(rs+0x6D2B79F5)|0;return mix(rs);};
 const seeded=a=>()=>{a=(a+0x6D2B79F5)|0;return mix(a);};
 const hashStr=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h|0;};
-const prnd=()=>mode==='daily'?srnd():Math.random();
+const newSeed=()=>((Math.random()*4294967296)|0)||1;
+const seedOf=()=>mode==='daily'?hashStr(daily.date):runSeed;
 function newPiece(R){
   /* баланс подобран симуляцией. В одной фигуре нет двух одинаковых растений, поэтому
      в каждом слиянии участвует ровно одна клетка фигуры: новый цветок вырастает в ней.
      Третий вид приходит с 1500 очков, а в семени дня с 46-й фигуры: так раздача не зависит от игрока. */
-  const deal=!R;R=R||prnd;
+  const deal=!R;R=R||srnd;
   const k=R(),n=k<.5?0:k<.92?1:2,third=mode==='daily'?dealt>=45:(score||0)>=1500,pool=third?['r','y','b']:['r','y'],used={},cells=[];
   SHAPES[n].forEach(q=>{let sp,st,tries=0;do{sp=pool[(R()*pool.length)|0];st=R()<.15?2:1;}while(used[sp+st]&&++tries<40);used[sp+st]=1;cells.push([q[0],q[1],sp,st]);});
   const p=mkPiece(cells);for(let i=(R()*4)|0;i>0;i--)rotate(p);
@@ -1091,7 +1097,6 @@ function renderTray(popIn){
     const {x,y,w:slotWidth,h:slotHeight}=slotBox(k),p=tray[k];
     s+=`<rect x="${x}" y="${y}" width="${slotWidth}" height="${slotHeight}" rx="20" style="${fill('card')};stroke:var(--card-line);stroke-width:1"/>`;
     if(!p)continue;
-    if(swap)s+=`<rect class="made pulse" x="${x-3}" y="${y-3}" width="${slotWidth+6}" height="${slotHeight+6}" rx="23"/>`;
     const m=trayCellSize(),g=TG,w=p.w*m+(p.w-1)*g,h=p.h*m+(p.h-1)*g;
     s+=`<g class="piece" data-slot="${k}"${drag&&drag.k===k?' style="opacity:.22"':''}><rect x="${x}" y="${y}" width="${slotWidth}" height="${slotHeight}" style="fill:transparent"/>${p.cells.length>1?turnIco(x+slotWidth-13,y+13):''}<g transform="translate(${x+(slotWidth-w)/2},${y+(slotHeight-h)/2})">${pieceHTML(p,m,g,false)}</g></g>`;
   }
@@ -1260,6 +1265,7 @@ async function playStep(s){
   await wait(250*slow);
 }
 async function place(k,p,c,r){
+  undoMark('place');
   busy=true;acted=true;tray[k]=null;gv++;
   const placed=p.cells.map(q=>{const i=(r+q[1])*5+c+q[0];grid[i]=q[2]==='g'?wild(grid,i):{sp:q[2],st:q[3]};renderCell(i,'pop');FX.puff(i);found(grid[i],true);return i;});
   SND.play('drop');buzz(8);stats.moves++;
@@ -1271,7 +1277,7 @@ async function place(k,p,c,r){
   if(steps.filter(s=>s.combo===1).length>=2)goalBump('double',1);
   if(PURE.earnsShovel(steps))gainShovel('chain');
   checkGoals();storeHerb();
-  busy=false;
+  busy=false;renderLabel();
   if(tut){tutDone();return;}
   if(tray.every(t=>!t)){tray=[newPiece(),newPiece(),newPiece()];renderTray(true);}
   eventsTick();mood();save();
@@ -1279,7 +1285,7 @@ async function place(k,p,c,r){
 }
 /* конец забега: сад засыпает, потом появляется его снимок */
 async function gameOver(){
-  over=true;modal=null;swap=false;dig=false;renderDig();stuck=false;mood();renderLabel();syncPlay();
+  over=true;modal=null;swap=false;dig=false;renderDig();stuck=false;undoRec=null;mood();renderLabel();syncPlay();
   const id=runId,isDaily=mode==='daily',rec=!isDaily&&score>best;
   if(rec){best=score;store('orangery-best',String(best));setBest();}
   finishRun();
@@ -1302,8 +1308,6 @@ async function gameOver(){
   modal=null;
   const ph=$('polaroid');if(ph&&!RM)ph.animate([{transform:'translateY(-26px) scale(1.07)',opacity:0},{transform:'translateY(0) scale(1)',opacity:1}],{duration:440,delay:120,easing:'cubic-bezier(.3,1.3,.5,1)',fill:'backwards'});
 }
-/* с мышью действие называется кликом, с пальцем тапом */
-const TAP=window.matchMedia&&matchMedia('(hover:hover) and (pointer:fine)').matches?'клик':'тап';
 const linkBtn=(id,y,label,text)=>`<g id="${id}" class="btn" role="button" tabindex="0" aria-label="${label}"><rect class="ring" x="60" y="${y-27}" width="270" height="44" rx="22" style="fill:transparent"/><text class="link" x="195" y="${y}" text-anchor="middle" style="${fill('over-muted')}">${text}</text></g>`;
 function share(el){
   const d=(modal==='daily'||mode==='daily')&&daily.result;
@@ -1354,8 +1358,8 @@ function eventsTick(){
   }
   if(ev.gold)giveGold();
   if(stats.moves<ev.next)return;
-  /* в семени дня время и вид событий одинаковы у всех: они зависят от даты и номера события */
-  const R=mode==='daily'?seeded(hashStr(daily.date)^Math.imul(ev.idx+3,97531)):Math.random;
+  /* время и вид событий зависят от зерна забега и номера события: в семени дня они одинаковы у всех, а отмена хода их не меняет */
+  const R=seeded(seedOf()^Math.imul(ev.idx+3,97531));
   ev.idx++;ev.next=stats.moves+7+((R()*4)|0);
   const empties=[],plants=[];let weeds=0;
   grid.forEach((t,i)=>{if(!t)empties.push(i);else if(t.sp==='x')weeds++;else if(t.st<4)plants.push(i);});
@@ -1412,8 +1416,8 @@ function herbCard(sel,still){
 const GTYPES=['buds','flowers','lotus','combo','score','big','double'];
 const GT={buds:[4,7,10,14,18],flowers:[2,4,6,8,10],lotus:[1,2,3,4,5],combo:[2,3,3,3],score:[300,800,1500,2500,4000,6000],big:[1,2,3,5,7],double:[1,2,3,5,7]};
 function newGoal(slot,pool){
-  /* в семени дня цели тоже одинаковы у всех: выбор зависит от даты и порядкового номера цели */
-  const R=mode==='daily'?seeded(hashStr(daily.date)^Math.imul(gIssued+7,40503)):Math.random;gIssued++;
+  /* выбор цели зависит от зерна забега и её порядкового номера: в семени дня цели одинаковы у всех */
+  const R=seeded(seedOf()^Math.imul(gIssued+7,40503));gIssued++;
   const busyT=goals.map((g,i)=>i!==slot&&g?g.type:null),was=goals[slot]&&goals[slot].type;
   const opts=(pool||GTYPES).filter(t=>busyT.indexOf(t)<0&&t!==was),list=opts.length?opts:GTYPES;
   const type=list[(R()*list.length)|0],tb=GT[type];
@@ -1486,7 +1490,8 @@ function cloudLate(d){
   if(idle&&part(m)!==part(cur)){applyRec(m);restore();}
   else{
     if(!idle){m.run=cur.run;m.mode=cur.mode;if(mode==='daily'&&cur.daily)m.daily=cur.daily;}
-    applyRec(m);best=m.best;loadHerb();renderHerbBtn();loadDaily();setBest();renderSeed();
+    /* гербарий слит с облаком: старый снимок его бы затёр, поэтому шаг назад после слияния недоступен */
+    applyRec(m);best=m.best;loadHerb();renderHerbBtn();loadDaily();setBest();renderSeed();undoRec=null;renderLabel();
   }
   PF.push(localRec,true);
 }
@@ -1515,7 +1520,7 @@ function lateReward(){
   adCans++;adFails=0;if(modal==='adcan')closeCard();giveTool(adAsked);save();if(!busy)checkEnd();
 }
 let preCloud=null;
-const snap=()=>({v:1,adCans,ev,goals:goals&&{list:goals,tier:gTier,issued:gIssued},grid,score,cans,shovels,stats,dealt,rs,tray:tray.map(p=>p&&{cells:p.cells,id:p.id,alt:p.alt?p.alt.map(a=>({cells:a.cells})):null})});
+const snap=()=>({v:1,seed:runSeed,adCans,ev,goals:goals&&{list:goals,tier:gTier,issued:gIssued},grid,score,cans,shovels,stats,dealt,rs,tray:tray.map(p=>p&&{cells:p.cells,id:p.id,alt:p.alt?p.alt.map(a=>({cells:a.cells})):null})});
 function save(){
   if(tut||over)return;
   if(mode==='daily'){daily.run=snap();store('orangery-daily',daily);}else store('orangery-run',snap());
@@ -1539,7 +1544,7 @@ function loadRun(raw){
     const okPiece=q=>!!q&&Array.isArray(q.cells)&&q.cells.length>=1&&q.cells.length<=3&&q.cells.every(c=>Array.isArray(c)&&c.length===4&&[0,1,2].indexOf(c[0])>=0&&[0,1,2].indexOf(c[1])>=0&&((one(c[2],'ryb')&&(c[3]===1||c[3]===2))||(c[2]==='g'&&c[3]===0)));
     if(!d.grid.every(okCell))return null;
     const num=v=>Math.max(0,Math.floor(+v||0)),copy=q=>mkPiece(q.cells.map(c=>c.slice()));
-    const tr=d.tray.map(q=>{if(q===null)return null;if(!okPiece(q))throw new Error('piece');const t=copy(q);t.id=num(q.id);
+    const tr=d.tray.map(q=>{if(q===null)return null;if(!okPiece(q))throw new Error('piece');const t=copy(q);t.id=q.cells[0][2]==='g'?-1:num(q.id);
       if(Array.isArray(q.alt)&&q.alt.length===2&&q.alt.every(okPiece))t.alt=q.alt.map(copy);return t;});
     if(tr.every(q=>!q))return null;
     const st=d.stats||{},G=d.goals;let gl=null,gt={};
@@ -1549,26 +1554,29 @@ function loadRun(raw){
     }
     const E=d.ev||{},eb=E.bfly,bi=eb?num(eb.i):-1;
     const evv={next:num(E.next)||6,idx:num(E.idx),gold:!!E.gold,bfly:eb&&bi<25&&d.grid[bi]&&d.grid[bi].sp!=='x'?{i:bi,left:Math.max(1,num(eb.left))}:null};
-    return {ev:evv,goals:gl,tier:gt,issued:num(G&&G.issued),grid:d.grid.map(t=>t?(one(t.v,'rybkd')?{sp:t.sp,st:t.st,v:t.v}:{sp:t.sp,st:t.st}):null),tray:tr,score:num(d.score),cans:Math.min(3,num(d.cans)),shovels:PURE.shovelsOf(d.shovels),adCans:Math.min(PURE.AD_CANS,num(d.adCans)),dealt:num(d.dealt),rs:(+d.rs||0)|0,stats:{moves:num(st.moves),lotus:num(st.lotus),combo:num(st.combo)}};
+    return {ev:evv,goals:gl,tier:gt,issued:num(G&&G.issued),grid:d.grid.map(t=>t?(one(t.v,'rybkd')?{sp:t.sp,st:t.st,v:t.v}:{sp:t.sp,st:t.st}):null),tray:tr,score:num(d.score),cans:Math.min(3,num(d.cans)),shovels:PURE.shovelsOf(d.shovels),adCans:Math.min(PURE.AD_CANS,num(d.adCans)),dealt:num(d.dealt),rs:(+d.rs||0)|0,seed:(+d.seed||0)|0,stats:{moves:num(st.moves),lotus:num(st.lotus),combo:num(st.combo)}};
   }catch(e){return null;}
 }
 function clearUI(){
-  busy=false;over=false;modal=null;drag=null;swap=false;dig=false;digG.innerHTML='';stuck=false;gv++;runId++;
+  busy=false;over=false;modal=null;drag=null;swap=false;dig=false;digG.innerHTML='';stuck=false;undoRec=null;gv++;runId++;
   overG.style.display='none';overG.innerHTML='';dragG.innerHTML='';fxG.innerHTML='';showPreview(null);
 }
-function resume(d,msg){
+function resume(d,msg,still){
   clearUI();grid=d.grid;tray=d.tray;cans=d.cans;shovels=d.shovels;adCans=d.adCans||0;stats=d.stats;dealt=d.dealt;rs=d.rs;score=d.score;
+  /* забег, сохранённый до появления зерна: зерно выдаётся сейчас, раздача продолжается от него */
+  const reseed=mode!=='daily'&&!d.seed;
+  if(mode!=='daily'){runSeed=d.seed||newSeed();if(reseed)rs=runSeed;}
   /* цели: из сохранения, а выполненные перед закрытием сразу сменяются новыми */
   ev=d.ev||{next:6,idx:0,bfly:null,gold:false};gTier=d.tier||{};gIssued=d.issued||0;
   if(d.goals){goals=d.goals;goals.forEach((g,i)=>{if(g.done)goals[i]=newGoal(i);});}else initGoals();
   /* уровень цветения ставится сразу: без фанфар и без подарочной лейки за уже пройденное */
   level=LEVELS.filter(v=>d.score>=v).length;applyLevel();
   for(let i=0;i<25;i++)renderCell(i);
-  setScore(d.score);renderTray(true);mood();renderLabel();renderSeed();renderGoals();renderEvt();toast(msg||'забег продолжается');syncPlay();checkEnd();
+  setScore(d.score);renderTray(!still);mood();renderLabel();renderSeed();renderGoals();renderEvt();toast(msg||'забег продолжается');syncPlay();if(reseed)save();checkEnd();
 }
 function startRun(){
   clearUI();
-  if(mode==='daily')rs=hashStr(daily.date);
+  if(mode==='daily')rs=hashStr(daily.date);else rs=runSeed=newSeed();
   dealt=0;grid=Array(25).fill(null);score=0;tray=[newPiece(),newPiece(),newPiece()];stats={moves:0,lotus:0,combo:0};cans=1;shovels=0;adCans=0;gTier={};gIssued=0;initGoals();ev={next:6,idx:0,bfly:null,gold:false};renderEvt();
   for(let i=0;i<25;i++)renderCell(i);
   setScore(0);renderTray(true);mood();renderLabel();renderSeed();renderGoals();save();syncPlay();
@@ -1674,7 +1682,7 @@ function canArt(x,y,k,pour,dry){
   </g>`;
 }
 function renderLabel(){
-  placeHud();
+  placeHud();giveArm=0;
   const B=toolBoxes(),dy=desktop?0:LROW,tapH=desktop?36:44;
   const plate=(id,b,hot,active,aria,title,inner)=>{const y=b.y-dy,cy=y+b.h/2;
     return `<g id="${id}" class="btn fxp" role="button" tabindex="0" aria-label="${aria}">${desktop?`<title>${title}</title>`:''}
@@ -1692,40 +1700,41 @@ function renderLabel(){
   const dim=n=>n?'':' style="opacity:.42"';
   const canChip=B.can?plate('can',B.can,canHot(),swap,`Лейка: заменить фигуру. Осталось ${cans} из 3`,'Лейка: заменить фигуру',(x,cy,w)=>{
     const pour=canHot()&&cans>0;
-    if(swap&&!tut)return `<g${dim(cans)}>${canArt(x+(desktop?29:32),cy,desktop?.8:1.05,pour,!cans)}</g>`+ask(x+(desktop?49:56),cy,'какую заменить?');
     /* в обучении плашка прежняя: на десктопе со словом, на телефоне шире */
     if(tut)return `<g${dim(cans)}>${canArt(x+(desktop?29:32),cy,desktop?.8:1.05,pour,!cans)}</g>`
-      +(desktop?`<text x="${x+49}" y="${cy+(swap?4.5:5)}" style="font-size:${swap?12.5:14}px;font-weight:500;${fill('ink-low')}">${swap?'какую заменить?':'Лейка'}</text>`:'')
-      +(desktop&&swap?'':drops(x+(desktop?108:62),cy,desktop?14:13.5,1));
+      +(desktop?`<text x="${x+49}" y="${cy+5}" style="font-size:14px;font-weight:500;${fill('ink-low')}">Лейка</text>`:'')
+      +drops(x+(desktop?108:62),cy,desktop?14:13.5,1);
     return desktop?`<g${dim(cans)}>${canArt(x+23,cy,.72,pour,!cans)}</g>`+drops(x+43.5,cy,10.5,.86)
-      :`<g${dim(cans)}>${canArt(x+30,cy,1,pour,!cans)}</g>`+drops(x+57,cy,12.5,.95);
+      :`<g${dim(cans)}>${canArt(x+29,cy,1,pour,!cans)}</g>`+drops(x+54.5,cy,11.5,.95);
   }):'';
   const shChip=B.shovel?plate('shovel',B.shovel,shovelHot(),dig,`Лопатка: выкопать растение. Осталось ${shovels} из ${PURE.SHOVEL_MAX}`,'Лопатка: выкопать растение',(x,cy,w)=>{
     const hot=shovelHot()&&shovels>0;
     if(dig)return shovelArt(x+(desktop?26:29),cy,desktop?.8:.92,true,false)+ask(x+(desktop?47:54),cy,'что выкопать?');
     return desktop?shovelArt(x+23,cy,.78,hot,!shovels)+spades(x+47.5,cy,12.5)
-      :shovelArt(x+23,cy,.88,hot,!shovels)+spades(x+44,cy,12.5);
+      :shovelArt(x+20,cy,.88,hot,!shovels)+spades(x+39.5,cy,12);
   }):'';
+  /* отмена: стрелка назад. Пока отменять нечего, она приглушена */
+  const undoIco=(x,cy,k)=>`<g transform="translate(${x},${cy})"><g class="uico fxp"${dim(undoRec)}><g transform="scale(${k})" style="fill:none;stroke:var(--ink-low);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="M-5.6,-2.6 H2.4 a4.9,4.9 0 0 1 0,9.8 H-2.6"/><path d="M-2.4,-6.2 L-6,-2.6 L-2.4,1"/></g></g></g>`;
+  const undoAria='Отменить последнее действие'+(undoRec?'':'. Пока отменять нечего');
+  const undoChip=B.undo?plate('undo',B.undo,false,false,undoAria,'Отменить последнее действие',(x,cy,w)=>undoIco(x+w/2,cy-1.6,1.05)).replace('role="button"',`role="button" aria-disabled="${!undoRec}"`):'';
   const skip=x=>`<g id="skip" class="btn" role="button" tabindex="0" aria-label="Пропустить обучение"><rect class="ring" x="${x-10}" y="606" width="152" height="38" rx="19" style="fill:transparent"/><text class="link" x="${x}" y="630" style="${fill('muted-low')}">пропустить обучение</text></g>`;
   if(desktop){
     /* в левой панели между целями и кнопками: что сделать, если обучение или тупик; вопрос включённого инструмента — в его плашке */
-    const action=tut?'skip':stuck?'giveup':null;
-    const caption=tut?'пропустить обучение':stuck?'закончить забег':'';
     /* лейка видна и в обучении, чтобы в правой панели не было дыры; пока шаг её не просит, она приглушена и не нажимается */
     $('menu-can').innerHTML=tut&&!TUT[tut.n].can?`<g style="opacity:.4;pointer-events:none">${canChip}</g>`:canChip+shChip;
     /* в обучении целей ещё нет: ссылка встаёт сразу под рекордом, иначе — между целями и кнопками */
     const ly=tut?376:508;
-    labelG.innerHTML=action
-      ?`<g class="btn" id="${action}" role="button" tabindex="0" aria-label="${caption[0].toUpperCase()+caption.slice(1)}"><rect class="ring" x="-171" y="${ly}" width="152" height="28" rx="14" style="fill:transparent"/><text class="link" x="-95" y="${ly+18.5}" text-anchor="middle" style="font-size:13px;${fill('ink-top')}">${caption}</text></g>`:'';
+    /* та же строка несёт отмену хода. В тупике она делит строку со ссылкой «закончить», обе надписи короткие */
+    const lnk=(id,x,w,cap,aria,soft)=>`<g class="btn" id="${id}" role="button" tabindex="0"${soft?' aria-disabled="true"':''} aria-label="${aria}"><rect class="ring" x="${x}" y="${ly}" width="${w}" height="28" rx="14" style="fill:transparent"/><text class="link" x="${x+w/2}" y="${ly+18.5}" text-anchor="middle" style="font-size:13px;${fill('ink-top')}${soft?';opacity:.42':''}">${cap}</text></g>`;
+    labelG.innerHTML=tut?lnk('skip',-171,152,'пропустить обучение','Пропустить обучение')
+      :stuck?lnk('undo',-171,72,'отменить',undoAria,!undoRec)+lnk('giveup',-91,72,'закончить','Закончить забег')
+      :lnk('undo',-171,152,'отменить ход',undoAria,!undoRec);
     return;
   }
   if(tut){labelG.innerHTML=TUT[tut.n].can?canChip+skip(134):skip(24);return;}
-  /* между плашками и «правилами» остаётся 86 единиц: там ссылка тупика. Постоянной подсказки про поворот на телефоне нет: её место заняла лопатка */
-  labelG.innerHTML=canChip+shChip
-    +(stuck?`<g id="giveup" class="btn" role="button" tabindex="0" aria-label="Закончить забег"><rect class="ring" x="201" y="606" width="86" height="38" rx="19" style="fill:transparent"/><text class="link" x="244" y="630" text-anchor="middle" style="${fill('muted-low')}">закончить забег</text></g>`:'');
-  /* полная надпись остаётся, только если помещается; иначе короткая, полное название — для программ чтения с экрана */
-  const gt=labelG.querySelector('#giveup text');
-  if(gt){const len=gt.getComputedTextLength?gt.getComputedTextLength():0;if(!(len>0&&len<=84))gt.textContent='закончить';}
+  /* между отменой и «правилами» остаётся 66 единиц: там ссылка тупика. Постоянной подсказки про поворот на телефоне нет: её место заняли инструменты */
+  labelG.innerHTML=canChip+shChip+undoChip
+    +(stuck?`<g id="giveup" class="btn" role="button" tabindex="0" aria-label="Закончить забег"><rect class="ring" x="227" y="606" width="64" height="38" rx="19" style="fill:transparent"/><text class="link" x="259" y="630" text-anchor="middle" style="${fill('muted-low')}">закончить</text></g>`:'');
 }
 /* лейка: заменить неудобную фигуру на одну из двух. Одна в начале забега, ещё дают за лотос и за новый уровень цветения, больше трёх не копится */
 function gainCan(){
@@ -1762,6 +1771,7 @@ function digAt(i){
 async function digNow(i){
   if(!dig||shovels<1||!grid[i]||busy||over||modal||tut||paused||drag)return false;
   const id=runId;
+  undoMark('dig');
   busy=true;acted=true;dig=false;shovels--;renderLabel();renderTray();renderDig();
   SND.play('dig');buzz(12);FX.puff(i);
   const el=holders[i].firstChild;
@@ -1770,6 +1780,36 @@ async function digNow(i){
   grid[i]=null;gv++;renderCell(i);
   if(ev.bfly&&ev.bfly.i===i){ev.bfly=null;renderEvt('away');toast('бабочка улетела');}
   busy=false;mood();save();checkEnd();
+  return true;
+}
+/* ---------- отмена: шаг назад на одно последнее действие ---------- */
+/* перед ходом, выкапыванием и заменой забег запоминается целиком, вместе с гербарием. Отмена возвращает этот снимок.
+   Фигуры, события и цели после неё придут те же: они зависят от зерна забега и номеров, которые тоже в снимке */
+const UNDO_TXT={place:'ход отменён',dig:'лопатка вернулась',swap:'лейка вернулась'};
+function undoMark(kind){undoRec=tut||over?null:{kind,run:JSON.stringify(snap()),herb:JSON.stringify(herb)};}
+const undoOk=()=>PURE.canUndo({has:!!undoRec,busy,over,modal,drag:drag||pend,tut,paused});
+function undo(){
+  /* в одной очереди с ходами и лопаткой: отмена дожидается, пока закончится начатый ход */
+  const run=queue.then(undoNow);
+  queue=run.catch(()=>{busy=false;renderLabel();});
+  return run;
+}
+function undoNow(){
+  if(!undoOk())return false;
+  const rec=undoRec,d=loadRun(rec.run);undoRec=null;
+  if(!d){renderLabel();return false;}
+  const was=grid.map(t=>t?t.sp+t.st+(t.v||''):''),hadPiece=tray.map(p=>!!p);
+  /* счётчики гербария возвращаются из снимка; отметки «новое» остаются только у того, что игрок ещё не открывал */
+  try{const old=JSON.parse(rec.herb);herb={c:old.c,n:herb.n.filter(k=>old.c[k])};}catch(e){}
+  storeHerb();renderHerbBtn();
+  acted=true;resume(d,UNDO_TXT[rec.kind]||'отменено',true);save();
+  SND.play('back');buzz(8);
+  if(RM)return true;
+  /* что вернулось на место, мягко проявляется: клетки грядки и фигура в лотке */
+  const soft=[{opacity:0,transform:'scale(.82)'},{opacity:1,transform:'scale(1)'}],opt={duration:240,easing:'cubic-bezier(.2,.8,.3,1)'};
+  grid.forEach((t,i)=>{const el=holders[i].firstChild;if(t&&el&&(t.sp+t.st+(t.v||''))!==was[i])el.animate(soft,opt);});
+  tray.forEach((p,k)=>{if(!p||hadPiece[k])return;const el=trayG.querySelector(`[data-slot="${k}"]`);if(el)el.animate([{opacity:0,transform:'translateY(-12px)'},{opacity:1,transform:'translateY(0)'}],opt);});
+  const ico=document.querySelector('#undo .uico');if(ico)ico.animate([{transform:'rotate(0deg)'},{transform:'rotate(-70deg)',offset:.45},{transform:'rotate(0deg)'}],{duration:320,easing:'ease-out'});
   return true;
 }
 /* конец забега наступает, только когда не помочь ни тем, что в руках, ни одним инструментом за ролик */
@@ -1817,7 +1857,8 @@ function toolCard(tool,kind,note){
     +linkBtn('adno',502,stop?'Закончить забег':'Не сейчас',stop?'закончить забег':'не сейчас'),again);
 }
 /* награда за ролик: тот инструмент, который просили. Если лопаток уже две, выдаётся лейка */
-function giveTool(tool){if(tool==='shovel'&&shovels<PURE.SHOVEL_MAX)gainShovel('ad');else gainCan();}
+/* инструмент за ролик отменой не вернуть и не размножить: шаг назад после награды недоступен */
+function giveTool(tool){undoRec=null;if(tool==='shovel'&&shovels<PURE.SHOVEL_MAX)gainShovel('ad');else gainCan();renderLabel();}
 async function watchCan(){
   if(adWait||modal!=='adcan')return;
   adWait=true;
@@ -1837,8 +1878,8 @@ async function watchCan(){
 }
 /* два варианта замены запоминаются за фигурой: отмена бесплатна, но перебирать варианты нельзя */
 function altsFor(p){
-  /* в семени дня варианты замены тоже одинаковы у всех: они зависят от даты и номера фигуры, а не от случая */
-  const R=mode==='daily'?seeded(hashStr(daily.date)^Math.imul((p.id|0)+1,-1640531535)):Math.random;
+  /* варианты замены зависят от зерна забега и номера фигуры, а не от случая: в семени дня они одинаковы у всех */
+  const R=seeded(seedOf()^Math.imul((p.id|0)+1,-1640531535));
   /* лейка должна выручать: если ни один вариант не помещается, первый становится одной клеткой.
      Запомненные варианты перепроверяются при каждом открытии: грядка с тех пор могла измениться, а на «лейка спасёт» опираются правила тупика */
   const fix=out=>{
@@ -1851,14 +1892,31 @@ function altsFor(p){
   while(out.length<2)out.push(newPiece(R));
   return p.alt=fix(out);
 }
-function openSwap(k){
-  const p=tray[k];if(!p)return;
-  if(p.cells[0][2]==='g'){toast('золотое семя менять незачем');return;}
-  swapK=k;
-  const alts=altsFor(p),opt=(q,i)=>{const x=i?211:75,w=q.w*TM+(q.w-1)*TG,h=q.h*TM+(q.h-1)*TG;
-    return `<g class="btn" role="button" tabindex="0" data-alt="${i}" aria-label="Вариант ${i+1}"><rect class="ring" x="${x}" y="372" width="104" height="104" rx="20" style="fill:var(--over-soil1);stroke:var(--over-line);stroke-width:1.2"/><g transform="translate(${x+(104-w)/2},${372+(104-h)/2})">${pieceHTML(q,TM,TG,false)}</g></g>`;};
-  showCard('swap',300,262,line(346,20,'over-ink','На что заменить?',600)+opt(alts[0],0)+opt(alts[1],1)
-    +`<g id="keep" class="btn" role="button" tabindex="0" aria-label="Оставить как есть"><rect class="ring" x="95" y="500" width="200" height="36" rx="18" style="fill:transparent"/><text class="link" x="195" y="523" text-anchor="middle" style="${fill('over-muted')}">оставить как есть</text></g>`);
+/* карточка замены открывается сразу по нажатию на лейку. Вверху три фигуры лотка: нажатие на другую показывает её варианты,
+   так что все замены видны без лишних нажатий. Золотое семя и пустое место в лотке не выбираются */
+const swappable=p=>!!p&&p.cells[0][2]!=='g';
+function openSwap(k,again){
+  if(k==null||!swappable(tray[k]))k=tray.findIndex(swappable);
+  if(k<0){swap=false;toast('золотое семя менять незачем');return;}
+  swapK=k;swap=true;
+  const Y=242,m=24,g=3,alts=altsFor(tray[k]);
+  const tab=(p,i)=>{const x=73+i*86,y=Y+82,on=i===k;
+    if(!p)return `<rect x="${x+.5}" y="${y+.5}" width="71" height="71" rx="16" style="fill:none;stroke:var(--over-line);stroke-width:1;stroke-dasharray:3 5;opacity:.6"/>`;
+    const w=p.w*m+(p.w-1)*g,h=p.h*m+(p.h-1)*g,art=`<g transform="translate(${x+(72-w)/2},${y+(72-h)/2})">${pieceHTML(p,m,g,false)}</g>`;
+    if(!swappable(p))return `<g aria-hidden="true" style="opacity:.4"><rect x="${x}" y="${y}" width="72" height="72" rx="16" style="fill:var(--over-soil1);stroke:var(--over-line);stroke-width:1"/>${art}</g>`;
+    return `<g class="btn" role="button" tabindex="0" data-tab="${i}" aria-pressed="${on}" aria-label="Фигура ${i+1} из лотка${on?', выбрана':''}"><rect class="ring" x="${x}" y="${y}" width="72" height="72" rx="16" style="fill:var(--over-soil${on?0:1});stroke:var(--${on?'gold':'over-line'});stroke-width:${on?2.2:1.2}"/><g${on?'':' style="opacity:.62"'}>${art}</g></g>`;};
+  const opt=(q,i)=>{const x=i?211:75,y=Y+192,w=q.w*TM+(q.w-1)*TG,h=q.h*TM+(q.h-1)*TG;
+    return `<g class="btn" role="button" tabindex="0" data-alt="${i}" aria-label="Заменить на вариант ${i+1}"><rect class="ring" x="${x}" y="${y}" width="104" height="104" rx="20" style="fill:var(--over-soil1);stroke:var(--over-line);stroke-width:1.2"/><g transform="translate(${x+(104-w)/2},${y+(104-h)/2})">${pieceHTML(q,TM,TG,false)}</g></g>`;};
+  /* стрелка от выбранной фигуры к её вариантам: видно, чьи это замены */
+  const cx=73+k*86+36,tie=`<path d="M${cx},${Y+159} v9 M${cx-4.5},${Y+164} l4.5,4.5 l4.5,-4.5" style="fill:none;stroke:var(--gold);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"/>`;
+  showCard('swap',Y,360,line(Y+44,20,'over-ink','Замена фигуры',600)+line(Y+68,13,'over-muted','выберите фигуру из лотка')
+    +tray.map(tab).join('')+tie
+    +`<g id="alts"><text x="195" y="${Y+183}" text-anchor="middle" style="font-size:13px;${fill('over-muted')}">и то, на что её заменить</text>${opt(alts[0],0)+opt(alts[1],1)}</g>`
+    +`<g id="keep" class="btn" role="button" tabindex="0" aria-label="Оставить как есть"><rect class="ring" x="95" y="${Y+308}" width="200" height="40" rx="20" style="fill:transparent"/><text class="link" x="195" y="${Y+333}" text-anchor="middle" style="${fill('over-muted')}">оставить как есть</text></g>`,again);
+  /* при переключении фигуры карточка стоит на месте, меняются только варианты */
+  if(again&&!RM)$('alts').animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}],{duration:180,easing:'cubic-bezier(.2,.8,.3,1)'});
+  /* фокус в карточке: с клавиатуры сразу видно, какая фигура выбрана */
+  const sel=overG.querySelector(`[data-tab="${k}"]`);if(sel)sel.focus({preventScroll:true});
 }
 
 /* ---------- карточки поверх игры ---------- */
@@ -1869,12 +1927,12 @@ const mini=(x,y,sp,st)=>`<g transform="translate(${x},${y}) scale(.6)">${plant(s
 const xBtn=(y,label)=>`<g id="xclose" class="btn" role="button" tabindex="0" aria-label="${label}"><rect x="308" y="${y+6}" width="46" height="46" style="fill:transparent"/><circle class="ring" cx="331" cy="${y+29}" r="14" style="fill:var(--over-soil0);stroke:var(--over-line);stroke-width:1"/><path d="M326.5,${y+24.5} l9,9 M335.5,${y+24.5} l-9,9" style="fill:none;stroke:var(--over-ink);stroke-width:1.8;stroke-linecap:round"/></g>`;
 const chev=(x,y)=>`<path d="M${x},${y} l6,6 l-6,6" style="fill:none;stroke:var(--over-muted);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"/>`;
 function showCard(kind,y,h,html,still){
-  modal=kind;
+  modal=kind;if(kind!=='swap')swap=false;
   overG.innerHTML=`<rect x="-4000" y="-4000" width="8390" height="8844" style="${fill('black')};opacity:.6"/><g id="cardg" data-y="${y}" data-h="${h}" transform="${cardPosition(y,h)}"><rect x="30" y="${y}" width="330" height="${h}" rx="30" style="fill:${u('over')};stroke:var(--over-line);stroke-width:1.2"/>${html}</g>`;
   overG.style.display='';syncPlay();
   if(!RM&&!still)overG.animate([{opacity:0},{opacity:1}],{duration:220,easing:'ease-out'});
 }
-function closeCard(){modal=null;overG.style.display='none';overG.innerHTML='';syncPlay();}
+function closeCard(){modal=null;swap=false;overG.style.display='none';overG.innerHTML='';syncPlay();}
 /* стартовая карточка: человек, которому прислали ссылку, должен понять игру без объяснений */
 function intro(){
   showCard('intro',236,340,line(286,23,'over-ink','Оранжерея',600)+line(308,13,'over-muted','спокойная игра про сад')
@@ -1886,16 +1944,17 @@ function intro(){
 function rules(page){
   if(page){
     const item=(y,name,text)=>line(y,14.5,'over-ink',name,600)+line(y+18,12.5,'over-muted',text);
-    showCard('help',124,514,xBtn(124,'Закрыть правила')+line(168,21,'over-ink','Ещё в игре',600)
-      +item(204,'Лейка','меняет фигуру; дают за лотос и цели')
-      +item(248,'Лопатка','выкапывает цветок или сорняк; дают за цепочку')
-      +item(292,'Цели','три задачи забега, за каждую лейка')
-      +item(336,'Бабочка','слейте её цветок: очки за слияние удвоятся')
-      +item(380,'Сорняк','занимает клетку; его убирает слияние рядом')
-      +item(424,'Золотое семя','становится тем, что растёт по соседству')
-      +item(468,'Гербарий','альбом находок, редкие растения по рецептам')
-      +item(512,'Семя дня','одна раздача на всех, одна попытка в день')
-      +button('ok',560,'Понятно','Закрыть правила'),true);
+    showCard('help',124,518,xBtn(124,'Закрыть правила')+line(168,21,'over-ink','Ещё в игре',600)
+      +item(202,'Лейка','меняет фигуру; дают за лотос и цели')
+      +item(242,'Лопатка','выкапывает цветок или сорняк; дают за цепочку')
+      +item(282,'Отмена','возвращает последнее действие, бесплатно')
+      +item(322,'Цели','три задачи забега, за каждую лейка')
+      +item(362,'Бабочка','слейте её цветок: очки за слияние удвоятся')
+      +item(402,'Сорняк','занимает клетку; его убирает слияние рядом')
+      +item(442,'Золотое семя','становится тем, что растёт по соседству')
+      +item(482,'Гербарий','альбом находок, редкие растения по рецептам')
+      +item(522,'Семя дня','одна раздача на всех, одна попытка в день')
+      +button('ok',564,'Понятно','Закрыть правила'),true);
     return;
   }
   const row=(y,a,b,cap)=>a.map((q,i)=>mini(52+i*40,y,q[0],q[1])).join('')+chev(184,y+13)
@@ -1909,7 +1968,7 @@ function rules(page){
     +row(322,[['w',4],['w',4],['w',4]],null,'+600 очков')
     +line(392,14,'over-ink','Новый цветок вырастает там,')+line(412,14,'over-ink','куда вы поставили фигуру.')
     +line(438,14,'over-ink','Грядка заранее показывает результат.')
-    +line(462,14,'over-ink',TAP[0].toUpperCase()+TAP.slice(1)+' по фигуре в лотке поворачивает её.')
+    +line(462,14,'over-ink','Нажатие на фигуру в лотке поворачивает её.')
     +line(486,14,'over-ink','Фигуры некуда ставить: конец забега.')
     +button('rnext',508,'Дальше','Вторая страница правил')
     +lk('retut',594,'Пройти обучение заново',score>0&&!tut?'пройти обучение (забег сбросится)':'пройти обучение заново')
@@ -1921,13 +1980,13 @@ const TUT=[
   {board:[[11,'r',1],[12,'r',1]],piece:[[0,0,'r',1]],at:[3,2],want:[[0,0]],
    hint:['Перетащите росток','к двум таким же'],done:['Три ростка слились в бутон.','Он вырос там, куда вы поставили.']},
   {board:[[2,'y',1],[8,'y',1],[11,'r',1],[17,'r',1]],piece:[[0,0,'y',1],[1,0,'r',1]],at:[2,1],want:[[0,0],[0,1]],
-   turn:['Тапните по фигуре,','чтобы повернуть её'],again:['Поверните ещё раз:','янтарный росток должен быть сверху'],
+   turn:['Нажмите на фигуру,','чтобы повернуть её'],again:['Поверните ещё раз:','янтарный росток должен быть сверху'],
    hint:['Теперь поставьте фигуру','в отмеченные клетки'],done:['Каждый росток слился','со своими соседями.']},
   {board:[[17,'r',1],[22,'r',1],[11,'r',2],[13,'r',2]],piece:[[0,0,'r',1]],at:[2,2],want:[[0,0]],
    hint:['Поставьте росток','между двумя бутонами'],done:['Цепочка: бутоны дали цветок.','Три любых цветка дадут лотос.']},
-  /* лейка: фигуру никуда ставить не нужно, шаг кончается выбором замены */
+  /* лейка: фигуру никуда ставить не нужно, шаг кончается выбором замены в карточке */
   {can:true,board:[[6,'y',1],[7,'y',1]],piece:[[0,0,'r',1],[1,0,'r',2]],alt:[[[0,0,'y',1]],[[0,0,'r',1],[1,0,'y',2]]],at:[-9,-9],want:[],
-   canHint:['Эта фигура здесь не нужна.','Тапните по лейке'],pick:['Теперь тапните по фигуре','и выберите замену'],done:['Лейка заменила фигуру.','Новые лейки дают за лотос и цели.']},
+   canHint:['Эта фигура здесь не нужна.','Нажмите на лейку и выберите замену'],done:['Лейка заменила фигуру.','Новые лейки дают за лотос и цели.']},
   /* бабочка сидит на ростке, сорняк стоит рядом с местом слияния: один ход показывает оба события */
   {bfly:7,board:[[6,'r',1],[7,'r',1],[13,'x',0]],piece:[[0,0,'r',1]],at:[3,1],want:[[0,0]],
    hint:['Бабочка удвоит очки за свой росток,','а слияние рядом уберёт сорняк'],done:['Очки удвоились, сорняк исчез.','Такие события случаются сами.']},
@@ -1937,7 +1996,7 @@ const TUT=[
 function tutWant(){const p=tray&&tray[1];return !!p&&TUT[tut.n].want.every((w,i)=>p.cells[i]&&p.cells[i][0]===w[0]&&p.cells[i][1]===w[1]);}
 function renderTut(){
   if(!tut){tutG.innerHTML='';return;}
-  const S=TUT[tut.n],done=tut.phase==='done',okRot=done||tutWant(),txt=done?S.done:S.can?(swap?S.pick:S.canHint):okRot?S.hint:tut.turned?S.again:S.turn;
+  const S=TUT[tut.n],done=tut.phase==='done',okRot=done||tutWant(),txt=done?S.done:S.can?S.canHint:okRot?S.hint:tut.turned?S.again:S.turn;
   const slot=slotBox(1),can=canBox();
   // Подсказка рисуется в координатах грядки, а лоток привязан к краю окна.
   slot.x+=rightMenuOffset;can.x+=rightMenuOffset;
@@ -1946,15 +2005,16 @@ function renderTut(){
     +line(148,12,'over-muted',`обучение, шаг ${tut.n+1} из ${TUT.length}`)+line(177,15.5,'over-ink',txt[0],500)+line(201,15.5,'over-ink',txt[1],500)+'</g>';
   if(!done){
     S.want.forEach(w=>{h+=`<rect class="made pulse" x="${BX+(S.at[0]+w[0])*STEP+2}" y="${BY+(S.at[1]+w[1])*STEP+2}" width="${CELL-4}" height="${CELL-4}" rx="11"/>`;});
-    if(S.can&&!swap)h+=`<rect class="made pulse" x="${can.x-4}" y="${can.y-4}" width="${can.w+8}" height="${can.h+8}" rx="${can.h/2+4}"/>`;
-    else if(S.can||!okRot)h+=`<rect class="made pulse" x="${slot.x-4}" y="${slot.y-4}" width="${slot.w+8}" height="${slot.h+8}" rx="24"/>`;
-    if(!RM&&!drag)h+=`<g id="hand" style="opacity:0"><circle r="13" style="${fill('white')};opacity:.85"/><circle r="13" style="fill:none;stroke:var(--dark);stroke-width:1;opacity:.35"/></g>`;
+    if(S.can&&swap);
+    else if(S.can)h+=`<rect class="made pulse" x="${can.x-4}" y="${can.y-4}" width="${can.w+8}" height="${can.h+8}" rx="${can.h/2+4}"/>`;
+    else if(!okRot)h+=`<rect class="made pulse" x="${slot.x-4}" y="${slot.y-4}" width="${slot.w+8}" height="${slot.h+8}" rx="24"/>`;
+    if(!RM&&!drag&&!(S.can&&swap))h+=`<g id="hand" style="opacity:0"><circle r="13" style="${fill('white')};opacity:.85"/><circle r="13" style="fill:none;stroke:var(--dark);stroke-width:1;opacity:.35"/></g>`;
   }
   tutG.innerHTML=h;
   const hand=$('hand');if(!hand)return;
   const sx=slot.x+slot.w/2,sy=slot.y+slot.h/2,T=(x,y,k)=>`translate(${x}px,${y}px) scale(${k})`;
   /* рука либо стучит по месту (лейка, фигура в лотке), либо тащит фигуру на грядку */
-  const tap=S.can?(swap?[sx,sy]:[can.x+can.w/2,can.y+can.h/2]):okRot?null:[sx,sy];
+  const tap=S.can?[can.x+can.w/2,can.y+can.h/2]:okRot?null:[sx,sy];
   if(!tap){
     const xs=S.want.map(w=>w[0]),ys=S.want.map(w=>w[1]);
     const tx=BX+(S.at[0]+(Math.min(...xs)+Math.max(...xs))/2)*STEP+CELL/2,ty=BY+(S.at[1]+(Math.min(...ys)+Math.max(...ys))/2)*STEP+CELL/2;
@@ -1974,7 +2034,7 @@ function tutSet(){
 function tutStart(){
   mode='free';store('orangery-run',null);
   closeCard();over=false;busy=false;drag=null;dragG.innerHTML='';fxG.innerHTML='';showPreview(null);
-  tut={n:0,phase:'do',turned:false};ev={next:6,idx:0,bfly:null,gold:false};renderEvt();renderLabel();renderGoals();setScore(0);tutSet();
+  undoRec=null;tut={n:0,phase:'do',turned:false};ev={next:6,idx:0,bfly:null,gold:false};renderEvt();renderLabel();renderGoals();setScore(0);tutSet();
 }
 function tutDone(){
   const t=tut;t.phase='done';renderTut();
@@ -2026,7 +2086,6 @@ game.addEventListener('pointerdown',e=>{
   const k=+el.dataset.slot,p=tray[k];if(!p)return;
   e.preventDefault();
   if(dig)setDig(false);
-  if(swap){openSwap(k);return;}
   try{game.setPointerCapture(e.pointerId);}catch(err){}
   const q=pt(e);
   pend={k,p,id:e.pointerId,touch:e.pointerType!=='mouse',x:q.x,y:q.y,e,timer:setTimeout(()=>{if(pend)beginDrag(pend.e);},230)};
@@ -2054,21 +2113,36 @@ function act(el){
   if(el.id==='adcan'){watchCan();return;}
   if(el.id==='adno'){if(adWait)return;const k=adKind;closeCard();if(k==='stuck')gameOver();return;}
   if(el.id==='can'){
-    if(busy||over||modal||drag||(tut&&!(tut.phase==='do'&&TUT[tut.n].can)))return;
+    if(busy||over||modal||drag||pend||(tut&&!(tut.phase==='do'&&TUT[tut.n].can)))return;
     if(!cans){if(PURE.canOffer(adState()))toolCard('can','empty');else toast('леек нет: их дают за лотос и цели');return;}
     if(dig){dig=false;renderDig();}
-    swap=!swap;renderLabel();renderTray();if(tut)renderTut();return;
+    openSwap();renderLabel();if(tut)renderTut();return;
   }
   if(el.id==='shovel'){
     if(busy||over||modal||drag||pend||tut)return;
     if(!shovels){if(PURE.adOpen(adState()))toolCard('shovel','empty');else toast('лопатку дают за цепочку слияний');return;}
     setDig(!dig);return;
   }
-  if(el.id==='giveup'){if(!busy&&!over&&!modal){stuck=false;gameOver();}return;}
-  if(el.id==='keep'){closeCard();swap=false;renderLabel();renderTray();if(tut)renderTut();return;}
+  if(el.id==='undo'){
+    if(undoRec)undo();else if(!busy&&!over&&!modal&&!tut)toast('отменять пока нечего');
+    return;
+  }
+  if(el.id==='giveup'){
+    /* ссылка стоит вплотную к отмене, а конец забега не вернуть: первое нажатие спрашивает «точно?», как у кнопки «заново» */
+    if(busy||over||modal)return;
+    if(Date.now()<giveArm){giveArm=0;stuck=false;gameOver();return;}
+    const t=el.querySelector('text');if(t)t.textContent='точно?';
+    giveArm=Date.now()+2500;
+    setTimeout(()=>{if(giveArm&&Date.now()>=giveArm)renderLabel();},2600);
+    return;
+  }
+  if(el.dataset.tab){openSwap(+el.dataset.tab,true);return;}
+  if(el.id==='keep'){closeCard();swap=false;renderLabel();if(tut)renderTut();return;}
   if(el.dataset.alt){
+    if(busy||drag||pend)return;
     const p=tray[swapK],q=p&&p.alt&&p.alt[+el.dataset.alt];closeCard();swap=false;
-    if(q){tray[swapK]=q;cans--;SND.play('level');buzz(10);}
+    /* у фигуры, которую поставила лейка, свой номер: от него зависят уже её варианты замены */
+    if(q){undoMark('swap');q.id=((((p.id|0)*31+1000+(+el.dataset.alt))>>>0)%1000000007);tray[swapK]=q;cans--;SND.play('level');buzz(10);}
     renderLabel();renderTray(true);
     if(tut){tutDone();return;}
     save();checkEnd();return;
@@ -2115,10 +2189,16 @@ document.addEventListener('click',e=>{if(dig&&e.composedPath().indexOf(game)<0)s
 window.addEventListener('keydown',e=>{
   if(e.key!=='Escape'||paused||modal)return;
   if(dig){e.preventDefault();SND.play('ui');setDig(false);}
-  else if(swap&&!tut){e.preventDefault();SND.play('ui');swap=false;renderLabel();renderTray();}
 });
-/* Esc закрывает справочные карточки (правила, цели, гербарий, семя дня); карточки с выбором (реклама, замена, конец забега) не трогает */
-window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!paused&&['help','goals','herb','daily'].indexOf(modal)>=0){e.preventDefault();SND.play('ui');closeCard();}});
+/* Ctrl+Z и Cmd+Z отменяют последнее действие, как привыкли за компьютером */
+window.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&!e.altKey&&(e.key==='z'||e.key==='Z'||e.key==='я'||e.key==='Я')&&booted&&undoOk()){e.preventDefault();undo();}});
+/* Esc закрывает справочные карточки (правила, цели, гербарий, семя дня) и карточку замены: отказ от замены бесплатный.
+   Карточки с выбором (реклама, конец забега) не трогает */
+window.addEventListener('keydown',e=>{
+  if(e.key!=='Escape'||paused)return;
+  if(modal==='swap'){e.preventDefault();SND.play('ui');closeCard();swap=false;renderLabel();if(tut)renderTut();}
+  else if(['help','goals','herb','daily'].indexOf(modal)>=0){e.preventDefault();SND.play('ui');closeCard();}
+});
 game.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const d=e.target.closest&&e.target.closest('[data-dig]');if(d){e.preventDefault();if(!paused&&booted)digAt(+d.dataset.dig);return;}const el=e.target.closest&&e.target.closest('.btn');if(el){e.preventDefault();press(el);}}});
 window.addEventListener('hashchange',()=>{const h=location.hash.replace('#','');if(THEMES[h]){manual=true;setTheme(h,true);}});
 
@@ -2195,14 +2275,15 @@ PF.init().then(boot);
 window.__orangery={LS,localRec,PF,adState,setLastAd:v=>{lastAdAt=v;},setAdFails:v=>{adFails=v;},setCans:n=>{cans=n;renderLabel();},setShovels:n=>{shovels=n;renderLabel();},setDig,digAt,goals:()=>goals,ev:()=>ev,eventsTick,renderEvt,herb:()=>herb,herbCard,found,goalBump,checkGoals,goalsCard,checkEnd,startDaily,exitDaily,dailyCard,loadDaily,state:()=>({booted,paused,pf:{on:PF.on,lang:PF.lang},mode,dealt,daily,streak,cans,shovels,dig,swap,stuck,grid,tray,score,best,busy,over,modal,themeId,level,lite,wet,tense,stats,parts:parts.length,K,tut:tut&&{n:tut.n,phase:tut.phase}}),start,turn,rules,tutStart,setTheme,gameOver,SND,FX,
   setScore:v=>setScore(v,true),set:(i,sp,st,v)=>{grid[i]=sp?(v?{sp,st,v}:{sp,st}):null;gv++;renderCell(i);},
   place:(k,c,r)=>fits(tray[k],c,r)?place(k,tray[k],c,r):false,
-  preview:(k,c,r)=>{showPreview(tray[k],c,r,fits(tray[k],c,r));return preG.childNodes.length;}};
+  preview:(k,c,r)=>{showPreview(tray[k],c,r,fits(tray[k],c,r));return preG.childNodes.length;},
+  undo,canUndo:()=>undoOk(),snap:()=>JSON.stringify(snap()),openSwap};
 /*</debug>*/
 })();
 </script>
 <!--orangery-build-->
 <div id="orangery-build-label" aria-hidden="true" style="position:fixed;left:8px;bottom:6px;z-index:50;pointer-events:none;font:11px/1.4 system-ui,sans-serif;color:rgba(255,255,255,.85);background:rgba(0,0,0,.38);padding:1px 7px;border-radius:8px"></div>
 <script>/*orangery-update*/(function(){
-var cur='0bfa2ff',at='2026-11-23T20:07:06Z',el=document.getElementById('orangery-build-label');
+var cur='d394afe',at='2026-11-26T05:33:27Z',el=document.getElementById('orangery-build-label');
 try{var d=new Date(at),z=function(v){return String(v).padStart(2,'0')};el.textContent='сборка '+cur+' · '+z(d.getDate())+'.'+z(d.getMonth()+1)+' '+z(d.getHours())+':'+z(d.getMinutes());}catch(e){el.textContent='сборка '+cur;}
 function check(){
   fetch(location.pathname+'?build-check='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
