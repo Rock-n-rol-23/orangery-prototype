@@ -4,13 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Оранжерея: прототип забега</title>
+<meta name="orangery-build" content="b64b853 2026-11-26T06:40:39Z">
 <style>
 /* «Оранжерея», черновой прототип забега. Стиль по orangery/design.md, эталон mockups/styles-v2.html. */
 :root{
   --page-bg:#07090B; --focus:#FFD875; --dust:#B9A88F;
   --font-game:"Avenir Next","Segoe UI",system-ui,sans-serif;
   --r:#FF7AB6; --r2:#D63F8E; --y:#FFCB5C; --y2:#EF8E1D; --b:#5CF2E3; --b2:#17A9BC; --w:#F2FFF0; --w2:#8FEFBF;
-  --white:#FFFFFF; --black:#000000; --core0:#FFFFFF; --core1:#FFF1CC; --gold:#FFD875; --dark:#06202A; --lamp-c:#FFE3A1; --petal-rim:rgba(255,255,255,.42);
+  --white:#FFFFFF; --black:#000000; --core0:#FFFFFF; --core1:#FFF1CC; --gold:#FFD875; --dark:#06202A; --lamp-c:#FFE3A1; --petal-rim:rgba(255,255,255,.42); --tool-rim:rgba(255,255,255,.42);
   --sw-dawn:#F0B59A; --sw-day:#86CFE6; --sw-dusk:#F6A160; --sw-night:#0A2C33; --sw-night-line:rgba(140,255,220,.6);
   --over-ink:#F3FFF9; --over-muted:rgba(243,255,249,.7); --over-soil0:#0B2428; --over-soil1:#061519; --over-line:rgba(140,255,220,.4);
 }
@@ -20,7 +21,7 @@
   --floor0:#2F5B5E; --floor1:#173B40; --fol0:#0A2327; --fol1:#1D4A4E; --fol2:#2B6164; --rim:rgba(255,215,180,.55);
   --shaft:#FFE1BF; --shaft-o:.3; --mist:#FFD7BC;
   --soil0:#102B2D; --soil1:#0B2124; --panel-line:rgba(255,225,200,.38); --cell:rgba(255,255,255,.045); --cell-line:rgba(255,230,210,.14); --cell-dot:rgba(255,230,210,.4);
-  --ink-top:#FFF6EA; --muted-top:rgba(255,246,234,.74); --chip:rgba(10,40,48,.34); --chip-line:rgba(255,240,225,.3);
+  --ink-top:#FFF6EA; --muted-top:rgba(255,246,234,.74); --chip:rgba(20,54,62,.8); --chip-line:rgba(255,240,225,.34); --sw-ring:rgba(255,246,234,.16); --halo-top:#143A42; --gold-ui:#FFD875;
   --ink-low:#FFF3E6; --muted-low:rgba(255,243,230,.72); --card:rgba(8,30,34,.5); --card-line:rgba(255,230,210,.22);
   --stem:#3E9A84; --leaf0:#2F7F6C; --leaf1:#14524A; --edge:rgba(255,225,190,.6);
   --glow:.7; --shade:.25; --lamp:.25; --stars:.25; --vig:.28; --mote:#FFE9CF; --bird:#173B40;
@@ -31,8 +32,8 @@
   --floor0:#86C8A4; --floor1:#D5EDDB; --fol0:#175C45; --fol1:#2C8361; --fol2:#2C8361; --rim:rgba(235,255,210,.6);
   --shaft:#FFFFFF; --shaft-o:.36; --mist:#FFFFFF;
   --soil0:#1F3F35; --soil1:#15302A; --panel-line:rgba(255,255,255,.6); --cell:rgba(255,255,255,.06); --cell-line:rgba(255,255,255,.16); --cell-dot:rgba(255,255,255,.45);
-  --ink-top:#0B3A44; --muted-top:rgba(11,58,68,.74); --chip:rgba(255,255,255,.55); --chip-line:rgba(255,255,255,.92);
-  --ink-low:#0F4034; --muted-low:rgba(15,64,52,.76); --card:rgba(255,255,255,.52); --card-line:rgba(255,255,255,.92);
+  --ink-top:#0B3A44; --muted-top:rgba(11,58,68,.74); --chip:rgba(255,255,255,.8); --chip-line:rgba(255,255,255,.95); --sw-ring:rgba(11,58,68,.6); --halo-top:#FFFFFF; --gold-ui:#A86F03;
+  --ink-low:#0F4034; --muted-low:rgba(15,64,52,.76); --card:rgba(255,255,255,.52); --card-line:rgba(255,255,255,.92); --tool-rim:rgba(15,64,52,.8);
   --stem:#4DB58E; --leaf0:#45A983; --leaf1:#1C6E55; --edge:rgba(235,255,215,.65);
   --glow:.45; --shade:.4; --lamp:0; --stars:0; --vig:.12; --mote:#FFFFFF; --bird:#1C6E55;
 }
@@ -42,7 +43,7 @@
   --floor0:#3D2A3A; --floor1:#1F1722; --fol0:#0E0A12; --fol1:#2C1F2E; --fol2:#4A3147; --rim:rgba(255,170,110,.6);
   --shaft:#FFC58A; --shaft-o:.3; --mist:#FF9F74;
   --soil0:#1B1722; --soil1:#120F18; --panel-line:rgba(255,200,150,.4); --cell:rgba(255,255,255,.04); --cell-line:rgba(255,200,160,.14); --cell-dot:rgba(255,205,165,.4);
-  --ink-top:#FFF3E2; --muted-top:rgba(255,243,226,.76); --chip:rgba(30,20,34,.36); --chip-line:rgba(255,215,175,.32);
+  --ink-top:#FFF3E2; --muted-top:rgba(255,243,226,.76); --chip:rgba(40,26,42,.8); --chip-line:rgba(255,215,175,.34); --sw-ring:rgba(255,243,226,.16); --halo-top:#2A1C2C; --gold-ui:#FFD875;
   --ink-low:#FFEEDD; --muted-low:rgba(255,238,221,.7); --card:rgba(18,12,22,.5); --card-line:rgba(255,200,160,.22);
   --stem:#3C8F7A; --leaf0:#2B7767; --leaf1:#153F44; --edge:rgba(255,185,130,.65);
   --glow:.85; --shade:.2; --lamp:.6; --stars:.15; --vig:.34; --mote:#FFD3A1; --bird:#2C1F2E;
@@ -53,7 +54,7 @@
   --floor0:#071E23; --floor1:#030F14; --fol0:#010A0E; --fol1:#06202A; --fol2:#0B303A; --rim:rgba(125,239,211,.45);
   --shaft:#BFFFEA; --shaft-o:.1; --mist:#5CF2E3;
   --soil0:#071B1F; --soil1:#04141A; --panel-line:rgba(140,255,220,.42); --cell:rgba(255,255,255,.035); --cell-line:rgba(140,255,220,.15); --cell-dot:rgba(140,255,220,.42);
-  --ink-top:#E4FFF6; --muted-top:rgba(228,255,246,.6); --chip:rgba(255,255,255,.06); --chip-line:rgba(140,255,220,.22);
+  --ink-top:#E4FFF6; --muted-top:rgba(228,255,246,.6); --chip:rgba(6,30,36,.8); --chip-line:rgba(140,255,220,.26); --sw-ring:rgba(228,255,246,.16); --halo-top:#04161B; --gold-ui:#FFD875;
   --ink-low:#E4FFF6; --muted-low:rgba(228,255,246,.55); --card:rgba(4,22,27,.6); --card-line:rgba(140,255,220,.2);
   --stem:#2B8774; --leaf0:#14584E; --leaf1:#0B3A36; --edge:rgba(110,240,205,.7);
   --glow:1; --shade:0; --lamp:1; --stars:1; --vig:.4; --mote:#FFE08A; --bird:transparent;
@@ -61,18 +62,63 @@
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;overflow:clip;background:var(--page-bg);overscroll-behavior:none}
 .stage{position:fixed;inset:0;display:grid;place-items:center}
-.screen{position:relative;height:min(100dvh,calc(100vw * 844 / 390));aspect-ratio:390/844;overflow:hidden;isolation:isolate;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-@media (min-width:600px){.screen{border-radius:11.3% / 5.2%}}
+.screen{position:relative;height:min(100dvh,calc(100vw * 844 / 390));aspect-ratio:390/844;isolation:isolate;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* сцена до краёв окна. Слои колонки не обрезаются по её краю и сами рисуют всё, что видно в окне: небо, холмы, стеклянную стену, лианы, листья.
+   Размер и место колонки задаёт fitView(): она встаёт по ширине окна, а в низком окне срезает пустое место сверху и снизу */
+#bg0,#bg1,#fg,#fgl,#game,.ghostscene svg{overflow:visible}
+.veil{position:absolute;inset:0;pointer-events:none}
+#vigw{background:radial-gradient(ellipse 80% 80% at 50% 46%,transparent 60%,rgba(0,0,0,var(--vig)) 100%)}
+/* тревога: темнеют края окна, а не весь кадр */
+#tense{background:radial-gradient(ellipse 70% 75% at 50% 46%,transparent 40%,var(--black) 100%);opacity:0}
+/* в лёгкой графике всё, что за краями поля, неподвижно */
+.lite .side *{animation:none!important}
 .screen svg{position:absolute;inset:0;width:100%;height:100%;display:block}
 .screen svg.pass{pointer-events:none}
 .screen svg.grain{mix-blend-mode:overlay}
 .screen text{font-family:var(--font-game)}
 #game{touch-action:none}
+#play-surface{position:absolute;inset:0}
+.desk-only{display:none}
+.desktop .desk-only{display:inline}
+.desktop #play-surface{inset:auto;z-index:1}
+.desk-panel{fill:var(--chip);stroke:var(--chip-line);stroke-width:1}
+.desk-heading{fill:var(--ink-top);text-anchor:middle;font-size:13px;font-weight:500}
+/* Десктоп: сетка из docs/superpowers/specs/2026-11-22-desktop-sign-layout-design.md, в единицах поля.
+   Колонки −187…−3, 21…369 (грядка), 393…577; все от 256 до 604. Шапка на 204…240. Кнопки 36, цели 28, отступ в панели 16, шаг 8.
+   Элементы шапки и панели — те же, что на телефоне: их переносят сдвиг и масштаб, а размеры подправляют свойства x, y, width, height. */
+.desktop #seed{transform:translate(-165px,195px)}
+.desktop #seed-c>.ring{x:-22px;y:9px;width:184px;height:36px;rx:18px}
+.desktop #seed>rect{x:-22px;y:5px;width:184px;height:44px}
+.desktop #theme-picker{transform:translate(269.4px,200.4px) scale(.8)}
+.desktop #theme-picker>rect{y:4.5px;height:45px;rx:22.5px;stroke-width:1.5px!important}
+.desktop #herb>.ring,.desktop #snd>.ring{stroke-width:.933px!important}
+.desktop #herb{transform:translate(106.14px,187.29px) scale(1.2857)}
+.desktop #snd{transform:translate(106.43px,187.29px) scale(1.2857)}
+.desktop #herb>rect,.desktop #snd>rect{y:10px;width:34px;height:34px}
+.desktop #herb>rect{x:301px}
+.desktop #snd>rect{x:335px}
+.desktop #score-group{transform:translate(-329px,212px) scale(1.2)}
+.desktop #best-chip{transform:translate(-168px,271px)}
+.desktop #best-chip>.ring{display:none}
+.desktop #best{font-size:13px!important}
+.desktop #restart{transform:translate(-372px,502px)}
+.desktop #restart>.ring{x:281px;width:72px}
+.desktop #help{transform:translate(-467px,-55px)}
+.desktop #help>.ring{x:296px;y:607px;width:72px;height:36px;rx:18px}
+.desktop #help>rect:not(.ring){x:296px;y:603px;width:72px;height:44px}
+.desktop #help>.ring{fill:var(--chip)!important;stroke:var(--chip-line)!important}
+.desktop #help text{font-size:14px!important;fill:var(--ink-top)!important}
+.desktop #label,.desktop #goals{transform:none}
+/* в обучении на месте вывески стоит подсказка, а целей ещё нет */
+.desktop .tut-active #desk-sign,.desktop .tut-active #desk-goal-title{visibility:hidden}
 .piece{cursor:grab}
 .btn{cursor:pointer;outline:none}
 .btn:focus-visible .ring{stroke:var(--focus);stroke-width:2.5}
-.sw-dawn{fill:var(--sw-dawn)}.sw-day{fill:var(--sw-day)}.sw-dusk{fill:var(--sw-dusk)}.sw-night{fill:var(--sw-night);stroke:var(--sw-night-line);stroke-width:1}
+.sw-dawn,.sw-day,.sw-dusk{stroke:var(--sw-ring);stroke-width:1.2}.sw-dawn{fill:var(--sw-dawn)}.sw-day{fill:var(--sw-day)}.sw-dusk{fill:var(--sw-dusk)}.sw-night{fill:var(--sw-night);stroke:var(--sw-night-line);stroke-width:1}
 .eat{fill:none;stroke:var(--gold);stroke-width:1.8;stroke-dasharray:5 4}
+.digc{fill:transparent;pointer-events:all;cursor:pointer;animation:digin .12s ease-out}
+.digc:hover,.digc:focus-visible{stroke-width:2.6;fill:rgba(255,216,117,.16);outline:none}
+@keyframes digin{from{opacity:0}to{opacity:1}}
 .made{fill:none;stroke:var(--gold);stroke-width:2.4}
 .link{font-size:13px;text-decoration:underline}
 .pw{transform-box:fill-box;transform-origin:50% 80%}
@@ -100,6 +146,10 @@ noscript p{color:var(--over-ink);font-family:var(--font-game);padding:24px}
 .drift{animation:drift 26s ease-in-out infinite alternate}
 @keyframes drift{from{transform:translateX(-18px)}to{transform:translateX(26px)}}
 .screen canvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+/* свет цветов шире поля на 110 единиц с каждой стороны: у крайних клеток он не обрезается по краю колонки */
+.screen #lightc{left:-28.2051%;width:156.4103%}
+/* частицы (вспышка слияния, кольцо, лепестки) шире поля на 160 единиц с каждой стороны */
+.screen #fxc{left:-41.0256%;width:182.0513%}
 .layer,.ghostscene{position:absolute;inset:0;pointer-events:none}
 .par{transition:transform .3s ease-out}
 #lightc{animation:lpulse 3.6s ease-in-out infinite alternate}
@@ -112,7 +162,7 @@ noscript p{color:var(--over-ink);font-family:var(--font-game);padding:24px}
 @keyframes dart{0%,100%{transform:translateX(0)}30%{transform:translateX(-1.3px)}70%{transform:translateX(1.3px)}}
 .worry .idle{animation-duration:1.1s!important}
 #tense.on{animation:tense 1.2s ease-in-out infinite alternate}
-@keyframes tense{from{opacity:0}to{opacity:.2}}
+@keyframes tense{from{opacity:0}to{opacity:.45}}
 .bl{opacity:0;transform:scale(.2);transform-box:fill-box;transform-origin:center;transition:opacity .7s ease-out,transform .7s cubic-bezier(.3,1.5,.5,1)}
 .bl.on{opacity:1;transform:scale(1)}
 .blo{opacity:0;transition:opacity 1.2s ease-out}
@@ -120,36 +170,166 @@ noscript p{color:var(--over-ink);font-family:var(--font-game);padding:24px}
 .wdrop{animation:wdrop 1.5s ease-in infinite}
 @keyframes wdrop{0%{transform:translateY(-2px);opacity:0}25%{opacity:1}100%{transform:translateY(6px);opacity:0}}
 .bob{animation:bob 1.8s ease-in-out infinite alternate}
+.digbob{animation:digbob 1.1s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 50%}
+@keyframes digbob{from{transform:translateY(-1.6px)}to{transform:translateY(1.8px)}}
 @keyframes bob{from{transform:translateY(-2px)}to{transform:translateY(2.5px)}}
 .flap{transform-box:fill-box;animation:flap .32s ease-in-out infinite alternate}
 .fl{transform-origin:100% 50%}.fr{transform-origin:0% 50%}
 @keyframes flap{from{transform:scaleX(1)}to{transform:scaleX(.3)}}
 .drop{animation-name:dropf;animation-timing-function:linear;animation-iteration-count:infinite}
 @keyframes dropf{from{transform:translateY(-30px)}to{transform:translateY(240px)}}
-@media (prefers-reduced-motion:reduce){.screen *{animation:none!important;transition:none!important}}
+/* пауза (реклама, скрытая вкладка): сцена замирает вместе со звуком */
+.paused *{animation-play-state:paused!important}
+@media (prefers-reduced-motion:reduce){.stage *{animation:none!important;transition:none!important}#tense.on{opacity:.15}}
 </style>
 </head>
 <body>
 <svg id="defs" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"></svg>
 <noscript><p>Игра работает на JavaScript: включите его, чтобы сыграть.</p></noscript>
-<div class="stage">
+<div class="stage t-night" id="stage">
   <div class="screen t-night" id="screen">
     <svg id="bg0" class="pass par" viewBox="0 0 390 844" aria-hidden="true" focusable="false"></svg>
     <svg id="bg1" class="pass par" viewBox="0 0 390 844" aria-hidden="true" focusable="false"></svg>
+    <div id="play-surface">
     <svg id="board" class="pass" viewBox="0 0 390 844" aria-hidden="true" focusable="false"></svg>
     <canvas id="lightc" aria-hidden="true"></canvas>
     <svg id="game" class="anim" viewBox="0 0 390 844" role="application" aria-label="Оранжерея: перетаскивайте фигуры из лотка на грядку, касание поворачивает фигуру"></svg>
     <canvas id="fxc" aria-hidden="true"></canvas>
+    </div>
     <svg id="fg" class="pass anim" viewBox="0 0 390 844" aria-hidden="true" focusable="false"></svg>
     <div id="fglw" class="layer par"><svg id="fgl" class="pass" viewBox="0 0 390 844" aria-hidden="true" focusable="false"></svg></div>
-    <svg id="vig" class="pass" viewBox="0 0 390 844" aria-hidden="true" focusable="false"></svg>
     <svg class="pass grain" viewBox="0 0 390 844" aria-hidden="true" focusable="false"><rect width="390" height="844" filter="url(#grain)"/></svg>
   </div>
+  <div id="vigw" class="veil"></div>
+  <div id="tense" class="veil"></div>
 </div>
 
 <script>
 (function(){
 'use strict';
+/*<pure>*/
+/* Расчётная логика без побочных действий. Блок не обращается ни к чему снаружи себя: тесты вынимают его из файла (tests/pure.mjs). */
+const PURE=(()=>{
+  const num=v=>{v=Math.floor(+v);return Number.isFinite(v)&&v>0?v:0;};
+  const isDate=s=>typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s);
+  const obj=o=>!!o&&typeof o==='object'&&!Array.isArray(o);
+  const clone=o=>JSON.parse(JSON.stringify(o));
+  /* запись игрока приводится к известному виду; всё непонятное отбрасывается */
+  function clean(r){
+    if(!obj(r)||r.v!==1)return null;
+    const herb={c:{},n:[]};
+    if(obj(r.herb)&&obj(r.herb.c)){
+      Object.keys(r.herb.c).forEach(k=>{const v=num(r.herb.c[k]);if(v>0)herb.c[k]=v;});
+      if(Array.isArray(r.herb.n))herb.n=r.herb.n.filter((k,i,a)=>typeof k==='string'&&herb.c[k]&&a.indexOf(k)===i);
+    }
+    const streak=obj(r.streak)&&isDate(r.streak.last)?{last:r.streak.last,n:num(r.streak.n)}:null;
+    const daily=obj(r.daily)&&isDate(r.daily.date)?{date:r.daily.date,done:!!r.daily.done,run:obj(r.daily.run)?clone(r.daily.run):null,result:obj(r.daily.result)?clone(r.daily.result):null}:null;
+    /* какие карточки ступеней игрок уже видел; null значит «записи ещё нет» (её не было до появления ступеней) */
+    const seen=Array.isArray(r.seen)?[2,3,4,5].filter(n=>r.seen.indexOf(n)>=0):null;
+    return {v:1,ts:num(r.ts),best:num(r.best),herb,daily,streak,run:obj(r.run)?clone(r.run):null,mode:r.mode==='daily'?'daily':'free',tut:!!r.tut,seen};
+  }
+  /* местная и облачная копии сливаются по частям: рекорд больший, гербарий объединяется, серия и семя по дате, забег от более свежей копии */
+  function mergeSaves(local,cloud,okRun){
+    const a=clean(local),b=clean(cloud);
+    if(!b)return a;
+    if(!a)return b;
+    const fresh=b.ts>a.ts?b:a,herb={c:{},n:[]};
+    /* негодный забег более свежей копии не заменяет рабочий забег другой копии */
+    const runOf=okRun&&fresh.run&&!okRun(fresh.run)?(fresh===a?b:a):fresh;
+    [a,b].forEach(r=>Object.keys(r.herb.c).forEach(k=>{herb.c[k]=Math.max(herb.c[k]||0,r.herb.c[k]);}));
+    [a,b].forEach(r=>r.herb.n.forEach(k=>{if(herb.n.indexOf(k)<0)herb.n.push(k);}));
+    let streak=a.streak||b.streak;
+    if(a.streak&&b.streak)streak=b.streak.last>a.streak.last||(b.streak.last===a.streak.last&&b.streak.n>a.streak.n)?b.streak:a.streak;
+    let daily=a.daily||b.daily;
+    if(a.daily&&b.daily){
+      if(a.daily.date!==b.daily.date)daily=b.daily.date>a.daily.date?b.daily:a.daily;
+      else if(a.daily.done!==b.daily.done)daily=a.daily.done?a.daily:b.daily;
+      else daily=fresh.daily;
+    }
+    const seen=a.seen||b.seen?[2,3,4,5].filter(n=>(a.seen||[]).indexOf(n)>=0||(b.seen||[]).indexOf(n)>=0):null;
+    return {v:1,ts:Math.max(a.ts,b.ts),best:Math.max(a.best,b.best),herb,daily,streak,run:runOf.run,mode:runOf.mode,tut:a.tut||b.tut,seen};
+  }
+  /* реклама между забегами: не чаще раза в три минуты. Лейка за ролик: не больше двух за забег; после двух отказов подряд предложение скрыто до конца сеанса */
+  const AD_GAP=180000,AD_CANS=2,AD_FAILS=2;
+  const adGate=(s,now)=>!!s.on&&!s.tut&&now-s.lastAdAt>=AD_GAP;
+  const canOffer=s=>!!s.on&&s.mode==='free'&&!s.tut&&s.adCans<AD_CANS&&s.fails<AD_FAILS&&!!s.hasEmpty;
+  /* лопатка выкапывает растение с грядки. Копится не больше двух; её даёт цепочка: выросшее растение тут же сливается снова (combo 2 и больше) */
+  const SHOVEL_MAX=2,SHOVEL_CHAIN=2;
+  const shovelsOf=v=>Math.min(SHOVEL_MAX,num(v));
+  const earnsShovel=steps=>steps.some(s=>s.combo>=SHOVEL_CHAIN);
+  /* сколько клеток надо выкопать, чтобы хоть одна фигура лотка встала: наименьшее число занятых клеток под фигурой по всем поворотам и местам */
+  function digsNeeded(grid,tray){
+    let best=Infinity;
+    tray.forEach(p=>{
+      if(!p)return;
+      let cells=p.cells.map(q=>[q[0],q[1]]);
+      for(let o=0;o<4;o++){
+        const w=Math.max(...cells.map(q=>q[0]))+1,h=Math.max(...cells.map(q=>q[1]))+1;
+        for(let r=0;r+h<=5;r++)for(let c=0;c+w<=5;c++){let n=0;cells.forEach(q=>{if(grid[(r+q[1])*5+c+q[0]])n++;});if(n<best)best=n;}
+        cells=cells.map(q=>[h-1-q[1],q[0]]);
+      }
+    });
+    return best;
+  }
+  /* фигуры не помещаются: что из инструментов в руках спасает. Лейка при пустой клетке выручает всегда (игра подставит фигуру из одной клетки),
+     поэтому на забитой грядке лейка и одна лопатка спасают вместе: выкопать клетку, потом заменить фигуру */
+  function rescue(s){
+    const can=s.cans>0&&!!s.hasEmpty,sh=s.shovels>0&&s.digs<=s.shovels;
+    return can&&sh?'either':can?'can':sh?'shovel':s.cans>0&&s.shovels>0?'both':null;
+  }
+  /* ступени забега: механики включаются по одной на порогах очков. Пятая ступень — игра целиком.
+     События: b бабочка, g золотое семя, w сорняк. Каждая ступень со 2-й по 4-ю приносит одну новинку */
+  /* пороги подобраны замером 26.11: игрок-программа берёт их примерно на 12-м, 20-м и 30-м ходу */
+  const STAGES=[0,100,300,700,1500];
+  const stageOf=score=>{const v=num(score);let n=1;for(let i=1;i<STAGES.length;i++)if(v>=STAGES[i])n=i+1;return n;};
+  const stageSpan=score=>{const n=stageOf(score);return {from:STAGES[n-1],to:n<STAGES.length?STAGES[n]:null};};
+  const stageEvents=n=>n>=4?['b','g','w']:n===3?['b','g']:n===2?['b']:[];
+  const stageNew=n=>n===2?'b':n===3?'g':n===4?'w':null;
+  const stageWeeds=n=>n>=5?2:n===4?1:0;
+  const stageGoals=n=>Math.max(1,Math.min(3,n));
+  const stageBig=n=>n>=3;
+  const goalPool=n=>n>=3?['buds','flowers','lotus','combo','score','big','double']:n===2?['buds','flowers','score','lotus']:['buds','flowers'];
+  /* отмена: шаг назад на одно последнее действие (ход, лопатка, замена лейкой). Бесплатна и без запаса, но только пока идёт игра:
+     не во время хода, не под карточкой, не в обучении и не после конца забега */
+  const canUndo=s=>!!s.has&&!s.busy&&!s.over&&!s.modal&&!s.drag&&!s.tut&&!s.paused;
+  /* ролик за инструмент: те же условия, что у лейки, предел общий на оба инструмента */
+  const adOpen=s=>!!s.on&&s.mode==='free'&&!s.tut&&s.adCans<AD_CANS&&s.fails<AD_FAILS;
+  /* какой инструмент предложить за ролик: только если один он вместе с тем, что в руках, спасёт. Два ролика подряд не предлагаются */
+  function adTool(s){
+    if(!adOpen(s)||rescue(s))return null;
+    if(s.hasEmpty)return 'can';
+    /* грядка забита. Ещё одна лопатка спасёт сама или вместе с лейкой в руках; если лопатка в руках уже есть, спасёт и лейка (выкопать клетку, потом заменить фигуру).
+       Третью лопатку держать нельзя, поэтому при двух предлагается только лейка */
+    if(s.shovels<SHOVEL_MAX&&(s.digs<=s.shovels+1||s.cans>0))return 'shovel';
+    return s.shovels>0?'can':null;
+  }
+  /* раскладка поля в окне. Поле 390×844 встаёт по ширине окна. Если окно ниже, сверху и снизу срезается пустое место:
+     небо между верхней панелью и грядкой (до CUT_TOP единиц) и низ листьев (до CUT_BOT). Верхняя панель при этом опускается на top.
+     Если и этого мало (планшет, десктоп), поле встаёт по высоте и по бокам остаётся сцена. Возвращает масштаб s (пикселей на единицу),
+     сдвиг колонки left и y в пикселях, срезы top и bot, запас gap над и под колонкой и видимую область x0..x1, y0..y1 в единицах поля */
+  const CUT_TOP=118,CUT_BOT=34;
+  function fit(vw,vh){
+    vw=vw>0?vw:390;vh=vh>0?vh:844;
+    const s=Math.min(vw/390,vh/(844-CUT_TOP-CUT_BOT)),vis=Math.min(844,vh/s),k=(844-vis)/(CUT_TOP+CUT_BOT);
+    const top=CUT_TOP*k,bot=CUT_BOT*k,gap=Math.max(0,(vh/s-844)/2),left=(vw-390*s)/2;
+    return {s,top,bot,gap,left,y:(gap-top)*s,x0:-left/s,x1:390+left/s,y0:top-gap,y1:844-bot+gap};
+  }
+  /* «поделиться»: только текст результата. Адреса страницы в нём нет: внешние ссылки площадка запрещает */
+  const shareText=r=>(r.daily?`Оранжерея, семя дня ${r.date}: ${r.score} очков`:`Мой сад в «Оранжерее»: ${r.score} очков`)+(r.lotus?', лотосов '+r.lotus:'')+'.';
+  /* запись более новой версии формата: её оставила более новая сборка игры, старой сборке её нельзя ни читать, ни затирать */
+  const foreign=r=>obj(r)&&typeof r.v==='number'&&r.v>1;
+  return {mergeSaves,foreign,adGate,canOffer,AD_GAP,AD_CANS,AD_FAILS,fit,shareText,SHOVEL_MAX,SHOVEL_CHAIN,earnsShovel,shovelsOf,digsNeeded,rescue,adOpen,adTool,canUndo,STAGES,stageOf,stageSpan,stageEvents,stageNew,stageWeeds,stageGoals,stageBig,goalPool};
+})();
+/*</pure>*/
+/* хранилище данных игрока: память и зеркало в localStorage. Если localStorage недоступен, игра живёт на памяти и облаке */
+const LS=(()=>{
+  const mem={};
+  return {
+    get(k){if(k in mem)return mem[k];let v=null;try{v=localStorage.getItem(k);}catch(e){}return mem[k]=v;},
+    set(k,v){mem[k]=String(v);try{localStorage.setItem(k,mem[k]);}catch(e){}},
+    del(k){mem[k]=null;try{localStorage.removeItem(k);}catch(e){}}
+  };
+})();
 const CELL=60,GAP=6,STEP=CELL+GAP,BW=CELL*5+GAP*4,BX=33,BY=268;
 const AX=195,AY=196,RX=186,RY=150;
 const ARCH=`M${AX-RX},272 V${AY} A${RX},${RY} 0 0 1 ${AX+RX},${AY} V272Z`;
@@ -162,7 +342,8 @@ const G={
   bud:'M31,8 C40,15 43,23 43,28 A12,12 0 0 1 19,28 C19,23 22,15 31,8Z',
   sepal:'M20,31 C25,38 37,38 42,31 C40,42 22,42 20,31Z'
 };
-const CARD={y:646,w:104,xs:[21,143,265]};
+/* низ поля: грядка кончается на 604, ряд лейки и подсказки стоит на 614–652 (сдвиг LROW), лоток начинается на 662: между ними по 10 единиц воздуха */
+const CARD={y:662,w:104,xs:[21,143,265]},LROW=8;
 const THEMES={
   dawn:{glow:.7,sun:[80,212,19],halo:150,shafts:[[-30,-18],[-8,6],[18,30]],clouds:[[236,150,1],[312,190,.7]],birds:[230,128],motes:13,fire:false},
   day:{glow:.45,sun:[304,124,21],halo:170,shafts:[[112,124],[134,150],[160,170]],clouds:[[78,132,1],[206,172,.8],[330,204,.6]],birds:[130,150],motes:12,fire:false},
@@ -173,7 +354,7 @@ const ORDER=['dawn','day','dusk','night'];
 const RM=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const NS='http://www.w3.org/2000/svg';
 const $=id=>document.getElementById(id);
-const scr=$('screen');
+const scr=$('screen'),stage=$('stage'),playSurface=$('play-surface');
 const mx=i=>BX+(i%5)*STEP+30,my=i=>BY+((i/5)|0)*STEP+30;
 
 let seed=11;
@@ -225,9 +406,24 @@ function plant(sp,st,v){
 }
 
 /* ---------- сцена за стеклом ---------- */
-function scene(T){
+/* холмы: одни и те же функции рисуют их и в поле, и за его краями. Узлы кривой стоят на общей сетке (-30+45k), поэтому линии совпадают без шва */
+const hf=(base,amp,ph)=>x=>base+amp*Math.sin(x*.017+ph)+amp*.4*Math.sin(x*.041+ph*2);
+const hill=(fn,xa,xb)=>{const p=[];for(let x=xa;x<=xb;x+=45)p.push([x,fn(x)]);let d=`M${p[0][0]},${f1(p[0][1])}`;for(let i=1;i<p.length-1;i++){d+=` Q${p[i][0]},${f1(p[i][1])} ${(p[i][0]+p[i+1][0])/2},${f1((p[i][1]+p[i+1][1])/2)}`;}return d+` L${xb},440 L${xa},440Z`;};
+const h0=hf(214,11,.6),h1=hf(231,9,2.1),h2=hf(249,7,4);
+const HX0=-120,HX1=510,TREES0=[38,52,170,186,300,356],TREES1=[24,34,112,122,132,228,240,318,330,372];
+function scene(T,V){
   seed=11;
-  const [sx,sy,sr]=T.sun;
+  V=V||{x0:0,x1:390,y0:0,y1:844,top:0,big:false};
+  /* XA, XW: всё, что видно в окне, с запасом. big: по бокам от поля видна сцена.
+     В широком окне солнце уходит в сторону от поля; в срезанном по высоте опускается под верхнюю панель */
+  const XA=Math.floor(V.x0-90),XW=Math.ceil(V.x1+90)-XA,sr=T.sun[2];
+  /* дождь бывает только там, где поле во всё окно (телефон); в широком окне дождя нет */
+  const rain=wet&&!V.big;
+  /* tight: поле во всё окно и срезано так, что между верхней панелью и целями светилу уже не поместиться.
+     Тогда высокое светило выглядывает из-за верхнего края между кружками времени суток и гербарием, а низкое встаёт на горизонте между плашками, где нет надписей */
+  const tight=!V.big&&V.top>60,high=T.sun[1]<180;
+  const sx=V.big?(T.sun[0]<195?Math.max(V.x0+70,-110):Math.min(V.x1-70,500)):tight?(high?277:T.sun[0]<195?145:245):T.sun[0];
+  const sy=V.big?Math.max(T.sun[1],V.y0+sr+26):tight?(high?V.y0+8:T.sun[1]):Math.max(T.sun[1],V.top+98+sr);
   const st=(o,v,op)=>`<stop offset="${o}" style="stop-color:var(--${v})${op!==undefined?';stop-opacity:'+op:''}"/>`;
   let defs=`<linearGradient id="g-sky" x1="0" y1="0" x2="0" y2="1">${st(0,'sky0')}${st(.34,'sky1')}${st(.62,'sky2')}${st(1,'sky3')}</linearGradient>
   <radialGradient id="g-halo">${st(0,'halo',.78)}${st(.28,'halo',.24)}${st(1,'halo',0)}</radialGradient>
@@ -244,32 +440,40 @@ function scene(T){
   <radialGradient id="g-lamp">${st(0,'lamp-c',.85)}${st(.25,'lamp-c',.3)}${st(1,'lamp-c',0)}</radialGradient>
   <radialGradient id="g-fly">${st(0,'mote',.75)}${st(.3,'mote',.22)}${st(1,'mote',0)}</radialGradient>
   <linearGradient id="g-can" x1="0" y1="0" x2="1" y2="1">${st(0,'white')}${st(.3,'b')}${st(1,'b2')}</linearGradient>
+  <linearGradient id="g-shovel" x1="0" y1="0" x2="1" y2="1">${st(0,'white')}${st(.3,'y')}${st(1,'y2')}</linearGradient>
   <radialGradient id="g-pshadow">${st(0,'black',.5)}${st(1,'black',0)}</radialGradient>`;
   ['r','y','b','w'].forEach(s=>{defs+=`<radialGradient id="g-halo-${s}">${st(0,s,.62)}${st(.45,s,.2)}${st(1,s,0)}</radialGradient>
   <linearGradient id="g-p-${s}" x1="0" y1="1" x2="0" y2="0">${st(0,'white')}${st(.34,s)}${st(1,s+'2')}</linearGradient>
   <radialGradient id="g-c-${s}" cx=".5" cy=".46" r=".7">${st(0,'white')}${st(.5,s)}${st(1,s+'2')}</radialGradient>`;});
 
-  let l0=`<defs>${defs}</defs><rect width="390" height="300" style="fill:${u('sky')}"/>`;
+  /* ореол под счётом и подписью «очки»: буквы обведены мягкой размытой подложкой цвета стекла */
+  defs+=`<filter id="g-tsh" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB"><feMorphology in="SourceAlpha" operator="dilate" radius="1.4" result="d"/><feGaussianBlur in="d" stdDeviation="3.4" result="b"/><feFlood style="flood-color:var(--halo-top);flood-opacity:.72"/><feComposite in2="b" operator="in" result="s"/><feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+  /* ореол для вывески: плотнее, чем у счёта, — буквы крупные и стоят прямо на небе */
+  defs+=`<filter id="g-tsh2" x="-30%" y="-60%" width="160%" height="220%" color-interpolation-filters="sRGB"><feMorphology in="SourceAlpha" operator="dilate" radius="2.2" result="d"/><feGaussianBlur in="d" stdDeviation="4.6" result="b"/><feFlood style="flood-color:var(--halo-top);flood-opacity:.88"/><feComposite in2="b" operator="in" result="s"/><feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+  let l0=`<defs>${defs}</defs><rect x="${XA}" y="-3000" width="${XW}" height="3001" style="fill:var(--sky0)"/><rect x="${XA}" y="0" width="${XW}" height="300" style="fill:${u('sky')}"/>`;
   for(let i=0;i<46;i++){l0+=`<circle cx="${f1(rnd()*390)}" cy="${f1(Math.pow(rnd(),1.5)*230)}" r="${(.4+rnd()*.8).toFixed(2)}" style="${fill('white')};opacity:calc(var(--stars)*${(.25+rnd()*.7).toFixed(2)})"/>`;}
+  l0+='<!--STARSX-->';
   l0+=`<circle cx="${sx}" cy="${sy}" r="${T.halo}" style="fill:${u('halo')}"/><circle cx="${sx}" cy="${sy}" r="${sr}" style="fill:${u('sun')}"/>`;
-  if(wet)l0+=`<rect width="390" height="300" style="${fill('black')};opacity:.24"/>`;
-  const hf=(base,amp,ph)=>x=>base+amp*Math.sin(x*.017+ph)+amp*.4*Math.sin(x*.041+ph*2);
-  const hill=fn=>{const p=[];for(let x=-30;x<=420;x+=45)p.push([x,fn(x)]);let d=`M${p[0][0]},${f1(p[0][1])}`;for(let i=1;i<p.length-1;i++){d+=` Q${p[i][0]},${f1(p[i][1])} ${(p[i][0]+p[i+1][0])/2},${f1((p[i][1]+p[i+1][1])/2)}`;}return d+' L420,440 L-30,440Z';};
-  const h0=hf(214,11,.6),h1=hf(231,9,2.1),h2=hf(249,7,4);
-  l0+=`<path d="${hill(h0)}" style="${fill('hill0')}"/>`;
-  [38,52,170,186,300,356].forEach((x,i)=>{l0+=`<circle cx="${x}" cy="${f1(h0(x)-4)}" r="${i%2?6:8}" style="${fill('hill0')}"/>`;});
-  l0+=`<path d="${hill(h1)}" style="${fill('hill1')}"/>`;
-  [24,34,112,122,132,228,240,318,330,372].forEach((x,i)=>{l0+=`<ellipse cx="${x}" cy="${f1(h1(x)-8)}" rx="3.3" ry="${9+(i%3)*2.5}" style="${fill('hill1')}"/>`;});
-  l0+=`<ellipse cx="195" cy="246" rx="240" ry="40" style="fill:${u('mist')}"/><path d="${hill(h2)}" style="${fill('hill2')}"/><rect x="0" y="262" width="390" height="582" style="fill:${u('floor')}"/>`;
+  if(rain)l0+=`<rect x="${XA}" y="-3000" width="${XW}" height="3300" style="${fill('black')};opacity:.24"/>`;
+  /* холмы идут через всё окно: узлы кривой стоят на одной сетке (-30+45k), поэтому линия в поле та же, что на телефоне */
+  const ha=-30+45*Math.floor((XA+30)/45-1),hb=-30+45*Math.ceil((XA+XW+30)/45+1);
+  l0+=`<path d="${hill(h0,ha,hb)}" style="${fill('hill0')}"/>`;
+  TREES0.forEach((x,i)=>{l0+=`<circle cx="${x}" cy="${f1(h0(x)-4)}" r="${i%2?6:8}" style="${fill('hill0')}"/>`;});
+  l0+=`<!--TREE0X--><path d="${hill(h1,ha,hb)}" style="${fill('hill1')}"/>`;
+  TREES1.forEach((x,i)=>{l0+=`<ellipse cx="${x}" cy="${f1(h1(x)-8)}" rx="3.3" ry="${9+(i%3)*2.5}" style="${fill('hill1')}"/>`;});
+  l0+=`<!--TREE1X--><ellipse cx="195" cy="246" rx="240" ry="40" style="fill:${u('mist')}"/><path d="${hill(h2,ha,hb)}" style="${fill('hill2')}"/><rect x="${XA}" y="262" width="${XW}" height="582" style="fill:${u('floor')}"/><rect x="${XA}" y="843" width="${XW}" height="3000" style="fill:var(--floor1)"/>`;
 
   let l1='';
   T.clouds.forEach(c=>{l1+=`<g class="drift" style="${dly(22,34)}"><g transform="translate(${c[0]},${c[1]}) scale(${c[2]})" style="opacity:var(--cloud-o)"><ellipse rx="44" ry="8" style="fill:${u('cloud')}"/><ellipse cx="-14" cy="-6" rx="22" ry="8" style="fill:${u('cloud')}"/><ellipse cx="14" cy="-7" rx="26" ry="9" style="fill:${u('cloud')}"/></g></g>`;});
+  l1+='<!--CLOUDX-->';
   if(T.birds){const [bx,by]=T.birds;l1+=`<g class="drift" style="animation-duration:40s"><g style="fill:none;stroke:var(--bird);stroke-width:1.2;stroke-linecap:round;opacity:.75"><path d="M${bx},${by} q3,-3.5 6,0 q3,-3.5 6,0"/><path d="M${bx+20},${by+9} q2.4,-2.8 4.8,0 q2.4,-2.8 4.8,0"/><path d="M${bx-14},${by+14} q2,-2.4 4,0 q2,-2.4 4,0"/></g></g>`;}
-  l1+=`<path d="${ARCH}" style="${fill('glass')}"/><g clip-path="url(#arch)" style="${fill('white')}"><path d="M70,40 L124,40 L24,272 L-30,272Z" style="opacity:.05"/><path d="M146,40 L166,40 L66,272 L46,272Z" style="opacity:.035"/></g>`;
+  /* в широком окне стекло идёт стеной через всё окно, арка остаётся её серединой */
+  l1+=(V.big?`<rect x="${XA}" y="-3000" width="${XW}" height="3272" style="${fill('glass')}"/>`:`<path d="${ARCH}" style="${fill('glass')}"/>`)+`<g clip-path="url(#arch)" style="${fill('white')}"><path d="M70,40 L124,40 L24,272 L-30,272Z" style="opacity:.05"/><path d="M146,40 L166,40 L66,272 L46,272Z" style="opacity:.035"/></g>`;
   let ribs=`M${AX-RX},${AY} H${AX+RX}`;
   for(let a=22.5;a<180;a+=22.5){const c=Math.cos(a*Math.PI/180),s=Math.sin(a*Math.PI/180);ribs+=` M${f1(AX+74*c)},${f1(AY-60*s)} L${f1(AX+RX*c)},${f1(AY-RY*s)}`;}
   [-124,-62,0,62,124].forEach(dx=>{ribs+=` M${AX+dx},${AY} V272`;});
   l1+=`<g style="fill:none;stroke:var(--frame);stroke-linecap:round"><path d="${ribs}" style="stroke-width:1.1"/><path d="M${AX-74},${AY} A74,60 0 0 1 ${AX+74},${AY}" style="stroke-width:1.3"/><path d="M${AX-130},${AY} A130,105 0 0 1 ${AX+130},${AY}" style="stroke-width:.8;opacity:.7"/><path d="M${AX-RX},272 V${AY} A${RX},${RY} 0 0 1 ${AX+RX},${AY} V272" style="stroke-width:2.2"/></g>`;
+  l1+='<!--WALLX-->';
   T.shafts.forEach(w=>{const a1=w[0]*Math.PI/180,a2=w[1]*Math.PI/180,L=620;l1+=`<path class="pulse" d="M${sx},${sy} L${f1(sx+L*Math.cos(a1))},${f1(sy+L*Math.sin(a1))} L${f1(sx+L*Math.cos(a2))},${f1(sy+L*Math.sin(a2))}Z" style="fill:${u('shaft')};${dly(5,9)}"/>`;});
   /* цветки, которые распускаются по ходу забега: у каждого свой порог data-lv */
   let nb=0;
@@ -281,18 +485,19 @@ function scene(T){
     for(let i=1;i<=n;i++){const t=i/n*.98,a=bz(t),b=bz(Math.min(1,t+.02)),ang=Math.atan2(b[1]-a[1],b[0]-a[0])*180/Math.PI,side=i%2?1:-1,L=10+rnd()*7+(1-t)*4;
       s+=`<path d="${almond(L,L*.38)}" transform="translate(${f1(a[0])},${f1(a[1])}) rotate(${f1(ang+90+side*(52+rnd()*22))})" style="${fill('fol1')};stroke:var(--rim);stroke-width:.6"/>`;
       if(i%2===0){nb++;s+=bl(a[0],a[1],.8+rnd()*.5,1+nb%6,'ryb'[nb%3]);}}
-    return `<g class="vsway" style="transform-origin:${x0}px 0px;${dly(6,10)}">${s}</g>`;
+    return `<path d="M${x0},-400 V-8" style="fill:none;stroke:var(--fol1);stroke-width:1.6;stroke-linecap:round"/><g class="vsway" style="transform-origin:${x0}px 0px;${dly(6,10)}">${s}</g>`;
   };
-  l1+=vine(8,226,1,11)+vine(26,150,-1,7)+vine(383,244,-1,12)+vine(364,138,1,6);
-  const lamp=(x,y)=>`<path d="M${x},-5 V${y-9}" style="fill:none;stroke:var(--fol0);stroke-width:1"/><g style="opacity:var(--lamp)"><circle class="pulse" cx="${x}" cy="${y+3}" r="30" style="fill:${u('lamp')};${dly(3,5)}"/></g><circle cx="${x}" cy="${y+2}" r="3.6" style="${fill('lamp-c')};opacity:calc(.22 + var(--lamp)*.78)"/><path d="M${x-9},${y} Q${x-9},${y-10} ${x},${y-10} Q${x+9},${y-10} ${x+9},${y}Z" style="${fill('fol0')}"/>`;
-  l1+=lamp(62,150)+lamp(148,122);
-  if(wet){let d='';for(let i=0;i<18;i++){d+=`<g transform="translate(${f1(20+rnd()*350)},${f1(50+rnd()*60)})"><g class="drop" style="${dly(2.6,6)}"><path d="M0,-18 V-2" style="fill:none;stroke:var(--white);stroke-width:.8;stroke-linecap:round;opacity:.14"/><path d="M0,-3 C-2.2,1.5 -1.8,4 0,4 C1.8,4 2.2,1.5 0,-3Z" style="${fill('white')};opacity:.5"/></g></g>`;}
-    l1+=`<g clip-path="url(#arch)">${d}</g>`;}
+  l1+=vine(8,226,1,11)+vine(26,150,-1,7)+vine(383,244,-1,12)+vine(364,138,1,6)+'<!--VINEX-->';
+  const lamp=(x,y)=>`<path d="M${x},-400 V${y-9}" style="fill:none;stroke:var(--fol0);stroke-width:1"/><g style="opacity:var(--lamp)"><circle class="pulse" cx="${x}" cy="${y+3}" r="30" style="fill:${u('lamp')};${dly(3,5)}"/></g><circle cx="${x}" cy="${y+2}" r="3.6" style="${fill('lamp-c')};opacity:calc(.22 + var(--lamp)*.78)"/><path d="M${x-9},${y} Q${x-9},${y-10} ${x},${y-10} Q${x+9},${y-10} ${x+9},${y}Z" style="${fill('fol0')}"/>`;
+  l1+=lamp(62,150)+lamp(148,122)+'<!--LAMPX-->';
+  if(rain){let d='';for(let i=0;i<18;i++){d+=`<g transform="translate(${f1(20+rnd()*350)},${f1(50+rnd()*60)})"><g class="drop" style="${dly(2.6,6)}"><path d="M0,-18 V-2" style="fill:none;stroke:var(--white);stroke-width:.8;stroke-linecap:round;opacity:.14"/><path d="M0,-3 C-2.2,1.5 -1.8,4 0,4 C1.8,4 2.2,1.5 0,-3Z" style="${fill('white')};opacity:.5"/></g></g>`;}
+    l1+=`<g clip-path="url(#arch)">${d}</g><!--RAINX-->`;}
 
   let fg='';
   for(let i=0;i<T.motes;i++){const x=(20+rnd()*350).toFixed(0),y=(110+rnd()*640).toFixed(0);
     fg+=T.fire?`<g transform="translate(${x},${y})"><g class="fly f${i%3}" style="${dly(10,18)}"><circle r="10" style="fill:${u('fly')}"/><circle class="flick" r="1.7" style="${fill('mote')};animation-delay:-${(rnd()*2).toFixed(2)}s"/></g></g>`
       :`<g transform="translate(${x},${y})"><circle class="fly f${i%3}" r="${(.8+rnd()*.9).toFixed(1)}" style="${fill('mote')};opacity:${(.35+rnd()*.4).toFixed(2)};${dly(16,28)}"/></g>`;}
+  fg+='<!--MOTEX-->';
   for(let i=0;i<12;i++){fg+=`<g class="blo" data-lv="${1+i%6}" transform="translate(${(20+rnd()*350).toFixed(0)},${(110+rnd()*600).toFixed(0)})"><g class="fly f${i%3}" style="${dly(9,16)}"><circle r="9" style="fill:${u('fly')}"/><circle class="flick" r="1.6" style="${fill('mote')};animation-delay:-${(rnd()*2).toFixed(2)}s"/></g></g>`;}
   /* листья переднего плана: две половины разного тона, изогнутые жилки, световая кромка, капли росы */
   const big=(x,L,W,rot,tone,bend,dew)=>{
@@ -316,10 +521,137 @@ function scene(T){
   const blade=(x,h,bx,tone)=>`<g class="vsway" style="transform-origin:${x}px 856px;${dly(4,7)}"><path d="M${x-2.4},856 Q${f1(x+bx*.2-2)},${f1(856-h*.55)} ${x+bx},${856-h} Q${f1(x+bx*.2+2.6)},${f1(856-h*.55)} ${x+2.4},856Z" style="${fill(tone)};stroke:var(--rim);stroke-width:.6;stroke-opacity:.5"/></g>`;
   const fgl=blade(52,96,14,'fol1')+blade(142,70,-12,'fol1')+blade(232,84,10,'fol1')+blade(322,74,-14,'fol1')
      +big(-4,150,36,-16,'fol2',.25,.5)+big(78,92,26,-26,'fol2',-.2)+big(166,74,22,-9,'fol2',.3,.45)+big(256,86,24,-15,'fol2',-.25)+big(344,128,31,-7,'fol2',.2,.55)
-     +blade(98,58,-9,'fol0')+blade(186,64,11,'fol0')+blade(276,54,-8,'fol0')+blade(366,66,9,'fol0')
+     +'<!--LEAFBACK-->'+blade(98,58,-9,'fol0')+blade(186,64,11,'fol0')+blade(276,54,-8,'fol0')+blade(366,66,9,'fol0')
      +big(34,104,30,9,'fol0',-.3)+big(120,82,24,15,'fol0',.25,.5)+big(212,78,22,11,'fol0',-.2)+big(300,100,27,23,'fol0',.3)+big(394,150,36,15,'fol0',-.25,.4)
-     +bl(30,794,2.6,3,'r')+bl(357,786,2.4,4,'y')+bl(118,824,2,5,'b')+bl(270,820,2.2,6,'r');
-  return {l0,l1,fg,fgl};
+     +'<!--LEAFX-->'+bl(30,794,2.6,3,'r')+bl(357,786,2.4,4,'y')+bl(118,824,2,5,'b')+bl(270,820,2.2,6,'r');
+  /* всё, что за краями поля, создаётся в самом конце и со своим зерном: само поле остаётся таким же, как на телефоне.
+     Ничего не повторяется и не зеркалится: одна теплица, одна арка в середине стеклянной стены, лианы и листья стоят где придётся */
+  const X={STARSX:'',TREE0X:'',TREE1X:'',CLOUDX:'',WALLX:'',VINEX:'',LAMPX:'',RAINX:'',MOTEX:'',LEAFBACK:'',LEAFX:''};
+  seed=4242;
+  const r1=v=>Math.round(v*10)/10,sides=[[V.x0-70,-6,-1],[396,V.x1+70,1]].filter(q=>q[1]-q[0]>30);
+  const cloud=(x,y,k)=>`<g class="drift" style="${dly(22,34)}"><g transform="translate(${f1(x)},${f1(y)}) scale(${k.toFixed(2)})" style="opacity:var(--cloud-o)"><ellipse rx="44" ry="8" style="fill:${u('cloud')}"/><ellipse cx="-14" cy="-6" rx="22" ry="8" style="fill:${u('cloud')}"/><ellipse cx="14" cy="-7" rx="26" ry="9" style="fill:${u('cloud')}"/></g></g>`;
+  sides.forEach(([a,b])=>{
+    const w=b-a,rx=()=>a+rnd()*w;
+    for(let i=Math.min(140,Math.round(46*w/390));i>0;i--)X.STARSX+=`<circle cx="${f1(rx())}" cy="${f1(Math.pow(rnd(),1.5)*230)}" r="${(.4+rnd()*.8).toFixed(2)}" style="${fill('white')};opacity:calc(var(--stars)*${(.25+rnd()*.7).toFixed(2)})"/>`;
+    for(let x=a+20+rnd()*60,i=0;x<b;x+=40+rnd()*110,i++)X.TREE0X+=`<circle cx="${f1(x)}" cy="${f1(h0(x)-4)}" r="${i%2?6:8}" style="${fill('hill0')}"/>`+(rnd()<.5?`<circle cx="${f1(x+13)}" cy="${f1(h0(x+13)-4)}" r="6" style="${fill('hill0')}"/>`:'');
+    for(let x=a+10+rnd()*40,i=0;x<b;x+=12+rnd()*80,i++)X.TREE1X+=`<ellipse cx="${f1(x)}" cy="${f1(h1(x)-8)}" rx="3.3" ry="${9+(i%3)*2.5}" style="${fill('hill1')}"/>`;
+    if(V.big)for(let x=a+60+rnd()*120;x<b-40;x+=170+rnd()*190){const c=T.clouds[(rnd()*T.clouds.length)|0];X.CLOUDX+=cloud(x,Math.max(c[1],V.y0+34)-10+rnd()*28,.6+rnd()*.45);}
+  });
+  if(V.big){
+    /* стеклянная стена: поручень на высоте пяты арки, порог, тонкие переплёты с тем же шагом, что внутри арки, и стойки потолще */
+    let thin='',thick=`M${AX-RX},${AY} V-3000 M${AX+RX},${AY} V-3000`,streak='';
+    sides.forEach(([a,b,dir])=>{
+      const e=AX+dir*RX,far=dir<0?a-40:b+40;
+      thin+=` M${e},${AY} H${far} M${e},272 H${far}`;
+      for(let k=4,x=AX+dir*248;dir<0?x>a-40:x<b+40;k++,x=AX+dir*62*k){if(k%3===1)thick+=` M${x},272 V-3000`;else thin+=` M${x},272 V-3000`;}
+      for(let x=(dir<0?a:420)+rnd()*120;x<b-20;x+=230+rnd()*200)streak+=`<path d="M${f1(x+246)},-300 L${f1(x+296)},-300 L${f1(x+50)},272 L${f1(x)},272Z" style="opacity:${(.03+rnd()*.025).toFixed(3)}"/>`;
+    });
+    X.WALLX=`<g style="${fill('white')}">${streak}</g><g style="fill:none;stroke:var(--frame);stroke-linecap:round"><path d="${thin}" style="stroke-width:1.1"/><path d="${thick}" style="stroke-width:2.2"/></g>`;
+    sides.forEach(([a,b,dir])=>{
+      const w=b-a,rx=()=>a+rnd()*w,lim=dir<0?a+30:b-30,in1=x=>dir<0?x>lim:x<lim;
+      /* лианы и лампы: неровный шаг, разная длина, ни одной пары */
+      for(let x=(dir<0?-70:460)+dir*rnd()*80;in1(x);x+=dir*(140+rnd()*170)){
+        X.VINEX+=vine(Math.round(x),r1(150+rnd()*100+V.y0*.4),rnd()<.5?1:-1,7+((rnd()*6)|0));
+        const lx=x+dir*(52+rnd()*56);if(in1(lx))X.LAMPX+=lamp(Math.round(lx),Math.round(Math.max(112,V.y0+32)+rnd()*46));
+      }
+      for(let i=Math.min(9,Math.round(T.motes*w/390*.5));i>0;i--){const x=f1(rx()),y=f1(V.y0+30+rnd()*(V.y1-V.y0-110));
+        X.MOTEX+=T.fire?`<g transform="translate(${x},${y})"><g class="fly f${i%3}" style="${dly(10,18)}"><circle r="10" style="fill:${u('fly')}"/><circle class="flick" r="1.7" style="${fill('mote')};animation-delay:-${(rnd()*2).toFixed(2)}s"/></g></g>`
+          :`<g transform="translate(${x},${y})"><circle class="fly f${i%3}" r="${(.8+rnd()*.9).toFixed(1)}" style="${fill('mote')};opacity:${(.35+rnd()*.4).toFixed(2)};${dly(16,28)}"/></g>`;}
+      /* листья переднего плана: задний ряд темнее, передний светлее, как в поле */
+      for(let x=dir<0?-46:436,i=0;dir<0?x>a:x<b;x+=dir*(36+rnd()*40),i++){
+        const xr=Math.round(x);
+        X.LEAFBACK+=(i%2?blade(xr+dir*14,r1(60+rnd()*40),r1((rnd()-.5)*26),'fol1'):'')+big(xr,r1(74+rnd()*76),r1(22+rnd()*14),-r1(7+rnd()*20),'fol2',r1((rnd()-.5)*.6),rnd()<.4?.5:0);
+        X.LEAFX+=blade(xr+dir*24,r1(54+rnd()*14),r1((rnd()-.5)*22),'fol0')+big(xr+dir*Math.round(18+rnd()*14),r1(78+rnd()*72),r1(22+rnd()*14),r1(9+rnd()*14),'fol0',r1((rnd()-.5)*.6),rnd()<.3?.45:0);
+        if(i%4===2)X.LEAFX+=bl(xr+dir*8,r1(786+rnd()*38),2+rnd()*.6,3+((rnd()*4)|0),'ryb'[(rnd()*3)|0]);
+      }
+    });
+  }
+  const whole={STARSX:1,TREE0X:1,TREE1X:1},put=h=>h.replace(/<!--([A-Z0-9]+)-->/g,(m,k)=>X[k]?(whole[k]?X[k]:`<g class="side">${X[k]}</g>`):'');
+  return {l0:put(l0),l1:put(l1),fg:put(fg),fgl:put(fgl)};
+}
+/* ---------- раскладка: где стоит поле и что видно в окне ---------- */
+let LAY={s:1,top:0,bot:0,gap:0,left:0,y:0},VIEW=null,viewKey='',leafDy=0,sceneOn=false;
+let desktop=false,classicDesktop=new URLSearchParams(location.search).get('layout')==='classic';
+let desktopHeight=0,rightMenuOffset=0;
+const slotBox=k=>desktop?{x:409,y:320+92*k,w:152,h:84}:{x:CARD.xs[k],y:CARD.y,w:CARD.w,h:CARD.w};
+/* плашки инструментов: лейка и лопатка рядом. Включённая лопатка растягивается на место обеих и несёт вопрос, лейка на это время скрыта.
+   Лейка не растягивается: её вопрос задаёт карточка замены. В обучении лопатки нет, лейка прежнего размера */
+function toolBoxes(){
+  const y=desktop?272:606+LROW,h=desktop?36:38,x=desktop?409:21,wide=desktop?152:172;
+  if(tut)return {can:{x,y,w:desktop?152:104,h},shovel:null,undo:null};
+  if(dig)return {can:null,shovel:{x,y,w:wide,h},undo:null};
+  /* на телефоне третьей в ряду стоит круглая кнопка отмены; на десктопе отмена живёт в левой панели, под целями */
+  return desktop?{can:{x,y,w:72,h},shovel:{x:489,y,w:72,h},undo:null}:{can:{x,y,w:88,h},shovel:{x:115,y,w:62,h},undo:{x:183,y,w:38,h}};
+}
+const canBox=()=>{const b=toolBoxes();return b.can||b.shovel;};
+/* карточка, которая в срезанном окне оказалась бы выше видимой области, опускается под верхний край */
+function cardPosition(y,h){
+  if(!desktop)return `translate(0,${f1(Math.max(0,LAY.top+10-y))})`;
+  const scale=Math.min(1,(desktopHeight-22)/h);
+  return `translate(195,390) scale(${scale}) translate(-195,${-y-h/2})`;
+}
+/* верхняя панель опускается на срез; в обучении, когда на её месте стоит подсказка, она прячется */
+function placeHud(){
+  game.classList.toggle('tut-active',!!tut);
+  for(const id of ['hud','hud2']){
+    const group=$(id);
+    group.setAttribute('transform',`translate(0,${desktop?0:f1(LAY.top)})`);
+    group.style.display=!desktop&&tut&&LAY.top>26?'none':'';
+  }
+  const c=$('cardg');if(c)c.setAttribute('transform',cardPosition(+c.dataset.y,+c.dataset.h));
+}
+/* росток на вывеске: стебель и два листа над первой буквой, повёрнутые по дуге */
+function placeSprout(){
+  const t=$('sign-t'),g=$('sign-sprout');
+  if(!t||!g||!desktop)return;
+  let a,b,rot;
+  try{if(!t.getNumberOfChars())return;a=t.getStartPositionOfChar(0);b=t.getEndPositionOfChar(0);rot=t.getRotationOfChar(0);}catch(e){return;}
+  const k=Math.PI/180*rot,cx=(a.x+b.x)/2,cy=(a.y+b.y)/2,lift=25;
+  g.setAttribute('transform',`translate(${f1(cx+Math.sin(k)*lift)},${f1(cy-Math.cos(k)*lift)}) rotate(${f1(rot)}) scale(1.6)`);
+  if(!g.firstChild)g.innerHTML=`<path d="M0,1 C0,-4 1,-8 3,-11" style="fill:none;stroke:var(--ink-top);stroke-width:1.5;stroke-linecap:round"/><path d="M3,-11 C3,-17 8,-20 14,-20 C14,-14 10,-11 3,-11Z" style="fill:${u('leaf')};stroke:var(--ink-top);stroke-width:1;stroke-linejoin:round"/><path d="M1.6,-6.5 C-2,-10.5 -7.5,-10.5 -10.5,-7.5 C-7.5,-4 -2.6,-4 1.6,-6.5Z" style="fill:${u('leaf')};stroke:var(--ink-top);stroke-width:1;stroke-linejoin:round"/>`;
+}
+/* считает раскладку по размеру окна и ставит колонку на место. Возвращает true, если сцену надо перерисовать */
+function fitView(){
+  const r=stage.getBoundingClientRect(),f=LAY=PURE.fit(r.width,r.height),st=scr.style;
+  st.position='absolute';st.left=f.left.toFixed(2)+'px';st.top=f.y.toFixed(2)+'px';st.width=(390*f.s).toFixed(2)+'px';st.height=(844*f.s).toFixed(2)+'px';
+  const wasDesktop=desktop;
+  const previousMenuOffset=rightMenuOffset;
+  desktop=!classicDesktop&&r.width>=900&&r.width>=1.2*r.height;
+  stage.classList.toggle('desktop',desktop);
+  if(wasDesktop!==desktop){
+    if(desktop){
+      $('right-menu').append(trayG,labelG);
+    }else{
+      $('menu-can').replaceChildren();
+      $('plants').before(trayG);
+      $('help').before(labelG);
+    }
+  }
+  if(desktop){
+    // Сцена заполняет окно по-прежнему. Композиция (−211…601 × 152…628 в единицах поля) масштабируется целиком и стоит по центру окна:
+    // поля слева и справа равны, середина композиции (195, 390) совпадает с серединой окна.
+    const scale=Math.min(r.width/820,r.height/476);
+    desktopHeight=r.height/scale;
+    rightMenuOffset=0;
+    $('right-menu').removeAttribute('transform');
+    Object.assign(playSurface.style,{
+      left:(r.width/2-195*scale-f.left)+'px',top:(r.height/2-390*scale-f.y)+'px',
+      width:(390*scale)+'px',height:(844*scale)+'px'
+    });
+  }else if(wasDesktop){rightMenuOffset=0;playSurface.removeAttribute('style');}
+  if(desktop)placeSprout();
+  VIEW={x0:f.x0,x1:f.x1,y0:f.y0,y1:f.y1,top:f.top,big:-f.x0>=24};
+  /* листья переднего плана стоят на 16 единиц ниже, чем нарисованы: лоток опущен, и они не должны закрывать фигуры. В высоком окне они опускаются ещё, к нижнему краю окна */
+  leafDy=(f.gap+16)*f.s;
+  placeHud();
+  if(wasDesktop!==desktop&&tray){
+    if(pend){clearTimeout(pend.timer);pend=null;}
+    if(drag)endDrag(false);
+    renderTray();renderGoals();renderLabel();renderTut();
+  }else if(tut&&previousMenuOffset!==rightMenuOffset)renderTut();
+  const key=[VIEW.big,Math.round(f.x0/70),Math.round(f.y0/40),Math.round(f.top/10)].join('|'),changed=key!==viewKey;
+  viewKey=key;
+  return changed;
 }
 
 /* ---------- время суток ---------- */
@@ -329,14 +661,14 @@ function setTheme(id,fade){
   if(fade&&!RM&&!lite&&id!==themeId){
     const gh=document.createElement('div');gh.className='ghostscene t-'+themeId;
     gh.innerHTML=['bg0','bg1'].map(k=>`<svg viewBox="0 0 390 844" style="transform:${$(k).style.transform}">${$(k).innerHTML.replace(/id="g-/g,'id="h-').replace(/url\((&quot;|"|')?#g-/g,'url($1#h-')}</svg>`).join('');
-    scr.insertBefore(gh,$('board'));
+    scr.insertBefore(gh,playSurface);
     gh.animate([{opacity:1},{opacity:0}],{duration:1300,easing:'ease-in-out',fill:'forwards'});setTimeout(()=>gh.remove(),1350);
   }
   themeId=id;
   scr.className='screen t-'+id+(lite?' lite':'');
-  const s=scene(THEMES[id]);
+  ORDER.forEach(t=>stage.classList.toggle('t-'+t,t===id));stage.classList.toggle('lite',lite);
+  const s=scene(THEMES[id],VIEW);sceneOn=true;
   $('bg0').innerHTML=s.l0;$('bg1').innerHTML=s.l1;$('fg').innerHTML=s.fg;$('fgl').innerHTML=s.fgl;
-  $('vig').innerHTML=`<rect width="390" height="844" style="fill:${u('vig')}"/><rect id="tense"${tense?' class="on"':''} width="390" height="844" style="${fill('black')};opacity:0"/>`;
   document.querySelectorAll('[data-theme]').forEach(el=>el.querySelector('.ring').setAttribute('style',`fill:none;stroke:var(--ink-top);stroke-width:1.4;opacity:${el.dataset.theme===id?.95:0}`));
   applyLevel();lights();SND.retheme();
 }
@@ -353,21 +685,38 @@ for(let r=0;r<5;r++)for(let c=0;c<5;c++){const x=BX+c*STEP,y=BY+r*STEP;
   stat+=`<rect x="${x}" y="${y}" width="${CELL}" height="${CELL}" rx="13" style="${fill('cell')};stroke:var(--cell-line);stroke-width:.9"/><path d="M${x+13},${y+CELL-.6} H${x+CELL-13}" style="fill:none;stroke:var(--white);stroke-width:.8;stroke-linecap:round;opacity:.12"/><circle class="dot" cx="${x+30}" cy="${y+30}" r="1.6" style="${fill('cell-dot')}"/>`;}
 $('board').innerHTML=stat;stat='';
 const chip=x=>`<rect class="ring" x="${x}" y="50" width="104" height="36" rx="18" style="${fill('chip')};stroke:var(--chip-line);stroke-width:1"/>`;
-stat+=chip(21)+`<text id="best" x="73" y="73" text-anchor="middle" style="font-size:14px;font-weight:500;${fill('ink-top')}">рекорд 0</text>
+/* десктоп: левая панель (счёт, рекорд, цели, кнопки) и вывеска «Оранжерея» дугой над грядкой */
+stat+=`<g class="desk-only" aria-hidden="true" pointer-events="none">
+  <rect id="desk-left" class="desk-panel" x="-187" y="256" width="184" height="348" rx="24"/>
+  <g id="desk-goal-title"><path d="M-171,364 H-19" style="fill:none;stroke:var(--chip-line);stroke-width:1"/><text class="desk-heading" x="-95" y="388">Цели</text></g>
+  <g id="desk-sign">
+    <path id="sign-arc" d="M40,222 Q195,186 350,222" style="fill:none"/>
+    <g style="filter:url(#g-tsh2)"><text id="sign-t" style="font-size:40px;font-weight:600;letter-spacing:.4px;${fill('ink-top')}"><textPath href="#sign-arc" startOffset="50%" text-anchor="middle">Оранжерея</textPath></text></g>
+    <path d="M122,232 Q195,224 268,232" style="fill:none;stroke:var(--gold-ui);stroke-width:1.6;stroke-linecap:round"/>
+    <g id="sign-sprout" style="filter:url(#g-tsh2)"></g>
+  </g>
+  </g>`;
+stat+='<g id="hud"><g id="best-chip">'+chip(21)+`<text id="best" x="73" y="73" text-anchor="middle" style="font-size:14px;font-weight:500;${fill('ink-top')}">рекорд 0</text></g>
   <g id="restart" class="btn" role="button" tabindex="0" aria-label="Начать забег заново">${chip(265)}<text id="restart-t" x="317" y="73" text-anchor="middle" style="font-size:14px;font-weight:500;${fill('ink-top')}">заново</text></g>
-  <text x="195" y="58" text-anchor="middle" style="font-size:12px;${fill('muted-top')}">очки</text>
-  <text id="score" class="fxp" x="195" y="90" text-anchor="middle" style="font-size:33px;font-weight:500;${fill('ink-top')}">0</text>
-  <g id="label"></g>
-  <g id="help" class="btn" role="button" tabindex="0" aria-label="Правила игры"><rect x="281" y="603" width="88" height="44" style="fill:transparent"/><rect class="ring" x="281" y="609" width="88" height="32" rx="16" style="${fill('card')};stroke:var(--card-line);stroke-width:1"/><text x="325" y="630" text-anchor="middle" style="font-size:13.5px;font-weight:500;${fill('ink-low')}">правила</text></g>`;
-stat+=`<g id="seed" class="btn" role="button" tabindex="0" aria-label="Семя дня"><rect x="21" y="7" width="104" height="40" style="fill:transparent"/><g id="seed-c"></g></g>`;
-ORDER.forEach((id,i)=>{const x=144+i*34;
-  stat+=`<g class="btn" role="button" tabindex="0" data-theme="${id}" aria-label="Время суток: ${({dawn:'рассвет',day:'день',dusk:'закат',night:'ночь'})[id]}"><rect x="${x-15}" y="12" width="30" height="30" style="fill:transparent"/><circle cx="${x}" cy="27" r="5.5" class="sw-${id}"/><circle class="ring" cx="${x}" cy="27" r="9"/></g>`;});
-stat+=`<g id="herb" class="btn" role="button" tabindex="0" aria-label="Гербарий"><rect x="298" y="7" width="40" height="40" style="fill:transparent"/><circle class="ring" cx="318" cy="27" r="14" style="${fill('chip')};stroke:var(--chip-line);stroke-width:1"/><path d="M312.4,33 C311.6,25.4 316,20.6 324.4,20.4 C324.6,28 320.4,33.4 312.4,33Z M312.4,33 L320.4,24.6" style="fill:none;stroke:var(--ink-top);stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round"/><circle id="herb-dot" cx="328.5" cy="17" r="3.6" style="${fill('gold')};display:none"/></g>`;
-stat+=`<g id="snd" class="btn" role="button" tabindex="0" aria-label="Звук"><rect x="332" y="7" width="40" height="40" style="fill:transparent"/><circle class="ring" cx="352" cy="27" r="14" style="${fill('chip')};stroke:var(--chip-line);stroke-width:1"/><g id="snd-i"></g></g>`;
-stat+=`<g id="goals"></g><g id="tray"></g><g id="plants"></g><g id="pre" style="pointer-events:none"></g><g id="evt" style="pointer-events:none"></g><g id="tutg" style="pointer-events:none"></g><g id="fx"></g><g id="drag" style="pointer-events:none"></g><g id="over" style="display:none"></g>`;
+  <g id="score-group" style="filter:url(#g-tsh)"><g id="stage-line" class="fxp"><text id="score-cap" x="195" y="58" text-anchor="middle" style="font-size:12px;${fill('muted-top')}">очки</text><g id="stage-bar"></g></g>
+  <text id="score" class="fxp" x="195" y="90" text-anchor="middle" style="font-size:33px;font-weight:500;${fill('ink-top')}">0</text></g>
+  </g><g id="label" transform="translate(0,${LROW})"></g>
+  <g id="help" class="btn" role="button" tabindex="0" aria-label="Правила игры" transform="translate(0,${LROW})"><rect x="289" y="603" width="80" height="44" style="fill:transparent"/><rect class="ring" x="295" y="609" width="74" height="32" rx="16" style="${fill('card')};stroke:var(--card-line);stroke-width:1"/><text x="332" y="630" text-anchor="middle" style="font-size:13.5px;font-weight:500;${fill('ink-low')}">правила</text></g>`;
+stat+=`<g id="hud2"><g id="seed" class="btn" role="button" tabindex="0" aria-label="Семя дня"><rect x="21" y="7" width="104" height="40" style="fill:transparent"/><g id="seed-c"></g></g>`;
+/* переключатель времени суток: четыре кружка на одной плашке между «семя дня» (до 125) и гербарием (от 304), зазоры по 29.5 */
+stat+=`<g id="theme-picker"><rect x="154.5" y="12" width="120" height="30" rx="15" style="${fill('chip')};stroke:var(--chip-line);stroke-width:1"/>`;
+ORDER.forEach((id,i)=>{const x=169.5+i*30;
+  stat+=`<g class="btn" role="button" tabindex="0" data-theme="${id}" aria-label="Время суток: ${({dawn:'рассвет',day:'день',dusk:'закат',night:'ночь'})[id]}"><rect x="${x-15}" y="5" width="30" height="44" style="fill:transparent"/><circle cx="${x}" cy="27" r="5.5" class="sw-${id}"/><circle class="ring" cx="${x}" cy="27" r="9"/></g>`;});
+stat+='</g>';
+stat+=`<g id="herb" class="btn" role="button" tabindex="0" aria-label="Гербарий"><rect x="295" y="5" width="40" height="44" style="fill:transparent"/><circle class="ring" cx="318" cy="27" r="14" style="${fill('chip')};stroke:var(--chip-line);stroke-width:1"/><path d="M312.4,33 C311.6,25.4 316,20.6 324.4,20.4 C324.6,28 320.4,33.4 312.4,33Z M312.4,33 L320.4,24.6" style="fill:none;stroke:var(--ink-top);stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round"/><circle id="herb-dot" cx="328.5" cy="17" r="3.6" style="${fill('gold-ui')};display:none"/></g>`;
+stat+=`<g id="snd" class="btn" role="button" tabindex="0" aria-label="Звук"><rect x="335" y="5" width="40" height="44" style="fill:transparent"/><circle class="ring" cx="352" cy="27" r="14" style="${fill('chip')};stroke:var(--chip-line);stroke-width:1"/><g id="snd-i"></g></g>`;
+stat+=`</g><g id="right-menu" class="desk-only" role="group" aria-label="Выбор фигур">
+  <rect id="desk-right" class="desk-panel" x="393" y="256" width="184" height="348" rx="24" pointer-events="none"/>
+  <g id="menu-can"></g></g>
+  <g id="goals" transform="translate(0,-4)"></g><g id="tray"></g><g id="plants"></g><g id="pre" style="pointer-events:none"></g><g id="digg"></g><g id="evt" style="pointer-events:none"></g><g id="tutg" style="pointer-events:none"></g><g id="fx"></g><g id="drag" style="pointer-events:none"></g><g id="over" style="display:none"></g>`;
 game.innerHTML=stat;
 const dotsEl=[...$('board').querySelectorAll('.dot')];
-const goalsG=$('goals'),evtG=$('evt'),trayG=$('tray'),plantsG=$('plants'),preG=$('pre'),tutG=$('tutg'),labelG=$('label'),fxG=$('fx'),dragG=$('drag'),overG=$('over');
+const goalsG=$('goals'),evtG=$('evt'),trayG=$('tray'),plantsG=$('plants'),preG=$('pre'),digG=$('digg'),tutG=$('tutg'),labelG=$('label'),fxG=$('fx'),dragG=$('drag'),overG=$('over');
 const holders=[];
 for(let i=0;i<25;i++){const g=document.createElementNS(NS,'g');g.setAttribute('transform',`translate(${BX+(i%5)*STEP-1},${BY+((i/5)|0)*STEP-1})`);g.style.pointerEvents='none';plantsG.appendChild(g);holders.push(g);}
 
@@ -390,7 +739,7 @@ function drawLights(){
   lightsDirty=false;
   lctx.setTransform(1,0,0,1,0,0);lctx.clearRect(0,0,lc.width,lc.height);
   if(!grid)return;
-  lctx.setTransform(K,0,0,K,0,0);lctx.globalCompositeOperation='lighter';
+  lctx.setTransform(K,0,0,K,110*K,0);lctx.globalCompositeOperation='lighter';
   const gl=THEMES[themeId].glow;
   for(let i=0;i<25;i++){const t=grid[i];if(!t||t.sp==='x')continue;const R=[0,46,60,80,104][t.st];
     lctx.globalAlpha=[0,.22,.3,.42,.55][t.st]*gl;lctx.drawImage(sprite(t.v&&'ryb'.indexOf(t.v)>=0?t.v:t.sp,true),mx(i)-R,my(i)+4-R,R*2,R*2);}
@@ -398,13 +747,18 @@ function drawLights(){
 }
 function lights(){if(lightsDirty)return;lightsDirty=true;Promise.resolve().then(drawLights);}
 function resize(){
-  const r=scr.getBoundingClientRect(),d=Math.min(lite?1:2,window.devicePixelRatio||1),w=Math.max(1,Math.round(r.width*d)),h=Math.max(1,Math.round(r.height*d));
-  if(lc.width!==w||lc.height!==h){lc.width=fc.width=w;lc.height=fc.height=h;}
+  /* сначала место колонки в окне; если видимая область заметно изменилась, сцена рисуется заново под неё */
+  if(fitView()&&sceneOn)setTheme(themeId);
+  par(0,0);
+  const r=playSurface.getBoundingClientRect(),d=Math.min(lite?1:2,window.devicePixelRatio||1),w=Math.max(1,Math.round(r.width*d)),h=Math.max(1,Math.round(r.height*d));
+  const lw=Math.round(w*610/390);
+  const fw=Math.round(w*710/390);
+  if(lc.width!==lw||lc.height!==h||fc.width!==fw){lc.width=lw;fc.width=fw;lc.height=fc.height=h;}
   K=w/390;drawLights();
 }
 function fxTick(now){
   fxRaf=0;const dt=Math.min(.05,(now-fxLast)/1000||.016);fxLast=now;
-  fctx.setTransform(1,0,0,1,0,0);fctx.clearRect(0,0,fc.width,fc.height);fctx.setTransform(K,0,0,K,0,0);
+  fctx.setTransform(1,0,0,1,0,0);fctx.clearRect(0,0,fc.width,fc.height);fctx.setTransform(K,0,0,K,160*K,0);
   const keep=[];
   for(const p of parts){
     p.age=(now-p.t0)/1000;if(p.age<0){keep.push(p);continue;}
@@ -450,9 +804,9 @@ const buzz=v=>{try{if(navigator.vibrate&&(!navigator.userActivation||navigator.u
 
 /* ---------- звук: всё синтезируется на месте, файлов нет ---------- */
 const SND=(()=>{
-  /* режимы: 2 звук и музыка, 1 только звуки, 0 тишина */
+  /* два состояния: 2 звук и музыка, 0 тишина. Прежний средний режим «только звуки» (1) в сохранённых настройках читается как включённый звук */
   let ac=null,B=null,mode=2,musT=0,nextT=0,stepN=0,bed=null;
-  try{const m=localStorage.getItem('orangery-snd2');if(m!==null)mode=Math.max(0,Math.min(2,+m||0));}catch(e){}
+  try{const m=localStorage.getItem('orangery-snd2');if(m!==null)mode=+m>0?2:0;}catch(e){}
   const hz=m=>440*Math.pow(2,(m-69)/12);
   /* пентатоника от до первой октавы: любые её ноты согласны со всеми аккордами фона */
   const PENTA=[0,2,4,7,9],note=n=>60+PENTA[((n%5)+5)%5]+12*Math.floor(n/5);
@@ -527,16 +881,19 @@ const SND=(()=>{
     clear:(b,t)=>{for(let i=0;i<8;i++)pluck(b,t+i*.05,note(8+i),.1);},
     level:(b,t)=>{pluck(b,t,note(7),.11);pluck(b,t+.13,note(9),.11);pluck(b,t+.26,note(12),.1);},
     over:(b,t)=>{pluck(b,t,note(7),.14);pluck(b,t+.32,note(5),.14);pluck(b,t+.68,note(2),.13);},
+    dig:(b,t)=>{blip(b,t,130,60,.12,.2);hiss(b,t+.03,.14,.06,650);},
     ui:(b,t)=>blip(b,t,700,700,.02,.035)
   };
   function bedOn(){
-    if(!wet||bed||!ac||ac.state!=='running')return;
+    if(!wet||(VIEW&&VIEW.big)||bed||!ac||ac.state!=='running')return;
     const s=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();s.buffer=B.nb;s.loop=true;f.type='bandpass';f.frequency.value=2600;f.Q.value=.6;g.gain.value=.025;
     s.connect(f);f.connect(g);g.connect(B.m);s.start();bed=s;
   }
   function wake(){bedOn();clearInterval(musT);musT=0;if(mode===2){musT=setInterval(tick,200);tick();}}
+  /* held: игра на паузе (реклама, скрытая вкладка) — звук не просыпается ни от хода, ни от нажатия */
+  let held=false;
   function ensure(){
-    if(!mode)return false;
+    if(!mode||held)return false;
     if(!ac){const C=window.AudioContext||window.webkitAudioContext;if(!C)return false;try{ac=new C();B=build(ac);}catch(e){ac=null;return false;}}
     if(ac.state==='suspended')ac.resume().then(wake).catch(()=>{});
     return true;
@@ -546,11 +903,11 @@ const SND=(()=>{
     play(name,a,b){if(!ensure()||ac.state!=='running')return;try{S[name](B,ac.currentTime+.004,a,b);}catch(e){}},
     unlock(){if(ensure()&&ac.state==='running'&&!musT)wake();},
     retheme(){},
-    toggle(){mode=(mode+2)%3;try{localStorage.setItem('orangery-snd2',String(mode));}catch(e){}
+    toggle(){mode=mode?0:2;try{localStorage.setItem('orangery-snd2',String(mode));}catch(e){}
       if(!mode){clearInterval(musT);musT=0;if(ac)ac.suspend().catch(()=>{});}
       else if(ensure()&&ac.state==='running')wake();
       return mode;},
-    hidden(h){if(!ac)return;if(h)ac.suspend().catch(()=>{});else if(mode)ac.resume().then(wake).catch(()=>{});},
+    hidden(h){held=!!h;if(!ac)return;if(h)ac.suspend().catch(()=>{});else if(mode)ac.resume().then(wake).catch(()=>{});},
     /* проверка без динамиков: звуки и 32 секунды музыки считаются в память, возвращаются пик и средняя громкость */
     async test(){
       const C=window.OfflineAudioContext||window.webkitOfflineAudioContext,out={},meas=d=>{let pk=0,sq=0,bad=0;for(let i=0;i<d.length;i++){const v=Math.abs(d[i]);if(!(v>=0))bad++;if(v>pk)pk=v;sq+=v*v;}return [+pk.toFixed(3),+Math.sqrt(sq/d.length).toFixed(4),bad];};
@@ -561,17 +918,147 @@ const SND=(()=>{
   };
 })();
 
+/* ---------- площадка: всё общение с Яндекс Играми идёт через этот слой; без SDK он молчит ---------- */
+const PF=(()=>{
+  /* y появляется, когда SDK ответил; желаемое состояние (готовность, идёт ли игра) запоминается и применяется, даже если он ответил поздно */
+  let y=null,wantReady=false,readyDone=false,wantPlay=null,gp=null,pauseFn=null;
+  const WAIT=4000,GAP=3000,LAZY=5000,RETRY=15000,TRIES=5;
+  /* облако: пока оно в этом сеансе не прочитано успешно (cloudOk), в него ничего не пишется */
+  let player=null,cloudOk=false,locked=false,sdkFn=null,cloudFn=null,tries=0,src=null,dirty=false,lastSent=0,timer=0,timerAt=0;
+  async function readCloud(){
+    if(!player)player=await y.getPlayer();
+    const d=await player.getData();
+    cloudOk=true;
+    return d;
+  }
+  /* чтение не удалось или опоздало: повторяем в фоне и отдаём результат игре, когда он придёт */
+  function retryCloud(){
+    if(!y||cloudOk||tries>=TRIES)return;
+    tries++;
+    setTimeout(()=>{readCloud().then(d=>{if(cloudFn)cloudFn(d);},retryCloud);},RETRY);
+  }
+  /* один показ рекламы за раз: повторный вызов, пока первый не закончен, получает тот же результат.
+     Без сети SDK молчит, поэтому показ даже не начинается. Если площадка не ответила за patience мс, игра отпускается,
+     но опоздавшие ответы не теряются: поздно открывшаяся реклама всё равно ставит паузу, а досмотренный ролик отдаёт награду через lateFn.
+     LIMIT: предел на случай, если реклама открылась, а о закрытии площадка так и не сообщила */
+  const LIMIT=180000,NONE={shown:false,opened:false,rewarded:false};
+  let adBusy=null,lateFn=null;
+  function adv(method,patience){
+    if(adBusy)return adBusy;
+    if(!y||!y.adv||typeof y.adv[method]!=='function'||navigator.onLine===false)return Promise.resolve(NONE);
+    const p=new Promise(res=>{
+      let opened=false,held=false,rewarded=false,settled=false,closed=false,guard=0;
+      const hold=v=>{if(held===v)return;held=v;if(pauseFn)pauseFn(v,'ad');};
+      /* settle: игра получает ответ. close: реклама ушла с экрана */
+      const settle=shown=>{if(settled)return;settled=true;res({shown:!!shown,opened,rewarded});};
+      const close=shown=>{if(closed)return;closed=true;clearTimeout(guard);const late=settled;hold(false);settle(shown);if(late&&rewarded&&lateFn)lateFn();};
+      guard=setTimeout(()=>{if(!opened)settle(false);},patience);
+      try{
+        y.adv[method]({callbacks:{
+          onOpen(){if(closed)return;opened=true;hold(true);clearTimeout(guard);guard=setTimeout(()=>close(true),LIMIT);},
+          onRewarded(){rewarded=true;},
+          onClose(wasShown){close(wasShown!==false&&opened);},
+          onError(){setTimeout(()=>{if(!opened)close(false);},300);}
+        }});
+      }catch(e){close(false);}
+    });
+    adBusy=p;p.then(()=>{if(adBusy===p)adBusy=null;});
+    return p;
+  }
+  function plan(delay){
+    const at=Math.max(Date.now()+delay,lastSent+GAP);
+    if(timer&&timerAt<=at)return;
+    clearTimeout(timer);timerAt=at;timer=setTimeout(flush,Math.max(0,at-Date.now()));
+  }
+  function flush(){
+    timer=0;timerAt=0;
+    if(!dirty||!cloudOk||locked||!player||!src)return;
+    dirty=false;lastSent=Date.now();
+    let rec;try{rec=src();}catch(e){return;}
+    try{Promise.resolve(player.setData(rec,true)).catch(()=>{dirty=true;plan(RETRY);});}catch(e){dirty=true;}
+  }
+  function adopt(sdk){
+    y=sdk;api.on=true;
+    try{api.lang=String(y.environment.i18n.lang||'ru');}catch(e){}
+    try{y.on('game_api_pause',()=>{if(pauseFn)pauseFn(true,'pf');});y.on('game_api_resume',()=>{if(pauseFn)pauseFn(false,'pf');});}catch(e){}
+    if(wantReady)api.ready();
+    if(wantPlay!==null)api.play(wantPlay);
+    api.pending=false;if(sdkFn)sdkFn();
+  }
+  const api={
+    /* pending: SDK подключён к странице, но ещё не ответил */
+    on:false,pending:false,lang:'ru',patience:{full:12000,rew:20000},
+    /* никогда не отклоняется: если площадка молчит дольше WAIT, игра стартует без неё */
+    init(){
+      const Y=window.YaGames;
+      if(!Y||typeof Y.init!=='function')return Promise.resolve({cloud:null});
+      let cloud=null,late=false,p;
+      api.pending=true;
+      try{p=Promise.resolve(Y.init());}catch(e){p=Promise.reject(e);}
+      p=p.then(adopt).then(readCloud).then(d=>{if(late){if(cloudFn)cloudFn(d);}else cloud=d;},()=>{if(y)retryCloud();else{api.pending=false;if(sdkFn)sdkFn();}});
+      return Promise.race([p,new Promise(r=>setTimeout(r,WAIT))]).then(()=>{late=true;return {cloud};});
+    },
+    /* запись в облако: get отдаёт запись в момент отправки; now просит отправить сразу, но не чаще раза в GAP */
+    push(get,now){src=get;dirty=true;if(cloudOk&&!locked&&player)plan(now?0:LAZY);},
+    /* в облаке запись более новой сборки: в этом сеансе в него больше ничего не пишется */
+    lock(){locked=true;},
+    onSdk(fn){sdkFn=fn;},
+    onLateReward(fn){lateFn=fn;},
+    onCloud(fn){cloudFn=fn;},
+    /* реклама между забегами: true, если её показали. Всегда завершается */
+    fullscreen(){return adv('showFullscreenAdv',api.patience.full).then(r=>r.shown);},
+    /* ролик за награду: rewarded досмотрен, closed закрыт раньше времени, error не открылся. Всегда завершается */
+    rewarded(){return adv('showRewardedVideo',api.patience.rew).then(r=>r.rewarded?'rewarded':r.opened?'closed':'error');},
+    ready(){wantReady=true;if(readyDone||!y)return;readyDone=true;try{const L=y.features&&y.features.LoadingAPI;if(L)L.ready();}catch(e){}},
+    play(on){on=!!on;wantPlay=on;if(!y||gp===on)return;if(gp===null&&!on){gp=false;return;}gp=on;try{const g=y.features&&y.features.GameplayAPI;if(g){if(on)g.start();else g.stop();}}catch(e){}},
+    onPause(fn){pauseFn=fn;}
+  };
+  return api;
+})();
+
 /* ---------- состояние ---------- */
 const SHAPES=[[[0,0]],[[0,0],[1,0]],[[0,0],[1,0],[0,1]]];
 let grid,tray,score,best=0,busy,over,modal=null,tut=null,drag=null,pend=null,gv=0,grnd=Math.random,queue=Promise.resolve();
-try{best=+localStorage.getItem('orangery-best')||0;}catch(e){}
+/* booted: данные игрока прочитаны и забег на экране. pauseWhy: кто поставил паузу (площадка, реклама, скрытая вкладка) */
+let booted=false,paused=false;const pauseWhy={};
+/* реклама: adCans сколько леек за ролик взято в этом забеге, adFails отказы ролика подряд, lastAdAt когда был последний показ между забегами */
+let adCans=0,adFails=0,lastAdAt=0,adWait=false,adKind=null;
+/* acted: игрок сделал в этом сеансе хоть что-то, что меняет забег (ход, замена лейкой, новый забег, вход в семя дня, обучение) */
+let acted=false;const ACTS=['again','giveup','dplay','free','begin','retut','skip','restart','adcan','adno'];
+const adState=()=>({on:PF.on,tut:!!tut,mode,adCans,fails:adFails,lastAdAt,hasEmpty:!!grid&&grid.some(t=>!t)});
+/* переход между забегами: сначала реклама, если ей пора, потом следующий забег. Отказ площадки ничего не задерживает */
+async function between(next){
+  if(adWait)return;
+  if(!PURE.adGate(adState(),Date.now())){next();return;}
+  adWait=true;lastAdAt=Date.now();
+  await PF.fullscreen();
+  adWait=false;
+  next();
+}
+/* площадке сообщается, идёт ли сейчас игра: не на паузе, не после конца забега и не под открытой карточкой */
+function syncPlay(){PF.play(booted&&!paused&&!over&&!modal);}
+function setPaused(v,why){
+  pauseWhy[why||'pf']=!!v;
+  const p=Object.keys(pauseWhy).some(k=>pauseWhy[k]);
+  SND.hidden(p);
+  if(p===paused)return;
+  paused=p;
+  if(p){if(pend){clearTimeout(pend.timer);try{game.releasePointerCapture(pend.id);}catch(e){}pend=null;}if(drag)endDrag(false);}
+  stage.classList.toggle('paused',p);
+  syncPlay();
+}
 const pick=a=>a[(grnd()*a.length)|0];
-let stats={moves:0,lotus:0,combo:0},runId=0,cans=1,swap=false,swapK=-1,stuck=false;
-/* режим: free обычный забег, daily семя дня. dealt считает розданные фигуры, rs хранит состояние генератора семени */
+let stats={moves:0,lotus:0,combo:0},runId=0,cans=1,shovels=0,dig=false,swap=false,swapK=-1,stuck=false,undoRec=null,giveArm=0,stageQueue=[];
+/* режим: free обычный забег, daily семя дня. dealt считает розданные фигуры, rs хранит состояние генератора раздачи.
+   У каждого забега есть зерно: в семени дня это дата, в свободной игре случайное число runSeed. От зерна и порядковых номеров
+   зависят фигуры, события, цели и варианты замены, поэтому после отмены хода игра выдаёт то же самое: перебирать удачу отменой нельзя */
 let goals=null,gTier={},gIssued=0;
-/* события: next номер хода следующего события, idx их счётчик, bfly бабочка на клетке, gold ждёт ли подарок места в лотке */
-let ev={next:6,idx:0,bfly:null,gold:false};
-let mode='free',dealt=0,rs=0,daily={date:'',done:false,result:null,run:null},streak={last:'',n:0};
+/* события: next номер хода следующего события, idx их счётчик, bfly бабочка на клетке, gold ждёт ли подарок места в лотке,
+   intro новинки ступеней, которые ещё не случились: строка из букв по порядку (b бабочка, g золотое семя, w сорняк) */
+let ev={next:6,idx:0,bfly:null,gold:false,intro:''};
+let mode='free',dealt=0,rs=0,runSeed=0,daily={date:'',done:false,result:null,run:null},streak={last:'',n:0};
+/* ступень текущего забега. В семени дня раздача обязана быть одинаковой у всех, поэтому там всё открыто сразу; в обучении ступеней нет */
+const stg=()=>mode==='daily'||tut?5:PURE.stageOf(score);
 const mkPiece=cells=>({cells,w:Math.max(...cells.map(q=>q[0]))+1,h:Math.max(...cells.map(q=>q[1]))+1});
 /* поворот на четверть оборота по часовой стрелке; растения остаются стоять прямо */
 function rotate(p){const h=p.h;p.cells=p.cells.map(q=>[h-1-q[1],q[0],q[2],q[3]]);p.h=p.w;p.w=h;}
@@ -580,13 +1067,15 @@ const mix=a=>{let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;
 const srnd=()=>{rs=(rs+0x6D2B79F5)|0;return mix(rs);};
 const seeded=a=>()=>{a=(a+0x6D2B79F5)|0;return mix(a);};
 const hashStr=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h|0;};
-const prnd=()=>mode==='daily'?srnd():Math.random();
+const newSeed=()=>((Math.random()*4294967296)|0)||1;
+const seedOf=()=>mode==='daily'?hashStr(daily.date):runSeed;
 function newPiece(R){
   /* баланс подобран симуляцией. В одной фигуре нет двух одинаковых растений, поэтому
      в каждом слиянии участвует ровно одна клетка фигуры: новый цветок вырастает в ней.
-     Третий вид приходит с 1500 очков, а в семени дня с 46-й фигуры: так раздача не зависит от игрока. */
-  const deal=!R;R=R||prnd;
-  const k=R(),n=k<.5?0:k<.92?1:2,third=mode==='daily'?dealt>=45:(score||0)>=1500,pool=third?['r','y','b']:['r','y'],used={},cells=[];
+     Третий вид приходит с 1500 очков, а в семени дня с 46-й фигуры: так раздача не зависит от игрока.
+     Фигуры из трёх клеток приходят с третьей ступени; до неё на их месте фигура из двух. */
+  const deal=!R;R=R||srnd;
+  const k=R(),n=k<.5?0:k<.92||!PURE.stageBig(stg())?1:2,third=mode==='daily'?dealt>=45:(score||0)>=1500,pool=third?['r','y','b']:['r','y'],used={},cells=[];
   SHAPES[n].forEach(q=>{let sp,st,tries=0;do{sp=pool[(R()*pool.length)|0];st=R()<.15?2:1;}while(used[sp+st]&&++tries<40);used[sp+st]=1;cells.push([q[0],q[1],sp,st]);});
   const p=mkPiece(cells);for(let i=(R()*4)|0;i>0;i--)rotate(p);
   if(deal)p.id=dealt++;
@@ -619,16 +1108,16 @@ function pieceHTML(p,size,gap,lifted){
   return s;
 }
 const TM=36,TG=4;
+const trayCellSize=()=>desktop?34:TM;
 const turnIco=(x,y)=>`<g transform="translate(${x},${y}) scale(.85)" style="fill:none;stroke:var(--muted-low);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M-5.5,1.5 A5.5,5.5 0 0 1 5.5,1.5"/><path d="M2.6,.4 L5.6,3.6 L8.4,.2"/></g>`;
 function renderTray(popIn){
   let s='';
   for(let k=0;k<3;k++){
-    const cx=CARD.xs[k],p=tray[k];
-    s+=`<rect x="${cx}" y="${CARD.y}" width="${CARD.w}" height="${CARD.w}" rx="20" style="${fill('card')};stroke:var(--card-line);stroke-width:1"/>`;
+    const {x,y,w:slotWidth,h:slotHeight}=slotBox(k),p=tray[k];
+    s+=`<rect x="${x}" y="${y}" width="${slotWidth}" height="${slotHeight}" rx="20" style="${fill('card')};stroke:var(--card-line);stroke-width:1"/>`;
     if(!p)continue;
-    if(swap)s+=`<rect class="made pulse" x="${cx-3}" y="${CARD.y-3}" width="${CARD.w+6}" height="${CARD.w+6}" rx="23"/>`;
-    const m=TM,g=TG,w=p.w*m+(p.w-1)*g,h=p.h*m+(p.h-1)*g;
-    s+=`<g class="piece" data-slot="${k}"${drag&&drag.k===k?' style="opacity:.22"':''}><rect x="${cx}" y="${CARD.y}" width="${CARD.w}" height="${CARD.w}" style="fill:transparent"/>${p.cells.length>1?turnIco(cx+CARD.w-13,CARD.y+13):''}<g transform="translate(${cx+(CARD.w-w)/2},${CARD.y+(CARD.w-h)/2})">${pieceHTML(p,m,g,false)}</g></g>`;
+    const m=trayCellSize(),g=TG,w=p.w*m+(p.w-1)*g,h=p.h*m+(p.h-1)*g;
+    s+=`<g class="piece" data-slot="${k}"${drag&&drag.k===k?' style="opacity:.22"':''}><rect x="${x}" y="${y}" width="${slotWidth}" height="${slotHeight}" style="fill:transparent"/>${p.cells.length>1?turnIco(x+slotWidth-13,y+13):''}<g transform="translate(${x+(slotWidth-w)/2},${y+(slotHeight-h)/2})">${pieceHTML(p,m,g,false)}</g></g>`;
   }
   trayG.innerHTML=s;
   if(popIn&&!RM)trayG.querySelectorAll('.piece').forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'translateY(0)'}],{duration:260,delay:i*70,easing:'ease-out',fill:'backwards'}));
@@ -636,7 +1125,7 @@ function renderTray(popIn){
 /* касание фигуры в лотке: поворот. Клетки переезжают со старых мест на новые. */
 function turn(k){
   const p=tray[k];if(!p||p.cells.length<2||over||modal)return;
-  const old=p.cells.map(q=>[q[0],q[1]]),ow=p.w,oh=p.h,st=TM+TG;
+  const old=p.cells.map(q=>[q[0],q[1]]),ow=p.w,oh=p.h,st=trayCellSize()+TG;
   rotate(p);renderTray();SND.play('turn');save();
   if(!RM)trayG.querySelectorAll(`[data-slot="${k}"] .pc`).forEach((el,i)=>{
     const dx=(old[i][0]-p.cells[i][0])*st+(p.w-ow)*st/2,dy=(old[i][1]-p.cells[i][1])*st+(p.h-oh)*st/2;
@@ -648,9 +1137,9 @@ const fmt=v=>String(v).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
 function setScore(v,bump){
   score=v;const el=$('score'),from=shown,steps=bump&&!RM?10:1;let n=0;
   clearInterval(cntT);
-  const put=x=>{shown=x;el.textContent=fmt(x);};
+  const put=x=>{shown=x;const t=fmt(x);el.textContent=t;el.style.fontSize=(desktop&&t.length>7?33*7/t.length:33).toFixed(1)+'px';};
   if(steps===1)put(v);else cntT=setInterval(()=>{n++;put(Math.round(from+(v-from)*n/steps));if(n>=steps)clearInterval(cntT);},32);
-  setLevel();goalBump('score',v);
+  setLevel();renderStage();goalBump('score',v);
 }
 function setBest(){$('best').textContent=mode==='daily'?'серия '+curStreak():'рекорд '+fmt(best);}
 /* очки взлетают над цветком и улетают в счётчик */
@@ -658,7 +1147,7 @@ function flyScore(i,text){
   const x=mx(i),y=my(i)-20,t=document.createElementNS(NS,'text');
   t.setAttribute('x',x);t.setAttribute('y',y);t.setAttribute('text-anchor','middle');t.setAttribute('class','pop fxp');t.textContent=text;fxG.appendChild(t);
   t.animate(RM?[{opacity:1},{opacity:1,offset:.8},{opacity:0}]
-    :[{transform:'translate(0,0) scale(.6)',opacity:0},{transform:'translate(0,-16px) scale(1.2)',opacity:1,offset:.16},{transform:'translate(0,-24px) scale(1)',opacity:1,offset:.5},{transform:`translate(${f1((195-x)*.92)}px,${f1(80-y)}px) scale(.5)`,opacity:.25}],
+    :[{transform:'translate(0,0) scale(.6)',opacity:0},{transform:'translate(0,-16px) scale(1.2)',opacity:1,offset:.16},{transform:'translate(0,-24px) scale(1)',opacity:1,offset:.5},{transform:`translate(${f1(((desktop?-95:195)-x)*.92)}px,${f1((desktop?315:80+LAY.top)-y)}px) scale(.5)`,opacity:.25}],
     {duration:840,easing:'cubic-bezier(.4,0,.6,1)',fill:'forwards'});
   setTimeout(()=>{t.remove();if(!RM)$('score').animate([{transform:'scale(1)'},{transform:'scale(1.16)'},{transform:'scale(1)'}],{duration:240,easing:'ease-out'});},850);
 }
@@ -695,10 +1184,12 @@ function markWant(p){
 }
 /* глубина: сцена за стеклом и листья переднего плана сдвигаются в разные стороны */
 function par(nx,ny){
+  /* фигуру можно увести мышью далеко за поле: сдвиг слоёв от этого не растёт */
+  nx=Math.max(-1,Math.min(1,nx||0));ny=Math.max(-1,Math.min(1,ny||0));
   if(lite||RM){nx=0;ny=0;}
   $('bg0').style.transform=`translate(${f1(-nx*4)}px,${f1(-ny*2.5)}px) scale(1.03)`;
   $('bg1').style.transform=`translate(${f1(-nx*2.5)}px,${f1(-ny*1.5)}px)`;
-  $('fglw').style.transform=`translate(${f1(nx*7)}px,${f1(ny*3)}px)`;
+  $('fglw').style.transform=`translate(${f1(nx*7)}px,${f1(ny*3+leafDy)}px)`;
 }
 /* когда свободных клеток мало, цветы тревожно озираются, а края экрана темнеют */
 function mood(){
@@ -706,8 +1197,64 @@ function mood(){
   tense=!tut&&!over&&grid.filter(t=>!t).length<=5;
   plantsG.classList.toggle('worry',tense);const el=$('tense');if(el)el.classList.toggle('on',tense);
 }
-/* теплица расцветает по ходу забега: шесть порогов по очкам */
-const LEVELS=[150,400,800,1300,2000,3000];let level=0;
+/* ---------- ступени забега ---------- */
+/* над счётом — строка ступени: номер и пять сегментов. Пройденные ступени залиты, сегмент текущей заполняется по пути к следующему порогу.
+   Всё в одной строке на месте слова «очки»: в низком окне телефона под счётом сразу стоят цели, отдельной полосе там нет места.
+   В семени дня и в обучении ступеней нет, там остаётся «очки» */
+function renderStage(){
+  const cap=$('score-cap'),bar=$('stage-bar');if(!cap)return;
+  if(mode==='daily'||tut){cap.textContent='очки';cap.setAttribute('x',195);cap.setAttribute('text-anchor','middle');bar.innerHTML='';cap.parentNode.removeAttribute('aria-label');return;}
+  const N=PURE.STAGES.length,n=PURE.stageOf(score),sp=PURE.stageSpan(score),p=sp.to?Math.min(1,(score-sp.from)/(sp.to-sp.from)):1;
+  cap.textContent='ступень '+n;
+  const tw=(cap.getComputedTextLength&&cap.getComputedTextLength())||54,sw=8,sg=2.5,bw=N*sw+(N-1)*sg,x0=195-(tw+7+bw)/2;
+  cap.setAttribute('x',f1(x0+tw));cap.setAttribute('text-anchor','end');
+  let h='';
+  for(let i=1;i<=N;i++){const x=x0+tw+7+(i-1)*(sw+sg),k=i<n?1:i===n?p:0;
+    h+=`<rect x="${f1(x)}" y="52.4" width="${sw}" height="3.4" rx="1.7" style="${fill('ink-top')};opacity:.26"/>`+(k>0?`<rect x="${f1(x)}" y="52.4" width="${f1(Math.max(3.4,sw*k))}" height="3.4" rx="1.7" style="${fill('gold-ui')}"/>`:'');}
+  bar.innerHTML=h;
+  cap.parentNode.setAttribute('aria-label',`Ступень ${n} из ${N}`);
+}
+const STAGE_NEW={2:'бабочки',3:'золотое семя',4:'сорняки',5:'синие ростки'};
+/* счёт перешёл порог: новинка встаёт в очередь событий и придёт через два хода, открываются новые цели.
+   За каждую новую ступень дают лейку: на первых ступенях целей меньше, а с ними и леек, и без этой награды начало забега выходило труднее прежнего */
+function stageUp(from,to){
+  for(let n=from+1;n<=to;n++){
+    const t=PURE.stageNew(n);
+    if(t&&(ev.intro||'').indexOf(t)<0){ev.intro=(ev.intro||'')+t;ev.next=stats.moves+2;}
+    toast(`ступень ${n}: ${STAGE_NEW[n]}`);gainCan();
+  }
+  const opened=openGoals();renderGoals();
+  if(RM)return;
+  $('stage-line').animate([{transform:'scale(1)'},{transform:'scale(1.22)'},{transform:'scale(1)'}],{duration:340,easing:'ease-out'});
+  opened.forEach(i=>{const el=goalsG.querySelector(`[data-goal="${i}"]`);if(el)el.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}],{duration:320,easing:'cubic-bezier(.2,.8,.3,1)'});});
+}
+/* карточка новинки показывается один раз за всё время: какие ступени игрок уже видел, лежит в его записи */
+const STAGE_CARD={
+  2:['Бабочка',['Она садится на цветок. Слейте его,','пока она не улетела:','очки за слияние удвоятся.']],
+  3:['Золотое семя',['Оно становится тем растением,','которое растёт рядом.','Ещё приходят фигуры из трёх клеток.']],
+  4:['Сорняк',['Он занимает клетку. Его убирает','слияние по соседству или лопатка.']],
+  5:['Синие ростки',['Третий вид растений.','Три разных цветка дают редкий лотос.']]};
+const seenStages=()=>{const a=readJ('orangery-stages');return Array.isArray(a)?a:[];};
+function stageCards(from,to){
+  const seen=seenStages();
+  for(let n=from+1;n<=to;n++)if(STAGE_CARD[n]&&seen.indexOf(n)<0&&stageQueue.indexOf(n)<0)stageQueue.push(n);
+  stageCard();
+}
+function stageCard(){
+  if(!stageQueue.length||over||modal||tut)return;
+  const n=stageQueue.shift();
+  const seen=seenStages();if(seen.indexOf(n)<0){seen.push(n);store('orangery-stages',seen.sort());}
+  const C=STAGE_CARD[n],Y=250,h=274+C[1].length*22;
+  const art=n===2?`<g transform="translate(164,${Y+58})">${plant('r',2)}<g transform="translate(47,9)">${BFLY}</g></g>`
+    :n===3?seedArt(195,Y+92,1.9)
+    :n===4?`<g transform="translate(164,${Y+58})">${weedArt()}</g>`
+    :mini(120,Y+70,'r',1)+mini(160,Y+70,'y',1)+`<g transform="translate(205,${Y+56}) scale(.95)">${plant('b',1)}</g>`;
+  showCard('stage',Y,h,line(Y+40,12.5,'over-muted',`ступень ${n} из ${PURE.STAGES.length}`)+art
+    +line(Y+152,21,'over-ink',C[0],600)+C[1].map((t,i)=>line(Y+182+i*22,14.5,'over-ink',t)).join('')
+    +button('stageok',Y+h-78,'Понятно','Закрыть и играть дальше'));
+}
+/* теплица расцветает по ходу забега: шесть порогов по очкам. Первые четыре совпадают с порогами ступеней */
+const LEVELS=[100,300,700,1500,2200,3000];let level=0;
 function applyLevel(){document.querySelectorAll('#bg1 .bl,#fgl .bl,#fg .blo').forEach(el=>el.classList.toggle('on',+el.dataset.lv<=level));}
 function setLevel(){
   const l=tut?0:LEVELS.filter(v=>score>=v).length;if(l===level)return;
@@ -793,7 +1340,9 @@ async function playStep(s){
   await wait(250*slow);
 }
 async function place(k,p,c,r){
-  busy=true;tray[k]=null;gv++;
+  undoMark('place');
+  const st0=stg();
+  busy=true;acted=true;tray[k]=null;gv++;
   const placed=p.cells.map(q=>{const i=(r+q[1])*5+c+q[0];grid[i]=q[2]==='g'?wild(grid,i):{sp:q[2],st:q[3]};renderCell(i,'pop');FX.puff(i);found(grid[i],true);return i;});
   SND.play('drop');buzz(8);stats.moves++;
   setScore(score+placed.length);
@@ -802,18 +1351,24 @@ async function place(k,p,c,r){
   const steps=plan(grid.slice(),placed);
   for(const s of steps)await playStep(s);
   if(steps.filter(s=>s.combo===1).length>=2)goalBump('double',1);
+  if(PURE.earnsShovel(steps))gainShovel('chain');
   checkGoals();storeHerb();
-  busy=false;
+  busy=false;renderLabel();
   if(tut){tutDone();return;}
   if(tray.every(t=>!t)){tray=[newPiece(),newPiece(),newPiece()];renderTray(true);}
+  const st1=stg();
+  if(st1>st0)stageUp(st0,st1);
   eventsTick();mood();save();
   checkEnd();
+  /* карточки новинок встают в очередь и показываются, когда забег продолжается и поверх ничего не открыто.
+     Если сейчас мешает другая карточка (предложение ролика), очередь дождётся конца следующего хода */
+  if(st1>st0)stageCards(st0,st1);else stageCard();
 }
 /* конец забега: сад засыпает, потом появляется его снимок */
 async function gameOver(){
-  over=true;modal=null;swap=false;stuck=false;mood();renderLabel();
+  over=true;modal=null;swap=false;dig=false;renderDig();stuck=false;undoRec=null;mood();renderLabel();syncPlay();
   const id=runId,isDaily=mode==='daily',rec=!isDaily&&score>best;
-  if(rec){best=score;try{localStorage.setItem('orangery-best',String(best));}catch(e){}setBest();}
+  if(rec){best=score;store('orangery-best',String(best));setBest();}
   finishRun();
   SND.play('over');
   if(!RM){let n=0;for(let i=0;i<25;i++){const el=holders[i].firstChild;if(el)el.animate([{opacity:1,transform:'scale(1)'},{opacity:.55,transform:'scale(.96,.9)'}],{duration:360,delay:n++*28,easing:'ease-in-out',fill:'forwards'});}}
@@ -834,15 +1389,15 @@ async function gameOver(){
   modal=null;
   const ph=$('polaroid');if(ph&&!RM)ph.animate([{transform:'translateY(-26px) scale(1.07)',opacity:0},{transform:'translateY(0) scale(1)',opacity:1}],{duration:440,delay:120,easing:'cubic-bezier(.3,1.3,.5,1)',fill:'backwards'});
 }
-const linkBtn=(id,y,label,text)=>`<g id="${id}" class="btn" role="button" tabindex="0" aria-label="${label}"><rect class="ring" x="60" y="${y-23}" width="270" height="36" rx="18" style="fill:transparent"/><text class="link" x="195" y="${y}" text-anchor="middle" style="${fill('over-muted')}">${text}</text></g>`;
+const linkBtn=(id,y,label,text)=>`<g id="${id}" class="btn" role="button" tabindex="0" aria-label="${label}"><rect class="ring" x="60" y="${y-27}" width="270" height="44" rx="22" style="fill:transparent"/><text class="link" x="195" y="${y}" text-anchor="middle" style="${fill('over-muted')}">${text}</text></g>`;
 function share(el){
-  const url=location.origin+location.pathname,d=(modal==='daily'||mode==='daily')&&daily.result;
-  const text=d?`Оранжерея, семя дня ${dateRu(daily.date)}: ${fmt(d.score)} очков${d.lotus?', лотосов '+d.lotus:''}. Те же фигуры ждут вас:`
-              :`Мой сад в «Оранжерее»: ${fmt(score)} очков${stats.lotus?', лотосов '+stats.lotus:''}. Попробуйте:`;
-  const say=m=>{const t=el.querySelector('text');if(t)t.textContent=m;};
-  if(navigator.share){navigator.share({title:'Оранжерея',text,url}).catch(()=>{});return;}
-  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text+' '+url).then(()=>say('скопировано'),()=>say('не получилось'));
-  else say('не получилось');
+  const d=(modal==='daily'||mode==='daily')&&daily.result;
+  const text=d?PURE.shareText({daily:true,date:dateRu(daily.date),score:fmt(d.score),lotus:d.lotus}):PURE.shareText({daily:false,score:fmt(score),lotus:stats.lotus});
+  const say=ok=>{const t=el.querySelector('text');if(t)t.textContent=ok?'скопировано':'не получилось';};
+  /* запасной способ для рамки, где у страницы нет доступа к буферу обмена */
+  const legacy=()=>{try{const ta=document.createElement('textarea');ta.value=text;ta.setAttribute('readonly','');ta.style.cssText='position:fixed;left:-9999px;top:0;opacity:0';document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();return ok;}catch(e){return false;}};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(()=>say(true),()=>say(legacy()));
+  else say(legacy());
 }
 /* ---------- события на грядке: бабочка, сорняк, золотое семя ---------- */
 const weedArt=()=>{const lf=`fill:${u('leaf')};stroke:var(--edge);stroke-width:.9;stroke-linejoin:round`;
@@ -883,17 +1438,24 @@ function eventsTick(){
     else if(--ev.bfly.left<=0){ev.bfly=null;renderEvt('away');toast('бабочка улетела');}
   }
   if(ev.gold)giveGold();
-  if(stats.moves<ev.next)return;
-  /* в семени дня время и вид событий одинаковы у всех: они зависят от даты и номера события */
-  const R=mode==='daily'?seeded(hashStr(daily.date)^Math.imul(ev.idx+3,97531)):Math.random;
+  /* на первой ступени событий нет; дальше случается только то, что ступень уже открыла */
+  const st=stg(),allow=PURE.stageEvents(st);
+  if(!allow.length||stats.moves<ev.next)return;
+  /* время и вид событий зависят от зерна забега и номера события: в семени дня они одинаковы у всех, а отмена хода их не меняет */
+  const R=seeded(seedOf()^Math.imul(ev.idx+3,97531));
   ev.idx++;ev.next=stats.moves+7+((R()*4)|0);
   const empties=[],plants=[];let weeds=0;
   grid.forEach((t,i)=>{if(!t)empties.push(i);else if(t.sp==='x')weeds++;else if(t.st<4)plants.push(i);});
-  const order=R()<.4?['b','w','g']:R()<.58?['w','g','b']:['g','b','w'];
+  let order=(R()<.4?['b','w','g']:R()<.58?['w','g','b']:['g','b','w']).filter(t=>allow.indexOf(t)>=0);
+  /* новинки ступеней идут первыми, по порядку. Если новинке сейчас нет места (сорняку нужно восемь пустых клеток), она ждёт следующего события.
+     Когда одна новинка пришла, а другая ещё ждёт, следующее событие случится через три хода */
+  const due=(ev.intro||'').split('').filter(t=>allow.indexOf(t)>=0);
+  order=due.concat(order.filter(t=>due.indexOf(t)<0));
+  const came=t=>{if((ev.intro||'').indexOf(t)<0)return;ev.intro=ev.intro.replace(t,'');if(ev.intro)ev.next=stats.moves+3;};
   for(const type of order){
-    if(type==='b'&&!ev.bfly&&plants.length){ev.bfly={i:plants[(R()*plants.length)|0],left:6};renderEvt('in');toast('бабочка: её цветок даст ×2');SND.play('level');return;}
-    if(type==='w'&&weeds<2&&empties.length>=8){const i=empties[(R()*empties.length)|0];grid[i]={sp:'x',st:0};gv++;renderCell(i,'pop');toast('сорняк: уберите слиянием рядом');SND.play('back');return;}
-    if(type==='g'&&!ev.gold&&!tray.some(p=>p&&p.cells[0][2]==='g')){ev.gold=true;giveGold();toast('подарок: золотое семя');SND.play('level');return;}
+    if(type==='b'&&!ev.bfly&&plants.length){ev.bfly={i:plants[(R()*plants.length)|0],left:6};came('b');renderEvt('in');toast('бабочка: её цветок даст ×2');SND.play('level');return;}
+    if(type==='w'&&weeds<PURE.stageWeeds(st)&&empties.length>=8){const i=empties[(R()*empties.length)|0];grid[i]={sp:'x',st:0};gv++;came('w');renderCell(i,'pop');toast('сорняк: уберите слиянием рядом');SND.play('back');return;}
+    if(type==='g'&&!ev.gold&&!tray.some(p=>p&&p.cells[0][2]==='g')){ev.gold=true;came('g');giveGold();toast('подарок: золотое семя');SND.play('level');return;}
   }
 }
 
@@ -907,7 +1469,7 @@ const HERB={
 const HROWS=[['r1','r2','r3','r3d'],['y1','y2','y3','y3d'],['b1','b2','b3','b3d']],HLOT=['w4','w4r','w4y','w4b','w4k'],HKEYS=HROWS[0].concat(HROWS[1],HROWS[2],HLOT);
 let herb={c:{},n:[]};
 function loadHerb(){
-  try{const d=JSON.parse(localStorage.getItem('orangery-herb')||'null');
+  try{const d=JSON.parse(LS.get('orangery-herb')||'null');
     if(d&&d.c&&typeof d.c==='object'){HKEYS.forEach(k=>{const v=Math.floor(+d.c[k]||0);if(v>0)herb.c[k]=v;});herb.n=Array.isArray(d.n)?d.n.filter(k=>HKEYS.indexOf(k)>=0&&herb.c[k]):[];}}catch(e){}
 }
 const storeHerb=()=>store('orangery-herb',herb);
@@ -938,14 +1500,17 @@ function herbCard(sel,still){
   if(herb.n.length){herb.n=[];storeHerb();renderHerbBtn();}
 }
 
-/* ---------- цели забега: три небольшие задачи, за каждую лейка; выполненную сменяет новая, труднее ---------- */
+/* ---------- цели забега: небольшие задачи, за каждую лейка; выполненную сменяет новая, труднее.
+   Целей до трёх: вторая открывается на второй ступени, третья на третьей. Закрытая ячейка — null. В семени дня все три с первого хода ---------- */
 const GTYPES=['buds','flowers','lotus','combo','score','big','double'];
 const GT={buds:[4,7,10,14,18],flowers:[2,4,6,8,10],lotus:[1,2,3,4,5],combo:[2,3,3,3],score:[300,800,1500,2500,4000,6000],big:[1,2,3,5,7],double:[1,2,3,5,7]};
 function newGoal(slot,pool){
-  /* в семени дня цели тоже одинаковы у всех: выбор зависит от даты и порядкового номера цели */
-  const R=mode==='daily'?seeded(hashStr(daily.date)^Math.imul(gIssued+7,40503)):Math.random;gIssued++;
+  /* выбор цели зависит от зерна забега и её порядкового номера: в семени дня цели одинаковы у всех */
+  const R=seeded(seedOf()^Math.imul(gIssued+7,40503));gIssued++;
   const busyT=goals.map((g,i)=>i!==slot&&g?g.type:null),was=goals[slot]&&goals[slot].type;
-  const opts=(pool||GTYPES).filter(t=>busyT.indexOf(t)<0&&t!==was),list=opts.length?opts:GTYPES;
+  /* без явного списка цель берётся из того, что открыто на этой ступени */
+  pool=pool||PURE.goalPool(stg());
+  const free=t=>busyT.indexOf(t)<0&&t!==was,opts=pool.filter(free),rest=GTYPES.filter(free),list=opts.length?opts:rest.length?rest:pool;
   const type=list[(R()*list.length)|0],tb=GT[type];
   let n=tb[Math.min(gTier[type]||0,tb.length-1)];
   if(type==='score')n=tb.find(v=>v>=score+150)||Math.ceil(score*1.4/500)*500;
@@ -953,16 +1518,25 @@ function newGoal(slot,pool){
 }
 function initGoals(){
   goals=[null,null,null];
-  goals[0]=newGoal(0,['buds','flowers']);goals[1]=newGoal(1,['combo','big','double']);goals[2]=newGoal(2,['score','lotus']);
+  goals[0]=newGoal(0,['buds','flowers']);
+  if(mode==='daily'){goals[1]=newGoal(1,['combo','big','double']);goals[2]=newGoal(2,['score','lotus']);}
+}
+/* ячейки целей, которые ступень уже открыла, но в которых ещё пусто. Возвращает номера открытых сейчас */
+function openGoals(){
+  if(!goals||mode==='daily')return [];
+  const n=PURE.stageGoals(stg()),out=[];
+  if(n>=2&&!goals[1]){goals[1]=newGoal(1,['score','lotus']);out.push(1);}
+  if(n>=3&&!goals[2]){goals[2]=newGoal(2,['combo','big','double']);out.push(2);}
+  return out;
 }
 function goalBump(type,v){
   if(!goals||tut)return;
-  goals.forEach(g=>{if(g.done||g.type!==type)return;if(type==='combo')g.cur=Math.max(g.cur,v);else if(type==='score')g.cur=v;else g.cur+=v;});
+  goals.forEach(g=>{if(!g||g.done||g.type!==type)return;if(type==='combo')g.cur=Math.max(g.cur,v);else if(type==='score')g.cur=v;else g.cur+=v;});
 }
 function checkGoals(){
   if(!goals||tut)return;
   goals.forEach((g,i)=>{
-    if(g.done||g.cur<g.n)return;
+    if(!g||g.done||g.cur<g.n)return;
     g.done=true;gTier[g.type]=(gTier[g.type]||0)+1;
     const had=cans,id=runId;gainCan();toast(cans>had?'цель выполнена: +1 лейка':'цель выполнена');SND.play('level');FX.rise(10);
     setTimeout(()=>{if(id!==runId||goals[i]!==g)return;goals[i]=newGoal(i);renderGoals();save();},1500);
@@ -976,18 +1550,83 @@ const goalText=g=>{const n=g.n,times=n>1?': '+n+' '+plural(n,['раз','раза
     :g.type==='score'?`Наберите ${fmt(n)} очков`:g.type==='big'?`Слейте четыре и больше за раз${times}`:`Два слияния одним ходом${times}`;};
 function renderGoals(){
   if(tut||!goals){goalsG.innerHTML='';return;}
-  goalsG.innerHTML=goals.map((g,i)=>{const x=CARD.xs[i],p=Math.min(1,g.cur/g.n);
-    return `<g class="btn" role="button" tabindex="0" data-goal="${i}" aria-label="Цель: ${goalText(g)}. ${g.done?'Выполнена':'Сделано '+Math.min(g.cur,g.n)+' из '+g.n}"><rect x="${x}" y="218" width="104" height="38" style="fill:transparent"/><rect class="ring" x="${x}" y="224" width="104" height="26" rx="13" style="${fill('chip')};stroke:var(--${g.done?'gold':'chip-line'});stroke-width:1"/>${p>0?`<rect x="${x+1}" y="225" width="${f1(Math.max(24,102*p))}" height="24" rx="12" style="${fill('gold')};opacity:${g.done?.5:.26}"/>`:''}<text x="${x+52}" y="241.5" text-anchor="middle" style="font-size:12px;font-weight:500;${fill('ink-top')}">${g.done?'готово':goalPill(g)}</text></g>`;}).join('');
+  goalsG.innerHTML=goals.map((g,i)=>{const x=desktop?-171:CARD.xs[i],y=desktop?400+36*i:224,w=desktop?152:104,gh=desktop?28:26;
+    /* закрытая ячейка: приглушённая плашка с пунктиром говорит, на какой ступени появится цель */
+    if(!g)return `<g class="btn" role="button" tabindex="0" data-goal="${i}" aria-label="Цель откроется на ступени ${i+1}" style="opacity:.62"><rect x="${x}" y="${desktop?y:y-6}" width="${w}" height="${desktop?gh:38}" style="fill:transparent"/><rect class="ring" x="${x}" y="${y}" width="${w}" height="${gh}" rx="${gh/2}" style="${fill('chip')};stroke:var(--chip-line);stroke-width:1;stroke-dasharray:3 4"/><text x="${x+w/2}" y="${y+gh/2+4}" text-anchor="middle" style="font-size:12px;font-weight:500;${fill('ink-top')}">со ступени ${i+1}</text></g>`;
+    const p=Math.min(1,g.cur/g.n),bar=w-28;
+    return `<g class="btn" role="button" tabindex="0" data-goal="${i}" aria-label="Цель: ${goalText(g)}. ${g.done?'Выполнена':'Сделано '+Math.min(g.cur,g.n)+' из '+g.n}"><rect x="${x}" y="${desktop?y:y-6}" width="${w}" height="${desktop?gh:38}" style="fill:transparent"/><rect class="ring" x="${x}" y="${y}" width="${w}" height="${gh}" rx="${gh/2}" style="${fill('chip')};stroke:var(--${g.done?'gold-ui':'chip-line'});stroke-width:${g.done?1.4:1}"/><rect x="${x+14}" y="${y+gh-5}" width="${bar}" height="2" rx="1" style="${fill('ink-top')};opacity:.16"/>${p>0?`<rect x="${x+14}" y="${y+gh-5}" width="${f1(Math.max(4,bar*p))}" height="2" rx="1" style="${fill('gold-ui')}"/>`:''}<text x="${x+w/2}" y="${y+gh/2+4}" text-anchor="middle" style="font-size:12px;font-weight:500;${fill('ink-top')}">${g.done?'готово':goalPill(g)}</text></g>`;}).join('');
 }
 function goalsCard(){
   const rows=goals.map((g,i)=>{const y=338+i*46;
+    if(!g)return line(y+9,14,'over-muted',(i===1?'Вторая':'Третья')+' цель откроется на ступени '+(i+1));
     return line(y,14.5,'over-ink',goalText(g))+line(y+19,12.5,g.done?'gold':'over-muted',g.done?'выполнено':g.type==='combo'?(g.cur>1?'лучшая пока: ×'+g.cur:'пока ни одной'):fmt(Math.min(g.cur,g.n))+' из '+fmt(g.n));}).join('');
   showCard('goals',250,346,line(298,21,'over-ink','Цели забега',600)+rows+line(494,13,'over-muted','За каждую выполненную цель: лейка.')+button('ok',516,'Понятно','Закрыть цели'));
 }
 
 /* ---------- сохранение забега: закрыли вкладку и вернулись к тому же саду ---------- */
-const store=(k,v)=>{try{if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));}catch(e){}};
-const snap=()=>({v:1,ev,goals:goals&&{list:goals,tier:gTier,issued:gIssued},grid,score,cans,stats,dealt,rs,tray:tray.map(p=>p&&{cells:p.cells,id:p.id,alt:p.alt?p.alt.map(a=>({cells:a.cells})):null})});
+const put=(k,v)=>{if(v===null||v===undefined)LS.del(k);else LS.set(k,typeof v==='string'?v:JSON.stringify(v));};
+/* каждая запись данных игрока ставит отметку времени и уходит в облако; во время запуска (quiet) отметка не ставится */
+let quiet=true;
+const store=(k,v)=>{put(k,v);if(quiet)return;LS.set('orangery-ts',String(Date.now()));PF.push(localRec,false);};
+const readJ=k=>{try{return JSON.parse(LS.get(k)||'null');}catch(e){return null;}};
+/* запись игрока целиком: то, что уходит в облако и сливается с ним. Настройки устройства (звук, графика) сюда не входят */
+function localRec(){
+  return {v:1,ts:+LS.get('orangery-ts')||0,best:+LS.get('orangery-best')||0,herb:readJ('orangery-herb')||{c:{},n:[]},daily:readJ('orangery-daily'),streak:readJ('orangery-streak'),
+    run:readJ('orangery-run'),mode:LS.get('orangery-mode')==='daily'?'daily':'free',tut:LS.get('orangery-tut')==='1',seen:readJ('orangery-stages')};
+}
+function applyRec(r){
+  if(!r)return;
+  put('orangery-best',String(r.best));put('orangery-herb',r.herb);put('orangery-daily',r.daily);put('orangery-streak',r.streak);
+  put('orangery-run',r.run);put('orangery-mode',r.mode);put('orangery-tut',r.tut?'1':null);put('orangery-ts',String(r.ts));
+  if(r.seen)put('orangery-stages',r.seen);
+}
+const okRun=r=>!!loadRun(r);
+/* облако ответило уже после запуска. Рекорд, гербарий, серия и семя сливаются на ходу.
+   Если игрок в этом сеансе ещё ничего не сделал, на экран ставится то, что получилось после слияния, как при обычном запуске:
+   недоигранный забег с другого устройства продолжается, пройденное обучение не показывается заново. Иначе идущий забег остаётся */
+function cloudLate(d){
+  if(!booted){preCloud=d;return;}
+  if(PURE.foreign(d)){PF.lock();return;}
+  const cur=PURE.mergeSaves(localRec(),null),m=PURE.mergeSaves(cur,d,okRun);
+  if(!m)return;
+  const idle=!acted&&!busy&&!drag&&(!modal||modal==='intro');
+  const part=r=>JSON.stringify([r.run,r.mode,r.tut,r.daily]);
+  if(idle&&part(m)!==part(cur)){applyRec(m);restore();}
+  else{
+    if(!idle){m.run=cur.run;m.mode=cur.mode;if(mode==='daily'&&cur.daily)m.daily=cur.daily;}
+    /* гербарий слит с облаком: старый снимок его бы затёр, поэтому шаг назад после слияния недоступен */
+    applyRec(m);best=m.best;loadHerb();renderHerbBtn();loadDaily();setBest();renderSeed();undoRec=null;renderLabel();
+  }
+  PF.push(localRec,true);
+}
+/* читает сохранения из хранилища и ставит на экран то, что в них лежит: рекорд, гербарий, семя дня, обучение или недоигранный забег */
+function restore(){
+  const q=quiet;quiet=true;
+  best=+LS.get('orangery-best')||0;
+  /* обучение показываем один раз; #tutorial в адресе включает его снова */
+  seen=LS.get('orangery-tut')==='1';
+  /* кто прошёл обучение до появления ступеней, тот бабочку, сорняк и золотое семя уже видел: карточки новинок ему не нужны */
+  if(seen&&!LS.get('orangery-stages'))put('orangery-stages',[2,3,4,5]);
+  const savedRun=LS.get('orangery-run'),savedMode=LS.get('orangery-mode')||'free';
+  loadHerb();renderHerbBtn();
+  mode='free';loadDaily();
+  tut=null;tutG.innerHTML='';
+  start();
+  if(!seen||location.hash==='#tutorial')intro();
+  else{
+    /* start() выше уже записал пустой свободный забег поверх сохранённого: возвращаем сохранённый на место */
+    const d=savedRun&&loadRun(savedRun);if(d){store('orangery-run',savedRun);resume(d);}
+    if(savedMode==='daily'&&!daily.done&&daily.run)startDaily();
+  }
+  quiet=q;
+}
+/* досмотренный ролик, о котором площадка сообщила слишком поздно: инструмент, который просили, всё равно выдаётся, если забег ещё идёт */
+function lateReward(){
+  if(over||tut||mode!=='free'||adCans>=PURE.AD_CANS)return;
+  adCans++;adFails=0;if(modal==='adcan')closeCard();giveTool(adAsked);save();if(!busy)checkEnd();
+}
+let preCloud=null;
+const snap=()=>({v:1,seed:runSeed,adCans,ev,goals:goals&&{list:goals,tier:gTier,issued:gIssued},grid,score,cans,shovels,stats,dealt,rs,tray:tray.map(p=>p&&{cells:p.cells,id:p.id,alt:p.alt?p.alt.map(a=>({cells:a.cells})):null})});
 function save(){
   if(tut||over)return;
   if(mode==='daily'){daily.run=snap();store('orangery-daily',daily);}else store('orangery-run',snap());
@@ -995,10 +1634,11 @@ function save(){
 }
 /* забег окончен: свободный стирается, семя дня записывает результат и продлевает серию */
 function finishRun(){
-  if(mode!=='daily'){store('orangery-run',null);return;}
+  if(mode!=='daily'){store('orangery-run',null);PF.push(localRec,true);return;}
   daily.done=true;daily.run=null;daily.result={score,lotus:stats.lotus,moves:stats.moves,combo:stats.combo};
   if(streak.last!==daily.date)streak={last:daily.date,n:streak.last&&dayDiff(streak.last,daily.date)<=2?streak.n+1:1};
   store('orangery-daily',daily);store('orangery-streak',streak);renderSeed();
+  PF.push(localRec,true);
 }
 /* сохранённое читается с проверкой: испорченная запись просто отбрасывается */
 function loadRun(raw){
@@ -1010,39 +1650,43 @@ function loadRun(raw){
     const okPiece=q=>!!q&&Array.isArray(q.cells)&&q.cells.length>=1&&q.cells.length<=3&&q.cells.every(c=>Array.isArray(c)&&c.length===4&&[0,1,2].indexOf(c[0])>=0&&[0,1,2].indexOf(c[1])>=0&&((one(c[2],'ryb')&&(c[3]===1||c[3]===2))||(c[2]==='g'&&c[3]===0)));
     if(!d.grid.every(okCell))return null;
     const num=v=>Math.max(0,Math.floor(+v||0)),copy=q=>mkPiece(q.cells.map(c=>c.slice()));
-    const tr=d.tray.map(q=>{if(q===null)return null;if(!okPiece(q))throw new Error('piece');const t=copy(q);t.id=num(q.id);
+    const tr=d.tray.map(q=>{if(q===null)return null;if(!okPiece(q))throw new Error('piece');const t=copy(q);t.id=q.cells[0][2]==='g'?-1:num(q.id);
       if(Array.isArray(q.alt)&&q.alt.length===2&&q.alt.every(okPiece))t.alt=q.alt.map(copy);return t;});
     if(tr.every(q=>!q))return null;
     const st=d.stats||{},G=d.goals;let gl=null,gt={};
-    if(G&&Array.isArray(G.list)&&G.list.length===3&&G.list.every(g=>!!g&&GTYPES.indexOf(g.type)>=0&&num(g.n)>0)){
-      gl=G.list.map(g=>({type:g.type,n:num(g.n),cur:num(g.cur),done:!!g.done}));
+    if(G&&Array.isArray(G.list)&&G.list.length===3&&G.list[0]&&G.list.every(g=>g===null||(!!g&&GTYPES.indexOf(g.type)>=0&&num(g.n)>0))){
+      gl=G.list.map(g=>g&&{type:g.type,n:num(g.n),cur:num(g.cur),done:!!g.done});
       GTYPES.forEach(t=>{gt[t]=num((G.tier||{})[t]);});
     }
     const E=d.ev||{},eb=E.bfly,bi=eb?num(eb.i):-1;
-    const evv={next:num(E.next)||6,idx:num(E.idx),gold:!!E.gold,bfly:eb&&bi<25&&d.grid[bi]&&d.grid[bi].sp!=='x'?{i:bi,left:Math.max(1,num(eb.left))}:null};
-    return {ev:evv,goals:gl,tier:gt,issued:num(G&&G.issued),grid:d.grid.map(t=>t?(one(t.v,'rybkd')?{sp:t.sp,st:t.st,v:t.v}:{sp:t.sp,st:t.st}):null),tray:tr,score:num(d.score),cans:Math.min(3,num(d.cans)),dealt:num(d.dealt),rs:(+d.rs||0)|0,stats:{moves:num(st.moves),lotus:num(st.lotus),combo:num(st.combo)}};
+    const evv={next:num(E.next)||6,idx:num(E.idx),gold:!!E.gold,intro:typeof E.intro==='string'&&/^[bgw]{0,3}$/.test(E.intro)?E.intro:'',bfly:eb&&bi<25&&d.grid[bi]&&d.grid[bi].sp!=='x'?{i:bi,left:Math.max(1,num(eb.left))}:null};
+    return {ev:evv,goals:gl,tier:gt,issued:num(G&&G.issued),grid:d.grid.map(t=>t?(one(t.v,'rybkd')?{sp:t.sp,st:t.st,v:t.v}:{sp:t.sp,st:t.st}):null),tray:tr,score:num(d.score),cans:Math.min(3,num(d.cans)),shovels:PURE.shovelsOf(d.shovels),adCans:Math.min(PURE.AD_CANS,num(d.adCans)),dealt:num(d.dealt),rs:(+d.rs||0)|0,seed:(+d.seed||0)|0,stats:{moves:num(st.moves),lotus:num(st.lotus),combo:num(st.combo)}};
   }catch(e){return null;}
 }
 function clearUI(){
-  busy=false;over=false;modal=null;drag=null;swap=false;stuck=false;gv++;runId++;
+  busy=false;over=false;modal=null;drag=null;swap=false;dig=false;digG.innerHTML='';stuck=false;undoRec=null;stageQueue=[];gv++;runId++;
   overG.style.display='none';overG.innerHTML='';dragG.innerHTML='';fxG.innerHTML='';showPreview(null);
 }
-function resume(d,msg){
-  clearUI();grid=d.grid;tray=d.tray;cans=d.cans;stats=d.stats;dealt=d.dealt;rs=d.rs;score=d.score;
+function resume(d,msg,still){
+  clearUI();grid=d.grid;tray=d.tray;cans=d.cans;shovels=d.shovels;adCans=d.adCans||0;stats=d.stats;dealt=d.dealt;rs=d.rs;score=d.score;
+  /* забег, сохранённый до появления зерна: зерно выдаётся сейчас, раздача продолжается от него */
+  const reseed=mode!=='daily'&&!d.seed;
+  if(mode!=='daily'){runSeed=d.seed||newSeed();if(reseed)rs=runSeed;}
   /* цели: из сохранения, а выполненные перед закрытием сразу сменяются новыми */
-  ev=d.ev||{next:6,idx:0,bfly:null,gold:false};gTier=d.tier||{};gIssued=d.issued||0;
-  if(d.goals){goals=d.goals;goals.forEach((g,i)=>{if(g.done)goals[i]=newGoal(i);});}else initGoals();
+  ev=d.ev||{next:6,idx:0,bfly:null,gold:false,intro:''};gTier=d.tier||{};gIssued=d.issued||0;
+  if(d.goals){goals=d.goals;goals.forEach((g,i)=>{if(g&&g.done)goals[i]=newGoal(i);});}else initGoals();
+  openGoals();
   /* уровень цветения ставится сразу: без фанфар и без подарочной лейки за уже пройденное */
   level=LEVELS.filter(v=>d.score>=v).length;applyLevel();
   for(let i=0;i<25;i++)renderCell(i);
-  setScore(d.score);renderTray(true);mood();renderLabel();renderSeed();renderGoals();renderEvt();toast(msg||'забег продолжается');checkEnd();
+  setScore(d.score);renderTray(!still);mood();renderLabel();renderSeed();renderGoals();renderEvt();toast(msg||'забег продолжается');syncPlay();if(reseed)save();checkEnd();
 }
 function startRun(){
   clearUI();
-  if(mode==='daily')rs=hashStr(daily.date);
-  dealt=0;grid=Array(25).fill(null);score=0;tray=[newPiece(),newPiece(),newPiece()];stats={moves:0,lotus:0,combo:0};cans=1;gTier={};gIssued=0;initGoals();ev={next:6,idx:0,bfly:null,gold:false};renderEvt();
+  if(mode==='daily')rs=hashStr(daily.date);else rs=runSeed=newSeed();
+  dealt=0;grid=Array(25).fill(null);score=0;tray=[newPiece(),newPiece(),newPiece()];stats={moves:0,lotus:0,combo:0};cans=1;shovels=0;adCans=0;gTier={};gIssued=0;initGoals();ev={next:6,idx:0,bfly:null,gold:false,intro:''};renderEvt();
   for(let i=0;i<25;i++)renderCell(i);
-  setScore(0);renderTray(true);mood();renderLabel();renderSeed();renderGoals();save();
+  setScore(0);renderTray(true);mood();renderLabel();renderSeed();renderGoals();save();syncPlay();
 }
 function start(){mode='free';startRun();}
 
@@ -1056,7 +1700,7 @@ const plural=(n,f)=>{const a=n%10,b=n%100;return f[a===1&&b!==11?0:a>=2&&a<=4&&(
 function curStreak(){if(!streak.last)return 0;const g=dayDiff(streak.last,today());return g>=0&&g<=2?streak.n:0;}
 function loadDaily(){
   try{
-    const num=v=>Math.max(0,Math.floor(+v||0)),d=JSON.parse(localStorage.getItem('orangery-daily')||'null'),s=JSON.parse(localStorage.getItem('orangery-streak')||'null');
+    const num=v=>Math.max(0,Math.floor(+v||0)),d=JSON.parse(LS.get('orangery-daily')||'null'),s=JSON.parse(LS.get('orangery-streak')||'null');
     if(d&&/^\d{4}-\d{2}-\d{2}$/.test(d.date)){const r=d.result;daily={date:d.date,done:!!d.done,run:d.run||null,result:r&&typeof r==='object'?{score:num(r.score),lotus:num(r.lotus),moves:num(r.moves),combo:num(r.combo)}:null};}
     if(s&&/^\d{4}-\d{2}-\d{2}$/.test(s.last))streak={last:s.last,n:num(s.n)};
   }catch(e){}
@@ -1070,7 +1714,7 @@ function rollDaily(){
 const seedArt=(x,y,k)=>`<g transform="translate(${x},${y}) scale(${k})"><g style="opacity:var(--glow)"><circle r="16" style="fill:${u('halo-y')};opacity:.7"/></g><path d="M0,9 C-7.5,6 -8,-3.5 0,-9.5 C8,-3.5 7.5,6 0,9Z" style="fill:${u('c-y')};stroke:var(--petal-rim);stroke-width:.7"/><path d="M-2.6,-3.6 Q-3.6,1 -2,5" style="fill:none;stroke:var(--white);stroke-width:1.3;stroke-linecap:round;opacity:.6"/><path d="M0,-9.5 C0,-13 2.5,-15.5 6.5,-16 C6.5,-12.5 4,-10 0,-9.5Z" style="fill:${u('leaf')};stroke:var(--edge);stroke-width:.7"/></g>`;
 function renderSeed(){
   const inD=mode==='daily',fresh=!daily.done;
-  $('seed-c').innerHTML=`<rect class="ring" x="21" y="12" width="104" height="30" rx="15" style="${fill('chip')};stroke:var(--${fresh||inD?'gold':'chip-line'});stroke-width:${inD?2:1}"/>${seedArt(38,28.5,.6)}<text x="84" y="32" text-anchor="middle" style="font-size:13px;font-weight:500;${fill('ink-top')}">${daily.done&&daily.result?'семя: '+fmt(daily.result.score):'семя дня'}</text>`;
+  $('seed-c').innerHTML=`<rect class="ring" x="21" y="12" width="104" height="30" rx="15" style="${fill('chip')};stroke:var(--${fresh||inD?'gold-ui':'chip-line'});stroke-width:${inD?2:1.2}"/>${seedArt(38,28.5,.6)}<text x="84" y="32" text-anchor="middle" style="font-size:13px;font-weight:500;${fill('ink-top')}">${daily.done&&daily.result?'семя: '+fmt(daily.result.score):'семя дня'}</text>`;
   $('seed').setAttribute('aria-label',daily.done?'Семя дня сыграно, посмотреть результат':'Семя дня: сыграть');
   $('restart-t').textContent=inD?'выйти':'заново';$('restart').setAttribute('aria-label',inD?'Выйти из семени дня в свободную игру':'Начать забег заново');
   setBest();
@@ -1086,7 +1730,7 @@ function dailyCard(){
   }else{
     body=(going?line(378,14.5,'over-ink','Попытка уже начата.')+line(400,14.5,'over-ink','Фигуры те же, что у всех.')
                :line(378,14.5,'over-ink','Сегодня у всех игроков')+line(400,14.5,'over-ink','одни и те же фигуры.'))
-      +line(426,13.5,'over-muted','Попытка одна.')+line(452,sl?14:13,sl?'gold':'over-muted',sl||'Играйте каждый день, чтобы росла серия.')
+      +line(426,13.5,'over-muted','Попытка одна. Здесь всё открыто сразу.')+line(452,sl?14:13,sl?'gold':'over-muted',sl||'Играйте каждый день, чтобы росла серия.')
       +button('dplay',478,going?'Продолжить':'Играть',going?'Продолжить семя дня':'Сыграть семя дня')+linkBtn('dclose',556,'Не сейчас','не сейчас');
   }
   showCard('daily',226,354,seedArt(195,272,1.7)+line(322,21,'over-ink','Семя дня',600)+line(344,13,'over-muted',dateRu(daily.date))+body);
@@ -1101,7 +1745,7 @@ function startDaily(){
 }
 function exitDaily(){
   if(mode==='daily')save();
-  mode='free';let raw=null;try{raw=localStorage.getItem('orangery-run');}catch(e){}
+  mode='free';const raw=LS.get('orangery-run');
   const d=raw&&loadRun(raw);
   if(d)resume(d,'свободная игра');else startRun();
   store('orangery-mode','free');
@@ -1109,6 +1753,25 @@ function exitDaily(){
 
 /* лейка нарисована тем же языком, что и растения: эмаль с градиентом, светлая кромка, мягкое свечение */
 const DROP='M0,-5.2 C2.6,-1.6 4,.6 4,2.4 A4,4 0 0 1 -4,2.4 C-4,.6 -2.6,-1.6 0,-5.2Z';
+/* лопатка нарисована тем же языком, что и лейка: эмаль с градиентом, светлая кромка, мягкое свечение. Полотно янтарное, ручка светлая: с бирюзовой лейкой не спутать */
+const SPADE='M0,4.9 C-2.3,3 -3.5,.4 -2.9,-2.6 Q-2.7,-3.6 -1.7,-3.6 L1.7,-3.6 Q2.7,-3.6 2.9,-2.6 C3.5,.4 2.3,3 0,4.9Z';
+function shovelArt(x,y,k,hot,dry){
+  /* обводка одной толщины на экране при любом размере рисунка. Пустая лопатка (dry) — та же обводка в полную силу и бледная заливка:
+     её очертание должно читаться и днём, и когда лопаток нет */
+  const rim=`stroke:var(--tool-rim);stroke-width:${f1(1.05/k)};stroke-linejoin:round`,fo=dry?';fill-opacity:.32':'';
+  return `<g transform="translate(${x},${y}) scale(${k})">
+    <g style="opacity:var(--glow)"><circle cx="0" cy="1" r="19" style="fill:${u('halo-y')};opacity:${dry?.3:.7}"/></g>
+    <g transform="rotate(38)"><g${hot?' class="digbob"':''}>
+      <rect x="-2.5" y="-17.4" width="5" height="10.8" rx="2.5" style="${fill('core1')};${rim}${fo}"/>
+      ${dry?'':'<path d="M-.9,-15.6 L-.9,-9.2" style="fill:none;stroke:var(--white);stroke-width:1.1;stroke-linecap:round;opacity:.7"/>'}
+      <path d="M-1.9,-7.4 L1.9,-7.4 L1.5,-2.6 L-1.5,-2.6Z" style="${fill('y2')};${rim}${fo}"/>
+      <path d="M0,14.6 C-5.6,10 -7.8,3.6 -6.4,-2 Q-6,-3.6 -4.2,-3.6 L4.2,-3.6 Q6,-3.6 6.4,-2 C7.8,3.6 5.6,10 0,14.6Z" style="fill:${u('shovel')};${rim}${fo}"/>
+      ${dry?'':`<path d="M0,-1.4 L0,10.4" style="fill:none;stroke:var(--y2);stroke-width:1;stroke-linecap:round;opacity:.6"/>
+      <path d="M-3.9,-.8 Q-4.7,3.6 -2.3,8" style="fill:none;stroke:var(--white);stroke-width:1.5;stroke-linecap:round;opacity:.6"/>`}
+    </g></g>
+    ${dry?'':`<g transform="translate(-9.5,12.4)"><ellipse cx="0" cy="0" rx="6.4" ry="1.7" style="${fill('black')};opacity:var(--shade)"/></g>`}
+  </g>`;
+}
 function canArt(x,y,k,pour,dry){
   const rim='stroke:var(--petal-rim);stroke-width:.7;stroke-linejoin:round',en=`fill:${u('can')};${rim}`;
   const drip=(dx,dy,d)=>`<g transform="translate(${dx},${dy}) scale(.36)"><path${pour?` class="wdrop" style="${fill('b')};animation-delay:-${d}s"`:` style="${fill('b')};opacity:.9"`} d="${DROP}"/></g>`;
@@ -1126,139 +1789,335 @@ function canArt(x,y,k,pour,dry){
   </g>`;
 }
 function renderLabel(){
-  /* запас показан каплями воды: полная капля есть, пустая потрачена */
-  let pips='';for(let i=0;i<3;i++)pips+=`<g transform="translate(${83+i*13.5},626)">`+(i<cans
-    ?`<path d="${DROP}" style="fill:${u('can')};stroke:var(--petal-rim);stroke-width:.7"/><circle cx="-1.4" cy="1.9" r=".95" style="${fill('white')};opacity:.8"/>`
-    :`<path d="${DROP}" style="fill:none;stroke:var(--ink-low);stroke-width:1.1;opacity:.4"/>`)+'</g>';
-  const hot=swap||stuck;
-  const chip=`<g id="can" class="btn fxp" role="button" tabindex="0" aria-label="Лейка: заменить фигуру. Осталось ${cans} из 3"><rect x="21" y="603" width="104" height="44" style="fill:transparent"/><rect class="ring${stuck?' pulse':''}" x="21" y="606" width="104" height="38" rx="19" style="${fill('card')};stroke:var(--${hot?'gold':'card-line'});stroke-width:${hot?2:1}"/><g${cans?'':' style="opacity:.42"'}>${canArt(53,625,1.05,hot&&cans>0,!cans)}</g>${pips}</g>`;
+  placeHud();giveArm=0;
+  const B=toolBoxes(),dy=desktop?0:LROW,tapH=desktop?36:44;
+  const plate=(id,b,hot,active,aria,title,inner)=>{const y=b.y-dy,cy=y+b.h/2;
+    return `<g id="${id}" class="btn fxp" role="button" tabindex="0" aria-label="${aria}">${desktop?`<title>${title}</title>`:''}
+    <rect x="${b.x}" y="${cy-tapH/2}" width="${b.w}" height="${tapH}" style="fill:transparent"/>
+    <rect class="ring${stuck&&hot&&!active?' pulse':''}" x="${b.x}" y="${y}" width="${b.w}" height="${b.h}" rx="${b.h/2}" style="${fill('card')};stroke:var(--${hot?'gold-ui':'card-line'});stroke-width:${hot?2:1}"/>${inner(b.x,cy,b.w)}</g>`;};
+  const ask=(x,cy,text)=>`<text x="${x}" y="${cy+4.5}" style="font-size:${desktop?12.5:13}px;font-weight:500;${fill('ink-low')}">${text}</text>`;
+  /* запас лейки показан каплями воды: полная капля есть, пустая потрачена */
+  const drops=(x,cy,step,k)=>{let h='';for(let i=0;i<3;i++)h+=`<g transform="translate(${x+i*step},${cy+1}) scale(${k})">`+(i<cans
+    ?`<path d="${DROP}" style="fill:${u('can')};stroke:var(--tool-rim);stroke-width:.7"/><circle cx="-1.4" cy="1.9" r=".95" style="${fill('white')};opacity:.8"/>`
+    :`<path d="${DROP}" style="fill:none;stroke:var(--ink-low);stroke-width:1.1;opacity:.4"/>`)+'</g>';return h;};
+  /* запас лопатки — маленькие полотна: закрашенное есть, контур потрачен */
+  const spades=(x,cy,step)=>{let h='';for(let i=0;i<PURE.SHOVEL_MAX;i++)h+=`<g transform="translate(${x+i*step},${cy+.4})">`+(i<shovels
+    ?`<path d="${SPADE}" style="fill:${u('shovel')};stroke:var(--tool-rim);stroke-width:.8"/><path d="M-1.2,-1.8 Q-1.5,.4 -.5,2" style="fill:none;stroke:var(--white);stroke-width:.8;stroke-linecap:round;opacity:.7"/>`
+    :`<path d="${SPADE}" style="fill:none;stroke:var(--tool-rim);stroke-width:1"/>`)+'</g>';return h;};
+  const dim=n=>n?'':' style="opacity:.42"';
+  const canChip=B.can?plate('can',B.can,canHot(),swap,`Лейка: заменить фигуру. Осталось ${cans} из 3`,'Лейка: заменить фигуру',(x,cy,w)=>{
+    const pour=canHot()&&cans>0;
+    /* в обучении плашка прежняя: на десктопе со словом, на телефоне шире */
+    if(tut)return `<g${dim(cans)}>${canArt(x+(desktop?29:32),cy,desktop?.8:1.05,pour,!cans)}</g>`
+      +(desktop?`<text x="${x+49}" y="${cy+5}" style="font-size:14px;font-weight:500;${fill('ink-low')}">Лейка</text>`:'')
+      +drops(x+(desktop?108:62),cy,desktop?14:13.5,1);
+    return desktop?`<g${dim(cans)}>${canArt(x+23,cy,.72,pour,!cans)}</g>`+drops(x+43.5,cy,10.5,.86)
+      :`<g${dim(cans)}>${canArt(x+29,cy,1,pour,!cans)}</g>`+drops(x+54.5,cy,11.5,.95);
+  }):'';
+  const shChip=B.shovel?plate('shovel',B.shovel,shovelHot(),dig,`Лопатка: выкопать растение. Осталось ${shovels} из ${PURE.SHOVEL_MAX}`,'Лопатка: выкопать растение',(x,cy,w)=>{
+    const hot=shovelHot()&&shovels>0;
+    if(dig)return shovelArt(x+(desktop?26:29),cy,desktop?.8:.92,true,false)+ask(x+(desktop?47:54),cy,'что выкопать?');
+    return desktop?shovelArt(x+23,cy,.78,hot,!shovels)+spades(x+47.5,cy,12.5)
+      :shovelArt(x+20,cy,.88,hot,!shovels)+spades(x+39.5,cy,12);
+  }):'';
+  /* отмена: стрелка назад. Пока отменять нечего, она приглушена */
+  const undoIco=(x,cy,k)=>`<g transform="translate(${x},${cy})"><g class="uico fxp"${dim(undoRec)}><g transform="scale(${k})" style="fill:none;stroke:var(--ink-low);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="M-5.6,-2.6 H2.4 a4.9,4.9 0 0 1 0,9.8 H-2.6"/><path d="M-2.4,-6.2 L-6,-2.6 L-2.4,1"/></g></g></g>`;
+  const undoAria='Отменить последнее действие'+(undoRec?'':'. Пока отменять нечего');
+  const undoChip=B.undo?plate('undo',B.undo,false,false,undoAria,'Отменить последнее действие',(x,cy,w)=>undoIco(x+w/2,cy-1.6,1.05)).replace('role="button"',`role="button" aria-disabled="${!undoRec}"`):'';
   const skip=x=>`<g id="skip" class="btn" role="button" tabindex="0" aria-label="Пропустить обучение"><rect class="ring" x="${x-10}" y="606" width="152" height="38" rx="19" style="fill:transparent"/><text class="link" x="${x}" y="630" style="${fill('muted-low')}">пропустить обучение</text></g>`;
-  if(tut){labelG.innerHTML=TUT[tut.n].can?chip+skip(134):skip(24);return;}
-  labelG.innerHTML=chip
-    +(stuck?`<g id="giveup" class="btn" role="button" tabindex="0" aria-label="Закончить забег"><rect class="ring" x="128" y="606" width="140" height="38" rx="19" style="fill:transparent"/><text class="link" x="134" y="630" style="${fill('muted-low')}">закончить забег</text></g>`
-      :`<text x="134" y="630" style="font-size:12.5px;${fill('muted-low')}">${swap?'какую заменить?':'тап по фигуре: поворот'}</text>`);
+  if(desktop){
+    /* в левой панели между целями и кнопками: что сделать, если обучение или тупик; вопрос включённого инструмента — в его плашке */
+    /* лейка видна и в обучении, чтобы в правой панели не было дыры; пока шаг её не просит, она приглушена и не нажимается */
+    $('menu-can').innerHTML=tut&&!TUT[tut.n].can?`<g style="opacity:.4;pointer-events:none">${canChip}</g>`:canChip+shChip;
+    /* в обучении целей ещё нет: ссылка встаёт сразу под рекордом, иначе — между целями и кнопками */
+    const ly=tut?376:508;
+    /* та же строка несёт отмену хода. В тупике она делит строку со ссылкой «закончить», обе надписи короткие */
+    const lnk=(id,x,w,cap,aria,soft)=>`<g class="btn" id="${id}" role="button" tabindex="0"${soft?' aria-disabled="true"':''} aria-label="${aria}"><rect class="ring" x="${x}" y="${ly}" width="${w}" height="28" rx="14" style="fill:transparent"/><text class="link" x="${x+w/2}" y="${ly+18.5}" text-anchor="middle" style="font-size:13px;${fill('ink-top')}${soft?';opacity:.42':''}">${cap}</text></g>`;
+    labelG.innerHTML=tut?lnk('skip',-171,152,'пропустить обучение','Пропустить обучение')
+      :stuck?lnk('undo',-171,72,'отменить',undoAria,!undoRec)+lnk('giveup',-91,72,'закончить','Закончить забег')
+      :lnk('undo',-171,152,'отменить ход',undoAria,!undoRec);
+    return;
+  }
+  if(tut){labelG.innerHTML=TUT[tut.n].can?canChip+skip(134):skip(24);return;}
+  /* между отменой и «правилами» остаётся 66 единиц: там ссылка тупика. Постоянной подсказки про поворот на телефоне нет: её место заняли инструменты */
+  labelG.innerHTML=canChip+shChip+undoChip
+    +(stuck?`<g id="giveup" class="btn" role="button" tabindex="0" aria-label="Закончить забег"><rect class="ring" x="227" y="606" width="64" height="38" rx="19" style="fill:transparent"/><text class="link" x="259" y="630" text-anchor="middle" style="${fill('muted-low')}">закончить</text></g>`:'');
 }
-/* лейка: заменить неудобную фигуру на одну из двух. Одна в начале забега, ещё дают за лотос и за новый уровень цветения, больше трёх не копится */
+/* лейка: заменить неудобную фигуру на одну из двух. Одна в начале забега, ещё дают за лотос, за цель и за новую ступень, больше трёх не копится */
 function gainCan(){
   if(tut||cans>=3)return;
   cans++;renderLabel();toast('+1 лейка');
-  const el=$('can');if(el&&!RM)el.animate([{transform:'scale(1)'},{transform:'scale(1.2)'},{transform:'scale(1)'}],{duration:340,easing:'ease-out'});
+  const el=$('can');if(el&&!RM)el.animate([{transform:'scale(1)'},{transform:desktop?'scale(1.08)':'scale(1.2)'},{transform:'scale(1)'}],{duration:340,easing:'ease-out'});
 }
-/* конец забега наступает, только когда не помочь и лейкой */
+/* лопатка: выкопать растение или сорняк с грядки. В начале забега лопаток нет, дают за цепочку, больше двух не копится */
+function gainShovel(src){
+  if(tut||shovels>=PURE.SHOVEL_MAX)return;
+  shovels++;renderLabel();toast(src==='chain'?'цепочка: +1 лопатка':'+1 лопатка');
+  const el=$('shovel');if(el&&!RM)el.animate([{transform:'scale(1)'},{transform:desktop?'scale(1.08)':'scale(1.2)'},{transform:'scale(1)'}],{duration:340,easing:'ease-out'});
+}
+/* режим «что выкопать?»: занятые клетки обведены пунктиром, как в подсветке «что исчезнет» перед ходом */
+function renderDig(){
+  if(!dig){digG.innerHTML='';return;}
+  let h='';
+  for(let i=0;i<25;i++){if(!grid[i])continue;const x=BX+(i%5)*STEP,y=BY+((i/5)|0)*STEP;
+    h+=`<rect class="eat digc" data-dig="${i}" role="button" tabindex="0" aria-label="Выкопать: ряд ${((i/5)|0)+1}, клетка ${i%5+1}" x="${x+1}" y="${y+1}" width="${CELL-2}" height="${CELL-2}" rx="12"/>`;}
+  digG.innerHTML=h;
+}
+function setDig(on){
+  on=!!on&&shovels>0&&!tut;if(on===dig)return;
+  dig=on;if(on)swap=false;
+  renderLabel();renderTray();renderDig();
+}
+/* выкапывание — не ход: счётчик ходов и события не идут, очков нет, слияний не бывает */
+function digAt(i){
+  /* в одной очереди с ходами: брошенная в ту же четверть секунды фигура ждёт, пока клетка освободится, и наоборот */
+  const run=queue.then(()=>digNow(i));
+  queue=run.catch(()=>{busy=false;renderDig();});
+  return run;
+}
+async function digNow(i){
+  if(!dig||shovels<1||!grid[i]||busy||over||modal||tut||paused||drag)return false;
+  const id=runId;
+  undoMark('dig');
+  busy=true;acted=true;dig=false;shovels--;renderLabel();renderTray();renderDig();
+  SND.play('dig');buzz(12);FX.puff(i);
+  const el=holders[i].firstChild;
+  if(el&&!RM){el.animate([{transform:'translateY(0) rotate(0deg)',opacity:1},{transform:'translateY(-10px) rotate(8deg)',opacity:0}],{duration:220,easing:'cubic-bezier(.4,0,.8,.4)',fill:'forwards'});await wait(220);}
+  if(id!==runId)return false;
+  grid[i]=null;gv++;renderCell(i);
+  if(ev.bfly&&ev.bfly.i===i){ev.bfly=null;renderEvt('away');toast('бабочка улетела');}
+  busy=false;mood();save();checkEnd();
+  return true;
+}
+/* ---------- отмена: шаг назад на одно последнее действие ---------- */
+/* перед ходом, выкапыванием и заменой забег запоминается целиком, вместе с гербарием. Отмена возвращает этот снимок.
+   Фигуры, события и цели после неё придут те же: они зависят от зерна забега и номеров, которые тоже в снимке */
+const UNDO_TXT={place:'ход отменён',dig:'лопатка вернулась',swap:'лейка вернулась'};
+function undoMark(kind){undoRec=tut||over?null:{kind,run:JSON.stringify(snap()),herb:JSON.stringify(herb)};}
+const undoOk=()=>PURE.canUndo({has:!!undoRec,busy,over,modal,drag:drag||pend,tut,paused});
+function undo(){
+  /* в одной очереди с ходами и лопаткой: отмена дожидается, пока закончится начатый ход */
+  const run=queue.then(undoNow);
+  queue=run.catch(()=>{busy=false;renderLabel();});
+  return run;
+}
+function undoNow(){
+  if(!undoOk())return false;
+  const rec=undoRec,d=loadRun(rec.run);undoRec=null;
+  if(!d){renderLabel();return false;}
+  const was=grid.map(t=>t?t.sp+t.st+(t.v||''):''),hadPiece=tray.map(p=>!!p);
+  /* счётчики гербария возвращаются из снимка; отметки «новое» остаются только у того, что игрок ещё не открывал */
+  try{const old=JSON.parse(rec.herb);herb={c:old.c,n:herb.n.filter(k=>old.c[k])};}catch(e){}
+  storeHerb();renderHerbBtn();
+  acted=true;resume(d,UNDO_TXT[rec.kind]||'отменено',true);save();
+  SND.play('back');buzz(8);
+  if(RM)return true;
+  /* что вернулось на место, мягко проявляется: клетки грядки и фигура в лотке */
+  const soft=[{opacity:0,transform:'scale(.82)'},{opacity:1,transform:'scale(1)'}],opt={duration:240,easing:'cubic-bezier(.2,.8,.3,1)'};
+  grid.forEach((t,i)=>{const el=holders[i].firstChild;if(t&&el&&(t.sp+t.st+(t.v||''))!==was[i])el.animate(soft,opt);});
+  tray.forEach((p,k)=>{if(!p||hadPiece[k])return;const el=trayG.querySelector(`[data-slot="${k}"]`);if(el)el.animate([{opacity:0,transform:'translateY(-12px)'},{opacity:1,transform:'translateY(0)'}],opt);});
+  const ico=document.querySelector('#undo .uico');if(ico)ico.animate([{transform:'rotate(0deg)'},{transform:'rotate(-70deg)',offset:.45},{transform:'rotate(0deg)'}],{duration:320,easing:'ease-out'});
+  return true;
+}
+/* конец забега наступает, только когда не помочь ни тем, что в руках, ни одним инструментом за ролик */
+const toolState=()=>({...adState(),cans,shovels,digs:PURE.digsNeeded(grid,tray)});
+/* какая плашка горит: включённый инструмент или тот, что спасёт в тупике */
+const canHot=()=>swap||stuck==='can'||stuck==='either'||stuck==='waitcan';
+const shovelHot=()=>dig||stuck==='shovel'||stuck==='either'||stuck==='both'||stuck==='waitshovel';
+const STUCK_TXT={can:'фигуры не помещаются: поможет лейка',shovel:'фигуры не помещаются: поможет лопатка',either:'фигуры не помещаются: поможет лейка или лопатка',both:'фигуры не помещаются: сначала лопатка, потом лейка'};
+/* stuck: false или что спасает — can, shovel, either (любой из двух), both (сначала лопатка, потом лейка), waitcan и waitshovel (ждём ответа площадки) */
+function setStuck(v){
+  if(stuck===v)return;
+  stuck=v;renderLabel();if(STUCK_TXT[v])toast(STUCK_TXT[v]);
+}
 function checkEnd(){
-  if(anyMove()){if(stuck){stuck=false;renderLabel();}return;}
-  if(cans>0&&grid.some(t=>!t)){if(!stuck){stuck=true;renderLabel();toast('фигуры не помещаются: поможет лейка');}return;}
-  stuck=false;gameOver();
+  if(anyMove()){setStuck(false);return;}
+  /* то, что в руках, считается вместе: забег не кончается, пока инструменты могут спасти */
+  const s=toolState(),help=PURE.rescue(s);
+  if(help){setStuck(help);return;}
+  /* площадка ещё не ответила (медленная связь при запуске): забег не заканчиваем, ждём её. Игрок может закончить сам */
+  if(PF.pending){const t=PURE.adTool({...s,on:true});if(t){setStuck('wait'+t);return;}}
+  setStuck(false);
+  /* в руках ничего не спасает, но спас бы один инструмент за ролик: в свободной игре его можно получить */
+  const tool=PURE.adTool(s);
+  if(tool){
+    /* короткая пауза, чтобы игрок успел увидеть, чем кончился ход; на это время поле не принимает нажатий */
+    const id=runId;modal='hold';
+    setTimeout(()=>{if(id===runId&&modal==='hold'&&!over)toolCard(tool,'stuck');},RM||!booted?0:600);
+    return;
+  }
+  gameOver();
+}
+/* лейка за рекламу. stuck: фигуры не помещаются, забег иначе кончится. empty: игрок сам нажал на пустую лейку.
+   note: строка под кнопкой — что это за ролик или почему лейки пока нет */
+const ADNOTE={ad:'короткий рекламный ролик',wait:'реклама загружается',early:'ролик нужно досмотреть до конца',fail:'реклама сейчас недоступна'};
+let adToolKind='can',adAsked='can';
+function toolCard(tool,kind,note){
+  const again=modal==='adcan';
+  adKind=kind;adToolKind=tool;
+  const stop=kind==='stuck',sh=tool==='shovel';
+  showCard('adcan',238,296,(sh?shovelArt(197,291,1.9,true,false):canArt(203,294,1.9,true,false))
+    +line(350,21,'over-ink',sh?(stop?'Грядка заполнена':'Лопаток нет'):(stop?'Фигуры не помещаются':'Леек нет'),600)
+    +line(374,13.5,'over-muted',sh?'лопатка освободит одну клетку':'лейка заменит одну из фигур')
+    +`<g id="adcan" class="btn" role="button" tabindex="0" aria-label="Посмотреть рекламу и получить ${sh?'лопатку':'лейку'}"><rect class="ring" x="85" y="396" width="220" height="50" rx="25" style="${fill('b')}"/><path d="M${sh?105:111},413 L${sh?118:124},421 L${sh?105:111},429Z" style="${fill('dark')};stroke:var(--dark);stroke-width:2.4;stroke-linejoin:round"/><text x="${sh?209:206}" y="427" text-anchor="middle" style="font-size:17px;font-weight:600;${fill('dark')}">${sh?'Лопатка':'Лейка'} за рекламу</text></g>`
+    +`<text id="adnote" x="195" y="468" text-anchor="middle" style="font-size:12.5px;${fill('over-muted')}">${ADNOTE[note||'ad']}</text>`
+    +linkBtn('adno',502,stop?'Закончить забег':'Не сейчас',stop?'закончить забег':'не сейчас'),again);
+}
+/* награда за ролик: тот инструмент, который просили. Если лопаток уже две, выдаётся лейка */
+/* инструмент за ролик отменой не вернуть и не размножить: шаг назад после награды недоступен */
+function giveTool(tool){undoRec=null;if(tool==='shovel'&&shovels<PURE.SHOVEL_MAX)gainShovel('ad');else gainCan();renderLabel();}
+async function watchCan(){
+  if(adWait||modal!=='adcan')return;
+  adWait=true;
+  const kind=adKind,tool=adToolKind,id=runId,b=$('adcan'),n=$('adnote');
+  adAsked=tool;
+  if(b)b.style.opacity='.5';if(n){n.textContent=ADNOTE.wait;n.setAttribute('class','pulse');}
+  const res=await PF.rewarded();
+  adWait=false;
+  if(id!==runId||modal!=='adcan')return;
+  if(res==='rewarded'){adCans++;adFails=0;closeCard();giveTool(tool);save();checkEnd();return;}
+  /* закрыл раньше времени: лейки нет, выбор остаётся. Не открылась: считаем отказ */
+  if(res==='closed'){toolCard(tool,kind,'early');return;}
+  adFails++;
+  if(adFails<PURE.AD_FAILS){toolCard(tool,kind,'fail');return;}
+  closeCard();
+  if(kind==='stuck')gameOver();else toast('реклама сейчас недоступна');
 }
 /* два варианта замены запоминаются за фигурой: отмена бесплатна, но перебирать варианты нельзя */
 function altsFor(p){
-  if(p.alt)return p.alt;
-  /* в семени дня варианты замены тоже одинаковы у всех: они зависят от даты и номера фигуры, а не от случая */
-  const R=mode==='daily'?seeded(hashStr(daily.date)^Math.imul((p.id|0)+1,-1640531535)):Math.random;
+  /* варианты замены зависят от зерна забега и номера фигуры, а не от случая: в семени дня они одинаковы у всех */
+  const R=seeded(seedOf()^Math.imul((p.id|0)+1,-1640531535));
+  /* лейка должна выручать: если ни один вариант не помещается, первый становится одной клеткой.
+     Запомненные варианты перепроверяются при каждом открытии: грядка с тех пор могла измениться, а на «лейка спасёт» опираются правила тупика */
+  const fix=out=>{
+    if(!out.some(fitsAny)){const pool=(mode==='daily'?dealt>=45:(score||0)>=1500)?['r','y','b']:['r','y'];out[0]=mkPiece([[0,0,pool[(R()*pool.length)|0],R()<.15?2:1]]);}
+    return out;
+  };
+  if(p.alt)return fix(p.alt);
   const sig=q=>q.cells.map(c=>c[2]+c[3]).sort().join(''),seen={},out=[];seen[sig(p)]=1;
   for(let i=0;i<40&&out.length<2;i++){const q=newPiece(R);if(!seen[sig(q)]){seen[sig(q)]=1;out.push(q);}}
   while(out.length<2)out.push(newPiece(R));
-  /* лейка должна выручать: если ни один вариант не помещается, первый становится одной клеткой */
-  if(!out.some(fitsAny)){const pool=(mode==='daily'?dealt>=45:(score||0)>=1500)?['r','y','b']:['r','y'];out[0]=mkPiece([[0,0,pool[(R()*pool.length)|0],R()<.15?2:1]]);}
-  return p.alt=out;
+  return p.alt=fix(out);
 }
-function openSwap(k){
-  const p=tray[k];if(!p)return;
-  if(p.cells[0][2]==='g'){toast('золотое семя менять незачем');return;}
-  swapK=k;
-  const alts=altsFor(p),opt=(q,i)=>{const x=i?211:75,w=q.w*TM+(q.w-1)*TG,h=q.h*TM+(q.h-1)*TG;
-    return `<g class="btn" role="button" tabindex="0" data-alt="${i}" aria-label="Вариант ${i+1}"><rect class="ring" x="${x}" y="372" width="104" height="104" rx="20" style="fill:var(--over-soil1);stroke:var(--over-line);stroke-width:1.2"/><g transform="translate(${x+(104-w)/2},${372+(104-h)/2})">${pieceHTML(q,TM,TG,false)}</g></g>`;};
-  showCard('swap',300,262,line(346,20,'over-ink','На что заменить?',600)+opt(alts[0],0)+opt(alts[1],1)
-    +`<g id="keep" class="btn" role="button" tabindex="0" aria-label="Оставить как есть"><rect class="ring" x="95" y="500" width="200" height="36" rx="18" style="fill:transparent"/><text class="link" x="195" y="523" text-anchor="middle" style="${fill('over-muted')}">оставить как есть</text></g>`);
+/* карточка замены открывается сразу по нажатию на лейку. Вверху три фигуры лотка: нажатие на другую показывает её варианты,
+   так что все замены видны без лишних нажатий. Золотое семя и пустое место в лотке не выбираются */
+const swappable=p=>!!p&&p.cells[0][2]!=='g';
+function openSwap(k,again){
+  if(k==null||!swappable(tray[k]))k=tray.findIndex(swappable);
+  if(k<0){swap=false;toast('золотое семя менять незачем');return;}
+  swapK=k;swap=true;
+  const Y=242,m=24,g=3,alts=altsFor(tray[k]);
+  const tab=(p,i)=>{const x=73+i*86,y=Y+82,on=i===k;
+    if(!p)return `<rect x="${x+.5}" y="${y+.5}" width="71" height="71" rx="16" style="fill:none;stroke:var(--over-line);stroke-width:1;stroke-dasharray:3 5;opacity:.6"/>`;
+    const w=p.w*m+(p.w-1)*g,h=p.h*m+(p.h-1)*g,art=`<g transform="translate(${x+(72-w)/2},${y+(72-h)/2})">${pieceHTML(p,m,g,false)}</g>`;
+    if(!swappable(p))return `<g aria-hidden="true" style="opacity:.4"><rect x="${x}" y="${y}" width="72" height="72" rx="16" style="fill:var(--over-soil1);stroke:var(--over-line);stroke-width:1"/>${art}</g>`;
+    return `<g class="btn" role="button" tabindex="0" data-tab="${i}" aria-pressed="${on}" aria-label="Фигура ${i+1} из лотка${on?', выбрана':''}"><rect class="ring" x="${x}" y="${y}" width="72" height="72" rx="16" style="fill:var(--over-soil${on?0:1});stroke:var(--${on?'gold':'over-line'});stroke-width:${on?2.2:1.2}"/><g${on?'':' style="opacity:.62"'}>${art}</g></g>`;};
+  const opt=(q,i)=>{const x=i?211:75,y=Y+192,w=q.w*TM+(q.w-1)*TG,h=q.h*TM+(q.h-1)*TG;
+    return `<g class="btn" role="button" tabindex="0" data-alt="${i}" aria-label="Заменить на вариант ${i+1}"><rect class="ring" x="${x}" y="${y}" width="104" height="104" rx="20" style="fill:var(--over-soil1);stroke:var(--over-line);stroke-width:1.2"/><g transform="translate(${x+(104-w)/2},${y+(104-h)/2})">${pieceHTML(q,TM,TG,false)}</g></g>`;};
+  /* стрелка от выбранной фигуры к её вариантам: видно, чьи это замены */
+  const cx=73+k*86+36,tie=`<path d="M${cx},${Y+159} v9 M${cx-4.5},${Y+164} l4.5,4.5 l4.5,-4.5" style="fill:none;stroke:var(--gold);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"/>`;
+  showCard('swap',Y,360,line(Y+44,20,'over-ink','Замена фигуры',600)+line(Y+68,13,'over-muted','выберите фигуру из лотка')
+    +tray.map(tab).join('')+tie
+    +`<g id="alts"><text x="195" y="${Y+183}" text-anchor="middle" style="font-size:13px;${fill('over-muted')}">и то, на что её заменить</text>${opt(alts[0],0)+opt(alts[1],1)}</g>`
+    +`<g id="keep" class="btn" role="button" tabindex="0" aria-label="Оставить как есть"><rect class="ring" x="95" y="${Y+308}" width="200" height="40" rx="20" style="fill:transparent"/><text class="link" x="195" y="${Y+333}" text-anchor="middle" style="${fill('over-muted')}">оставить как есть</text></g>`,again);
+  /* при переключении фигуры карточка стоит на месте, меняются только варианты */
+  if(again&&!RM)$('alts').animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}],{duration:180,easing:'cubic-bezier(.2,.8,.3,1)'});
+  /* фокус в карточке: с клавиатуры сразу видно, какая фигура выбрана */
+  const sel=overG.querySelector(`[data-tab="${k}"]`);if(sel)sel.focus({preventScroll:true});
 }
 
 /* ---------- карточки поверх игры ---------- */
 const line=(y,size,tone,text,weight)=>`<text x="195" y="${y}" text-anchor="middle" style="font-size:${size}px;${weight?'font-weight:'+weight+';':''}${fill(tone)}">${text}</text>`;
 const button=(id,y,text,label)=>`<g id="${id}" class="btn" role="button" tabindex="0" aria-label="${label}"><rect class="ring" x="105" y="${y}" width="180" height="50" rx="25" style="${fill('b')}"/><text x="195" y="${y+31}" text-anchor="middle" style="font-size:17px;font-weight:600;${fill('dark')}">${text}</text></g>`;
 const mini=(x,y,sp,st)=>`<g transform="translate(${x},${y}) scale(.6)">${plant(sp,st)}</g>`;
+/* крестик в правом верхнем углу карточки: кружок 28 единиц у самого угла, зона нажатия 44×44 */
+const xBtn=(y,label)=>`<g id="xclose" class="btn" role="button" tabindex="0" aria-label="${label}"><rect x="308" y="${y+6}" width="46" height="46" style="fill:transparent"/><circle class="ring" cx="331" cy="${y+29}" r="14" style="fill:var(--over-soil0);stroke:var(--over-line);stroke-width:1"/><path d="M326.5,${y+24.5} l9,9 M335.5,${y+24.5} l-9,9" style="fill:none;stroke:var(--over-ink);stroke-width:1.8;stroke-linecap:round"/></g>`;
 const chev=(x,y)=>`<path d="M${x},${y} l6,6 l-6,6" style="fill:none;stroke:var(--over-muted);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round"/>`;
 function showCard(kind,y,h,html,still){
-  modal=kind;
-  overG.innerHTML=`<rect width="390" height="844" style="${fill('black')};opacity:.6"/><rect x="30" y="${y}" width="330" height="${h}" rx="30" style="fill:${u('over')};stroke:var(--over-line);stroke-width:1.2"/>${html}`;
-  overG.style.display='';
+  modal=kind;if(kind!=='swap')swap=false;
+  overG.innerHTML=`<rect x="-4000" y="-4000" width="8390" height="8844" style="${fill('black')};opacity:.6"/><g id="cardg" data-y="${y}" data-h="${h}" transform="${cardPosition(y,h)}"><rect x="30" y="${y}" width="330" height="${h}" rx="30" style="fill:${u('over')};stroke:var(--over-line);stroke-width:1.2"/>${html}</g>`;
+  overG.style.display='';syncPlay();
   if(!RM&&!still)overG.animate([{opacity:0},{opacity:1}],{duration:220,easing:'ease-out'});
 }
-function closeCard(){modal=null;overG.style.display='none';overG.innerHTML='';}
+function closeCard(){modal=null;swap=false;overG.style.display='none';overG.innerHTML='';syncPlay();}
 /* стартовая карточка: человек, которому прислали ссылку, должен понять игру без объяснений */
 function intro(){
-  showCard('intro',236,340,line(286,23,'over-ink','Оранжерея',600)+line(308,13,'over-muted','черновик игры на пару минут')
+  showCard('intro',236,340,line(286,23,'over-ink','Оранжерея',600)+line(308,13,'over-muted','спокойная игра про сад')
     +mini(98,338,'r',1)+mini(138,338,'r',1)+mini(178,338,'r',1)+chev(224,352)+mini(246,338,'r',2)
     +line(424,14.5,'over-ink','Собирайте одинаковые ростки по три:')+line(446,14.5,'over-ink','они сливаются в цветы.')
-    +line(472,13.5,'over-muted','Сначала шесть коротких шагов обучения.')+button('begin',498,'Начать','Начать обучение'));
+    +line(472,13.5,'over-muted','Сначала четыре коротких шага обучения.')+button('begin',498,'Начать','Начать обучение'));
 }
 /* правила: открываются кнопкой над лотком в любой момент */
 function rules(page){
   if(page){
     const item=(y,name,text)=>line(y,14.5,'over-ink',name,600)+line(y+18,12.5,'over-muted',text);
-    showCard('help',146,470,line(190,21,'over-ink','Ещё в игре',600)
-      +item(226,'Лейка','меняет фигуру; дают за лотос и цели')
-      +item(270,'Цели','три задачи над грядкой, за каждую лейка')
-      +item(314,'Бабочка','слейте её цветок: очки за слияние удвоятся')
-      +item(358,'Сорняк','занимает клетку; его убирает слияние рядом')
-      +item(402,'Золотое семя','становится тем, что растёт по соседству')
-      +item(446,'Гербарий','альбом находок, редкие растения по рецептам')
-      +item(490,'Семя дня','одна раздача на всех, одна попытка в день')
-      +button('ok',538,'Понятно','Закрыть правила'),true);
+    showCard('help',124,518,xBtn(124,'Закрыть правила')+line(168,21,'over-ink','Ещё в игре',600)
+      +item(202,'Лейка','меняет фигуру; дают за лотос, цели и ступени')
+      +item(242,'Лопатка','выкапывает цветок или сорняк; дают за цепочку')
+      +item(282,'Отмена','возвращает последнее действие, бесплатно')
+      +item(322,'Цели','три задачи забега, за каждую лейка')
+      +item(362,'Бабочка','слейте её цветок: очки за слияние удвоятся')
+      +item(402,'Сорняк','занимает клетку; его убирает слияние рядом')
+      +item(442,'Золотое семя','становится тем, что растёт по соседству')
+      +item(482,'Гербарий','альбом находок, редкие растения по рецептам')
+      +item(522,'Семя дня','одна раздача на всех, одна попытка в день')
+      +button('ok',564,'Понятно','Закрыть правила'),true);
     return;
   }
   const row=(y,a,b,cap)=>a.map((q,i)=>mini(52+i*40,y,q[0],q[1])).join('')+chev(184,y+13)
     +(b?mini(202,y,b[0],b[1]):`<g transform="translate(221,${y+19}) scale(1.7)"><path d="${STAR}" style="${fill('gold')}"/></g>`)
     +`<text x="254" y="${y+24}" style="font-size:13.5px;${fill('over-ink')}">${cap}</text>`;
   const lk=(id,y,label,text)=>`<g id="${id}" class="btn" role="button" tabindex="0" aria-label="${label}"><rect class="ring" x="60" y="${y-22}" width="270" height="32" rx="16" style="fill:transparent"/><text class="link" x="195" y="${y}" text-anchor="middle" style="${fill('over-muted')}">${text}</text></g>`;
-  showCard('help',104,560,line(146,21,'over-ink','Правила',600)
+  showCard('help',104,560,xBtn(104,'Закрыть правила')+line(146,21,'over-ink','Правила',600)
     +row(166,[['r',1],['r',1],['r',1]],['r',2],'бутон')
     +row(218,[['y',2],['y',2],['y',2]],['y',3],'цветок')
     +row(270,[['r',3],['y',3],['b',3]],['w',4],'редкий лотос')
     +row(322,[['w',4],['w',4],['w',4]],null,'+600 очков')
     +line(392,14,'over-ink','Новый цветок вырастает там,')+line(412,14,'over-ink','куда вы поставили фигуру.')
     +line(438,14,'over-ink','Грядка заранее показывает результат.')
-    +line(462,14,'over-ink','Тап по фигуре в лотке поворачивает её.')
+    +line(462,14,'over-ink','Нажатие на фигуру в лотке поворачивает её.')
     +line(486,14,'over-ink','Фигуры некуда ставить: конец забега.')
     +button('rnext',508,'Дальше','Вторая страница правил')
     +lk('retut',594,'Пройти обучение заново',score>0&&!tut?'пройти обучение (забег сбросится)':'пройти обучение заново')
     +lk('gfx',626,'Переключить качество графики',lite?'графика: лёгкая':'графика: полная'));
 }
 
-/* ---------- обучение: три хода на живой грядке ---------- */
+/* ---------- обучение: четыре шага на живой грядке ---------- */
 const TUT=[
   {board:[[11,'r',1],[12,'r',1]],piece:[[0,0,'r',1]],at:[3,2],want:[[0,0]],
    hint:['Перетащите росток','к двум таким же'],done:['Три ростка слились в бутон.','Он вырос там, куда вы поставили.']},
   {board:[[2,'y',1],[8,'y',1],[11,'r',1],[17,'r',1]],piece:[[0,0,'y',1],[1,0,'r',1]],at:[2,1],want:[[0,0],[0,1]],
-   turn:['Тапните по фигуре,','чтобы повернуть её'],again:['Поверните ещё раз:','янтарный росток должен быть сверху'],
+   turn:['Нажмите на фигуру,','чтобы повернуть её'],again:['Поверните ещё раз:','янтарный росток должен быть сверху'],
    hint:['Теперь поставьте фигуру','в отмеченные клетки'],done:['Каждый росток слился','со своими соседями.']},
   {board:[[17,'r',1],[22,'r',1],[11,'r',2],[13,'r',2]],piece:[[0,0,'r',1]],at:[2,2],want:[[0,0]],
    hint:['Поставьте росток','между двумя бутонами'],done:['Цепочка: бутоны дали цветок.','Три любых цветка дадут лотос.']},
-  /* лейка: фигуру никуда ставить не нужно, шаг кончается выбором замены */
+  /* лейка: фигуру никуда ставить не нужно, шаг кончается выбором замены в карточке */
   {can:true,board:[[6,'y',1],[7,'y',1]],piece:[[0,0,'r',1],[1,0,'r',2]],alt:[[[0,0,'y',1]],[[0,0,'r',1],[1,0,'y',2]]],at:[-9,-9],want:[],
-   canHint:['Эта фигура здесь не нужна.','Тапните по лейке'],pick:['Теперь тапните по фигуре','и выберите замену'],done:['Лейка заменила фигуру.','Новые лейки дают за лотос и цели.']},
-  /* бабочка сидит на ростке, сорняк стоит рядом с местом слияния: один ход показывает оба события */
-  {bfly:7,board:[[6,'r',1],[7,'r',1],[13,'x',0]],piece:[[0,0,'r',1]],at:[3,1],want:[[0,0]],
-   hint:['Бабочка удвоит очки за свой росток,','а слияние рядом уберёт сорняк'],done:['Очки удвоились, сорняк исчез.','Такие события случаются сами.']},
-  {board:[[11,'y',3],[13,'y',3]],piece:[[0,0,'g',0]],at:[2,2],want:[[0,0]],
-   hint:['Золотое семя становится тем,','что растёт рядом. Поставьте его'],done:['Три подсолнуха дали золотой лотос.','Редкие находки копятся в гербарии.']}
+   canHint:['Эта фигура здесь не нужна.','Нажмите на лейку и выберите замену'],done:['Лейка заменила фигуру.','Новые лейки дают за лотос и цели.']}
+  /* бабочку, сорняк и золотое семя обучение не показывает: их объясняют карточки ступеней в тот момент, когда они появляются на грядке */
 ];
 function tutWant(){const p=tray&&tray[1];return !!p&&TUT[tut.n].want.every((w,i)=>p.cells[i]&&p.cells[i][0]===w[0]&&p.cells[i][1]===w[1]);}
 function renderTut(){
   if(!tut){tutG.innerHTML='';return;}
-  const S=TUT[tut.n],done=tut.phase==='done',okRot=done||tutWant(),txt=done?S.done:S.can?(swap?S.pick:S.canHint):okRot?S.hint:tut.turned?S.again:S.turn;
-  let h=`<rect x="36" y="122" width="318" height="104" rx="24" style="fill:${u('over')};stroke:var(--over-line);stroke-width:1.2"/>`
-    +line(148,12,'over-muted',`обучение, шаг ${tut.n+1} из ${TUT.length}`)+line(177,15.5,'over-ink',txt[0],500)+line(201,15.5,'over-ink',txt[1],500);
+  const S=TUT[tut.n],done=tut.phase==='done',okRot=done||tutWant(),txt=done?S.done:S.can?S.canHint:okRot?S.hint:tut.turned?S.again:S.turn;
+  const slot=slotBox(1),can=canBox();
+  // Подсказка рисуется в координатах грядки, а лоток привязан к краю окна.
+  slot.x+=rightMenuOffset;can.x+=rightMenuOffset;
+  const hintPosition=desktop?'translate(195,201) scale(.75) translate(-195,-174)':`translate(0,${f1(Math.max(0,LAY.top+8-122))})`;
+  let h=`<g transform="${hintPosition}"><rect x="36" y="122" width="318" height="104" rx="24" style="fill:${u('over')};stroke:var(--over-line);stroke-width:1.2"/>`
+    +line(148,12,'over-muted',`обучение, шаг ${tut.n+1} из ${TUT.length}`)+line(177,15.5,'over-ink',txt[0],500)+line(201,15.5,'over-ink',txt[1],500)+'</g>';
   if(!done){
     S.want.forEach(w=>{h+=`<rect class="made pulse" x="${BX+(S.at[0]+w[0])*STEP+2}" y="${BY+(S.at[1]+w[1])*STEP+2}" width="${CELL-4}" height="${CELL-4}" rx="11"/>`;});
-    if(S.can&&!swap)h+=`<rect class="made pulse" x="17" y="602" width="112" height="46" rx="23"/>`;
-    else if(S.can||!okRot)h+=`<rect class="made pulse" x="${CARD.xs[1]-4}" y="${CARD.y-4}" width="${CARD.w+8}" height="${CARD.w+8}" rx="24"/>`;
-    if(!RM&&!drag)h+=`<g id="hand" style="opacity:0"><circle r="13" style="${fill('white')};opacity:.85"/><circle r="13" style="fill:none;stroke:var(--dark);stroke-width:1;opacity:.35"/></g>`;
+    if(S.can&&swap);
+    else if(S.can)h+=`<rect class="made pulse" x="${can.x-4}" y="${can.y-4}" width="${can.w+8}" height="${can.h+8}" rx="${can.h/2+4}"/>`;
+    else if(!okRot)h+=`<rect class="made pulse" x="${slot.x-4}" y="${slot.y-4}" width="${slot.w+8}" height="${slot.h+8}" rx="24"/>`;
+    if(!RM&&!drag&&!(S.can&&swap))h+=`<g id="hand" style="opacity:0"><circle r="13" style="${fill('white')};opacity:.85"/><circle r="13" style="fill:none;stroke:var(--dark);stroke-width:1;opacity:.35"/></g>`;
   }
   tutG.innerHTML=h;
   const hand=$('hand');if(!hand)return;
-  const sx=CARD.xs[1]+CARD.w/2,sy=CARD.y+CARD.w/2,T=(x,y,k)=>`translate(${x}px,${y}px) scale(${k})`;
+  const sx=slot.x+slot.w/2,sy=slot.y+slot.h/2,T=(x,y,k)=>`translate(${x}px,${y}px) scale(${k})`;
   /* рука либо стучит по месту (лейка, фигура в лотке), либо тащит фигуру на грядку */
-  const tap=S.can?(swap?[sx,sy]:[73,625]):okRot?null:[sx,sy];
+  const tap=S.can?[can.x+can.w/2,can.y+can.h/2]:okRot?null:[sx,sy];
   if(!tap){
     const xs=S.want.map(w=>w[0]),ys=S.want.map(w=>w[1]);
     const tx=BX+(S.at[0]+(Math.min(...xs)+Math.max(...xs))/2)*STEP+CELL/2,ty=BY+(S.at[1]+(Math.min(...ys)+Math.max(...ys))/2)*STEP+CELL/2;
@@ -1272,28 +2131,26 @@ function tutSet(){
   grid=Array(25).fill(null);gv++;S.board.forEach(b=>{grid[b[0]]={sp:b[1],st:b[2]};});
   for(let i=0;i<25;i++)renderCell(i);
   const p=mkPiece(S.piece.map(q=>q.slice()));if(S.alt)p.alt=S.alt.map(a=>mkPiece(a.map(q=>q.slice())));
-  cans=1;swap=false;ev.bfly=S.bfly!=null?{i:S.bfly,left:99}:null;renderEvt(S.bfly!=null?'in':undefined);
+  cans=1;shovels=0;swap=false;dig=false;digG.innerHTML='';ev.bfly=S.bfly!=null?{i:S.bfly,left:99}:null;renderEvt(S.bfly!=null?'in':undefined);
   tray=[null,p,null];renderTray(true);renderLabel();renderTut();mood();
 }
 function tutStart(){
   mode='free';store('orangery-run',null);
   closeCard();over=false;busy=false;drag=null;dragG.innerHTML='';fxG.innerHTML='';showPreview(null);
-  tut={n:0,phase:'do',turned:false};ev={next:6,idx:0,bfly:null,gold:false};renderEvt();renderLabel();renderGoals();setScore(0);tutSet();
+  undoRec=null;tut={n:0,phase:'do',turned:false};ev={next:6,idx:0,bfly:null,gold:false,intro:''};renderEvt();renderLabel();renderGoals();setScore(0);tutSet();
 }
 function tutDone(){
   const t=tut;t.phase='done';renderTut();
   setTimeout(()=>{if(tut!==t||t.phase!=='done')return;if(++t.n<TUT.length)tutSet();else tutEnd();},2400);
 }
-function tutFinish(){tut=null;try{localStorage.setItem('orangery-tut','1');}catch(e){}tutG.innerHTML='';renderLabel();}
+function tutFinish(){tut=null;if(!LS.get('orangery-stages'))store('orangery-stages',[]);store('orangery-tut','1');tutG.innerHTML='';renderLabel();}
 function tutEnd(){
   tutFinish();start();
-  showCard('tutend',262,306,line(310,21,'over-ink','Дальше сами',600)
-    +line(346,14,'over-ink','Над грядкой три цели: за каждую лейка.')
-    +line(370,14,'over-ink','Лист наверху открывает гербарий.')
-    +line(394,14,'over-ink','Семя дня: одна раздача для всех.')
-    +line(418,14,'over-ink','Фигуры некуда ставить: конец забега.')
-    +line(446,13,'over-muted','Всё это есть в правилах над лотком.')
-    +button('play',470,'Играть','Начать игру'));
+  showCard('tutend',290,236,line(338,21,'over-ink','Дальше сами',600)
+    +line(374,14,'over-ink','Новое в игре появляется постепенно,')
+    +line(396,14,'over-ink','по ступеням.')
+    +line(424,14,'over-ink','Фигуры некуда ставить: конец забега.')
+    +button('play',448,'Играть','Начать игру'));
 }
 
 /* ---------- перетаскивание ---------- */
@@ -1326,10 +2183,10 @@ function endDrag(commit){
 /* короткое касание без сдвига поворачивает фигуру, сдвиг или задержка поднимают её */
 game.addEventListener('pointerdown',e=>{
   const el=e.target.closest('[data-slot]');
-  if(!el||over||modal||drag||pend)return;
+  if(!el||over||modal||drag||pend||paused||!booted)return;
   const k=+el.dataset.slot,p=tray[k];if(!p)return;
   e.preventDefault();
-  if(swap){openSwap(k);return;}
+  if(dig)setDig(false);
   try{game.setPointerCapture(e.pointerId);}catch(err){}
   const q=pt(e);
   pend={k,p,id:e.pointerId,touch:e.pointerType!=='mouse',x:q.x,y:q.y,e,timer:setTimeout(()=>{if(pend)beginDrag(pend.e);},230)};
@@ -1350,34 +2207,59 @@ game.addEventListener('pointercancel',e=>{
 /* ---------- кнопки ---------- */
 let armed=0;
 function act(el){
-  if(!el)return;
+  if(!el||paused||!booted)return;
+  if(ACTS.indexOf(el.id)>=0||el.dataset.alt)acted=true;
   SND.play('ui');
-  if(el.id==='again'){start();return;}
+  if(el.id==='again'){between(start);return;}
+  if(el.id==='adcan'){watchCan();return;}
+  if(el.id==='adno'){if(adWait)return;const k=adKind;closeCard();if(k==='stuck')gameOver();return;}
   if(el.id==='can'){
-    if(busy||over||modal||drag||(tut&&!(tut.phase==='do'&&TUT[tut.n].can)))return;
-    if(!cans){toast('леек нет: их дают за лотос и цели');return;}
-    swap=!swap;renderLabel();renderTray();if(tut)renderTut();return;
+    if(busy||over||modal||drag||pend||(tut&&!(tut.phase==='do'&&TUT[tut.n].can)))return;
+    if(!cans){if(PURE.canOffer(adState()))toolCard('can','empty');else toast('леек нет: их дают за лотос и цели');return;}
+    if(dig){dig=false;renderDig();}
+    openSwap();renderLabel();if(tut)renderTut();return;
   }
-  if(el.id==='giveup'){if(!busy&&!over&&!modal){stuck=false;gameOver();}return;}
-  if(el.id==='keep'){closeCard();swap=false;renderLabel();renderTray();if(tut)renderTut();return;}
+  if(el.id==='shovel'){
+    if(busy||over||modal||drag||pend||tut)return;
+    if(!shovels){if(PURE.adOpen(adState()))toolCard('shovel','empty');else toast('лопатку дают за цепочку слияний');return;}
+    setDig(!dig);return;
+  }
+  if(el.id==='undo'){
+    if(undoRec)undo();else if(!busy&&!over&&!modal&&!tut)toast('отменять пока нечего');
+    return;
+  }
+  if(el.id==='giveup'){
+    /* ссылка стоит вплотную к отмене, а конец забега не вернуть: первое нажатие спрашивает «точно?», как у кнопки «заново» */
+    if(busy||over||modal)return;
+    if(Date.now()<giveArm){giveArm=0;stuck=false;gameOver();return;}
+    const t=el.querySelector('text');if(t)t.textContent='точно?';
+    giveArm=Date.now()+2500;
+    setTimeout(()=>{if(giveArm&&Date.now()>=giveArm)renderLabel();},2600);
+    return;
+  }
+  if(el.dataset.tab){openSwap(+el.dataset.tab,true);return;}
+  if(el.id==='keep'){closeCard();swap=false;renderLabel();if(tut)renderTut();return;}
   if(el.dataset.alt){
+    if(busy||drag||pend)return;
     const p=tray[swapK],q=p&&p.alt&&p.alt[+el.dataset.alt];closeCard();swap=false;
-    if(q){tray[swapK]=q;cans--;SND.play('level');buzz(10);}
+    /* у фигуры, которую поставила лейка, свой номер: от него зависят уже её варианты замены */
+    if(q){undoMark('swap');q.id=((((p.id|0)*31+1000+(+el.dataset.alt))>>>0)%1000000007);tray[swapK]=q;cans--;SND.play('level');buzz(10);}
     renderLabel();renderTray(true);
     if(tut){tutDone();return;}
     save();checkEnd();return;
   }
-  if(el.id==='snd'){SND.toggle();sndIcon();toast(SNDNAME[SND.mode]);return;}
+  if(el.id==='snd'){SND.toggle();sndIcon();toast(sndName(SND.mode));return;}
   if(el.id==='share'){share(el);return;}
-  if(el.id==='gfx'){lite=!lite;try{localStorage.setItem('orangery-lite',lite?'1':'0');}catch(e){}scr.classList.toggle('lite',lite);par(0,0);resize();rules();return;}
-  if(el.id==='play'||el.id==='ok'||el.id==='dclose'){closeCard();return;}
+  if(el.id==='gfx'){lite=!lite;try{localStorage.setItem('orangery-lite',lite?'1':'0');}catch(e){}scr.classList.toggle('lite',lite);stage.classList.toggle('lite',lite);par(0,0);resize();rules();return;}
+  if(el.id==='stageok'){closeCard();stageCard();return;}
+  if(el.id==='play'||el.id==='ok'||el.id==='dclose'||el.id==='xclose'){closeCard();return;}
   if(el.id==='rnext'){rules(1);return;}
   if(el.id==='herb'){if(!busy&&!drag&&!tut&&!over&&!modal)herbCard();return;}
   if(el.dataset.herb){herbCard(el.dataset.herb,true);return;}
   if(el.dataset.goal){if(!busy&&!drag&&!over&&!modal&&goals)goalsCard();return;}
   if(el.id==='seed'){if(!busy&&!drag&&!tut&&!over&&(!modal||modal==='daily'))dailyCard();return;}
   if(el.id==='dplay'){startDaily();return;}
-  if(el.id==='free'){exitDaily();return;}
+  if(el.id==='free'){between(exitDaily);return;}
   if(el.id==='begin'){tutStart();return;}
   if(el.id==='help'){if(!over&&!modal&&!drag)rules();return;}
   if(el.id==='retut'){if(!busy)tutStart();return;}
@@ -1385,69 +2267,136 @@ function act(el){
   if(el.dataset.theme){manual=true;setTheme(el.dataset.theme,true);return;}
   if(el.id==='restart'){
     if(busy||tut)return;
-    if(mode==='daily'){exitDaily();return;}
+    if(mode==='daily'){if(daily.done)between(exitDaily);else exitDaily();return;}
     const t=$('restart-t');
-    if(over||score===0||Date.now()<armed){armed=0;t.textContent='заново';start();return;}
+    if(over){armed=0;t.textContent='заново';between(start);return;}
+    if(score===0||Date.now()<armed){armed=0;t.textContent='заново';start();return;}
     armed=Date.now()+2500;t.textContent='точно?';
     setTimeout(()=>{if(armed&&Date.now()>=armed){armed=0;t.textContent='заново';}},2600);
   }
 }
-game.addEventListener('click',e=>act(e.target.closest('.btn')));
-game.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const el=e.target.closest&&e.target.closest('.btn');if(el){e.preventDefault();act(el);}}});
+game.addEventListener('click',e=>{
+  /* режим лопатки: нажатие на обведённую клетку копает; любое другое нажатие, кроме самой плашки, выключает режим и дальше работает как обычно */
+  const d=e.target.closest('[data-dig]');
+  if(d){if(!paused&&booted)digAt(+d.dataset.dig);return;}
+  press(e.target.closest('.btn'));
+});
+/* любое нажатие, кроме самой плашки лопатки, выключает её режим и дальше работает как обычно; так же с клавиатуры */
+function press(el){
+  if(dig&&!(el&&el.id==='shovel'))setDig(false);
+  act(el);
+}
+/* нажатие мимо поля тоже выключает режим. Путь события, а не closest: плашка к этому моменту уже перерисована, и цель нажатия вынута из страницы */
+document.addEventListener('click',e=>{if(dig&&e.composedPath().indexOf(game)<0)setDig(false);});
+window.addEventListener('keydown',e=>{
+  if(e.key!=='Escape'||paused||modal)return;
+  if(dig){e.preventDefault();SND.play('ui');setDig(false);}
+});
+/* Ctrl+Z и Cmd+Z отменяют последнее действие, как привыкли за компьютером */
+window.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&!e.altKey&&(e.key==='z'||e.key==='Z'||e.key==='я'||e.key==='Я')&&booted&&undoOk()){e.preventDefault();undo();}});
+/* Esc закрывает справочные карточки (правила, цели, гербарий, семя дня) и карточку замены: отказ от замены бесплатный.
+   Карточки с выбором (реклама, конец забега) не трогает */
+window.addEventListener('keydown',e=>{
+  if(e.key!=='Escape'||paused)return;
+  if(modal==='swap'){e.preventDefault();SND.play('ui');closeCard();swap=false;renderLabel();if(tut)renderTut();}
+  else if(modal==='stage'){e.preventDefault();SND.play('ui');closeCard();stageCard();}
+  else if(['help','goals','herb','daily'].indexOf(modal)>=0){e.preventDefault();SND.play('ui');closeCard();}
+});
+game.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const d=e.target.closest&&e.target.closest('[data-dig]');if(d){e.preventDefault();if(!paused&&booted)digAt(+d.dataset.dig);return;}const el=e.target.closest&&e.target.closest('.btn');if(el){e.preventDefault();press(el);}}});
 window.addEventListener('hashchange',()=>{const h=location.hash.replace('#','');if(THEMES[h]){manual=true;setTheme(h,true);}});
 
 $('defs').innerHTML=`<defs><clipPath id="arch"><path d="${ARCH}"/></clipPath><clipPath id="photo"><rect x="91" y="221" width="208" height="208" rx="5"/></clipPath><filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7"/><feColorMatrix type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 0.1"/></filter></defs>`;
 function sndIcon(){
   const st='fill:none;stroke:var(--ink-top);stroke-width:1.4;stroke-linecap:round',m=SND.mode;
   $('snd-i').innerHTML=`<path d="M343.5,24.6 h3.4 l4.4,-3.7 v12.2 l-4.4,-3.7 h-3.4z" style="${fill('ink-top')}"/>`
-    +(m===2?`<path d="M355,23.6 q2.3,3.4 0,6.8 M358,21 q4.2,6 0,12" style="${st}"/>`:m===1?`<path d="M355,23.6 q2.3,3.4 0,6.8" style="${st}"/>`:`<path d="M355.2,24 l5.2,6 M360.4,24 l-5.2,6" style="${st}"/>`);
-  $('snd').setAttribute('aria-label','Звук: '+SNDNAME[m]+'. Нажмите, чтобы переключить');
+    +(m?`<path d="M355,23.6 q2.3,3.4 0,6.8 M358,21 q4.2,6 0,12" style="${st}"/>`:`<path d="M355.2,24 l5.2,6 M360.4,24 l-5.2,6" style="${st}"/>`);
+  $('snd').setAttribute('aria-label','Звук: '+sndName(m)+'. Нажмите, чтобы '+(m?'выключить':'включить'));
 }
-const SNDNAME=['тишина','только звуки','звук и музыка'];
+const sndName=m=>m?'звук и музыка':'тишина';
 /* короткая подпись под кнопкой: что именно сейчас включено */
 function toast(text){
   const olds=[...fxG.querySelectorAll('.toast')];if(olds.length>=3)olds.shift().remove();olds.forEach(o=>o.removeAttribute('id'));
-  const t=document.createElementNS(NS,'text');t.id='toast';t.setAttribute('x',369);t.setAttribute('y',108+olds.length*20);t.setAttribute('text-anchor','end');t.setAttribute('class','pop toast');t.setAttribute('style','font-size:14px');t.textContent=text;fxG.appendChild(t);
+  const t=document.createElementNS(NS,'text');t.id='toast';t.setAttribute('x',369);t.setAttribute('y',(desktop?276:LAY.top>60?282:108+LAY.top)+olds.length*20);t.setAttribute('text-anchor','end');t.setAttribute('class','pop toast');t.setAttribute('style','font-size:14px');t.textContent=text;fxG.appendChild(t);
   t.animate([{opacity:0},{opacity:1,offset:.12},{opacity:1,offset:.75},{opacity:0}],{duration:1500,fill:'forwards'});setTimeout(()=>{if(t.parentNode)t.remove();},1550);
 }
-/* обучение показываем один раз; #tutorial в адресе включает его снова */
-let seen=false;try{seen=localStorage.getItem('orangery-tut')==='1';lite=localStorage.getItem('orangery-lite')==='1';}catch(e){}
+/* настройки устройства читаются сразу, сцена рисуется сразу; данные игрока читает boot(), когда ответит площадка */
+let seen=false;
+try{lite=localStorage.getItem('orangery-lite')==='1';}catch(e){}
 if(location.hash==='#lite')lite=true;
-/* иногда идёт дождь; #rain в адресе включает его наверняка */
-wet=location.hash==='#rain'||(seen&&Math.random()<.18);
 manual=!!THEMES[location.hash.replace('#','')];
+fitView();
 setTheme(themeByClock());
-sndIcon();renderLabel();
-let savedRun=null,savedMode='free';try{savedRun=localStorage.getItem('orangery-run');savedMode=localStorage.getItem('orangery-mode')||'free';}catch(e){}
-loadHerb();renderHerbBtn();
-loadDaily();
-start();
+sndIcon();
 par(0,0);resize();
 window.addEventListener('resize',resize);
+window.addEventListener('message',e=>{
+  if(window.parent===window||e.source!==window.parent||e.data?.type!=='orangery-preview-layout')return;
+  classicDesktop=e.data.classic===true;
+  resize();
+});
 if(window.ResizeObserver)new ResizeObserver(resize).observe(scr);
 window.addEventListener('pointerdown',()=>SND.unlock(),{passive:true});
-document.addEventListener('visibilitychange',()=>SND.hidden(document.hidden));
-/* сцена сама переходит к следующему времени суток, если его не выбрали вручную */
-setInterval(()=>{if(!manual){const t=themeByClock();if(t!==themeId)setTheme(t,true);}},60000);
-/* жизнь в простое: то одно, то другое растение подпрыгивает само */
-setInterval(()=>{
-  if(RM||drag||busy||over||modal||document.hidden)return;
-  const occ=[];for(let i=0;i<25;i++)if(grid[i])occ.push(i);if(!occ.length)return;
-  const el=holders[pick(occ)].firstChild;
-  if(el)el.animate([{transform:'translateY(0) scale(1)'},{transform:'translateY(-5px) scale(1.06,1.1)',offset:.35},{transform:'translateY(0) scale(1.05,.94)',offset:.65},{transform:'translateY(0) scale(1)'}],{duration:520,easing:'ease-out'});
-},2800);
-if(!seen||location.hash==='#tutorial')intro();
-else{
-  /* start() выше уже записал пустой свободный забег поверх сохранённого: возвращаем сохранённый на место */
-  const d=savedRun&&loadRun(savedRun);if(d){store('orangery-run',savedRun);resume(d);}
-  if(savedMode==='daily'&&!daily.done&&daily.run)startDaily();
+/* правая кнопка мыши и долгое нажатие не открывают меню браузера поверх игры */
+window.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('visibilitychange',()=>{setPaused(document.hidden,'tab');if(document.hidden&&booted)PF.push(localRec,true);});
+PF.onPause((v,why)=>setPaused(v,why||'pf'));
+PF.onCloud(cloudLate);
+PF.onSdk(()=>{if(booted&&(stuck==='waitcan'||stuck==='waitshovel')&&!over&&!modal&&!busy)checkEnd();});
+PF.onLateReward(lateReward);
+function boot(env){
+  try{
+    /* облачная копия сливается с местной до того, как игра прочитает сохранения */
+    const cloud=(env&&env.cloud)||preCloud;
+    if(PURE.foreign(cloud))PF.lock();
+    else if(cloud)applyRec(PURE.mergeSaves(localRec(),cloud,okRun));
+    /* иногда идёт дождь; #rain в адресе включает его наверняка */
+    wet=location.hash==='#rain'||(LS.get('orangery-tut')==='1'&&Math.random()<.18);
+    if(wet)setTheme(themeId);
+    renderLabel();
+    restore();
+  }catch(e){
+    /* что бы ни случилось с сохранениями, игрок получает пустой забег, а площадка — сигнал готовности */
+    try{console.error(e);mode='free';startRun();}catch(e2){}
+  }
+  /* сцена сама переходит к следующему времени суток, если его не выбрали вручную */
+  setInterval(()=>{if(!manual){const t=themeByClock();if(t!==themeId)setTheme(t,true);}},60000);
+  /* жизнь в простое: то одно, то другое растение подпрыгивает само */
+  setInterval(()=>{
+    if(RM||drag||busy||over||modal||paused||document.hidden||!grid)return;
+    const occ=[];for(let i=0;i<25;i++)if(grid[i])occ.push(i);if(!occ.length)return;
+    const el=holders[pick(occ)].firstChild;
+    if(el)el.animate([{transform:'translateY(0) scale(1)'},{transform:'translateY(-5px) scale(1.06,1.1)',offset:.35},{transform:'translateY(0) scale(1.05,.94)',offset:.65},{transform:'translateY(0) scale(1)'}],{duration:520,easing:'ease-out'});
+  },2800);
+  /* игру можно трогать: сообщаем площадке о готовности и о том, идёт ли игра */
+  booted=true;quiet=false;lastAdAt=Date.now();PF.ready();syncPlay();
+  /* местная копия могла оказаться полнее облачной: отправляем слитую запись */
+  if(PF.on)PF.push(localRec,false);
 }
-/* для проверки из консоли */
-window.__orangery={setCans:n=>{cans=n;renderLabel();},goals:()=>goals,ev:()=>ev,eventsTick,renderEvt,herb:()=>herb,herbCard,found,goalBump,checkGoals,goalsCard,checkEnd,startDaily,exitDaily,dailyCard,loadDaily,state:()=>({mode,dealt,daily,streak,cans,swap,stuck,grid,tray,score,best,busy,over,modal,themeId,level,lite,wet,tense,stats,parts:parts.length,K,tut:tut&&{n:tut.n,phase:tut.phase}}),start,turn,rules,tutStart,setTheme,gameOver,SND,FX,
+PF.init().then(boot);
+/*<debug>*/
+/* для проверки из консоли; в архив для площадки этот блок не попадает (его вырезает tools/build-yandex.mjs) */
+window.__orangery={LS,localRec,PF,adState,setLastAd:v=>{lastAdAt=v;},setAdFails:v=>{adFails=v;},setCans:n=>{cans=n;renderLabel();},setShovels:n=>{shovels=n;renderLabel();},setDig,digAt,goals:()=>goals,ev:()=>ev,eventsTick,renderEvt,herb:()=>herb,herbCard,found,goalBump,checkGoals,goalsCard,checkEnd,startDaily,exitDaily,dailyCard,loadDaily,state:()=>({booted,paused,pf:{on:PF.on,lang:PF.lang},mode,dealt,daily,streak,cans,shovels,dig,swap,stuck,grid,tray,score,best,busy,over,modal,themeId,level,lite,wet,tense,stats,parts:parts.length,K,tut:tut&&{n:tut.n,phase:tut.phase}}),start,turn,rules,tutStart,setTheme,gameOver,SND,FX,
   setScore:v=>setScore(v,true),set:(i,sp,st,v)=>{grid[i]=sp?(v?{sp,st,v}:{sp,st}):null;gv++;renderCell(i);},
   place:(k,c,r)=>fits(tray[k],c,r)?place(k,tray[k],c,r):false,
-  preview:(k,c,r)=>{showPreview(tray[k],c,r,fits(tray[k],c,r));return preG.childNodes.length;}};
+  preview:(k,c,r)=>{showPreview(tray[k],c,r,fits(tray[k],c,r));return preG.childNodes.length;},
+  undo,canUndo:()=>undoOk(),snap:()=>JSON.stringify(snap()),openSwap,stg,stageUp,stageCards};
+/*</debug>*/
 })();
 </script>
+<!--orangery-build-->
+<div id="orangery-build-label" aria-hidden="true" style="position:fixed;left:8px;bottom:6px;z-index:50;pointer-events:none;font:11px/1.4 system-ui,sans-serif;color:rgba(255,255,255,.85);background:rgba(0,0,0,.38);padding:1px 7px;border-radius:8px"></div>
+<script>/*orangery-update*/(function(){
+var cur='b64b853',at='2026-11-26T06:40:39Z',el=document.getElementById('orangery-build-label');
+try{var d=new Date(at),z=function(v){return String(v).padStart(2,'0')};el.textContent='сборка '+cur+' · '+z(d.getDate())+'.'+z(d.getMonth()+1)+' '+z(d.getHours())+':'+z(d.getMinutes());}catch(e){el.textContent='сборка '+cur;}
+function check(){
+  fetch(location.pathname+'?build-check='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
+    var m=t.match(/name="orangery-build" content="(\w+)/);if(!m||m[1]===cur)return;
+    var key='orangery-reloaded-'+m[1];try{if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1');}catch(e){return;}
+    fetch(location.href,{cache:'reload'}).catch(function(){}).then(function(){location.reload();});
+  }).catch(function(){});
+}
+check();document.addEventListener('visibilitychange',function(){if(!document.hidden)check();});
+})();</script>
+<!--/orangery-build-->
 </body>
 </html>
