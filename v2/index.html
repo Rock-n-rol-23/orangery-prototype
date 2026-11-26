@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Оранжерея: прототип забега</title>
-<meta name="orangery-build" content="b64b853 2026-11-26T06:40:39Z">
+<meta name="orangery-build" content="c7fb4ab 2026-11-26T14:02:19Z">
 <style>
 /* «Оранжерея», черновой прототип забега. Стиль по orangery/design.md, эталон mockups/styles-v2.html. */
 :root{
@@ -214,13 +214,15 @@ const PURE=(()=>{
   const isDate=s=>typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s);
   const obj=o=>!!o&&typeof o==='object'&&!Array.isArray(o);
   const clone=o=>JSON.parse(JSON.stringify(o));
+  /* только собственный ключ: имя вроде toString в испорченной записи не должно находить свойство самого объекта */
+  const own=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
   /* запись игрока приводится к известному виду; всё непонятное отбрасывается */
   function clean(r){
     if(!obj(r)||r.v!==1)return null;
     const herb={c:{},n:[]};
     if(obj(r.herb)&&obj(r.herb.c)){
       Object.keys(r.herb.c).forEach(k=>{const v=num(r.herb.c[k]);if(v>0)herb.c[k]=v;});
-      if(Array.isArray(r.herb.n))herb.n=r.herb.n.filter((k,i,a)=>typeof k==='string'&&herb.c[k]&&a.indexOf(k)===i);
+      if(Array.isArray(r.herb.n))herb.n=r.herb.n.filter((k,i,a)=>typeof k==='string'&&own(herb.c,k)&&a.indexOf(k)===i);
     }
     const streak=obj(r.streak)&&isDate(r.streak.last)?{last:r.streak.last,n:num(r.streak.n)}:null;
     const daily=obj(r.daily)&&isDate(r.daily.date)?{date:r.daily.date,done:!!r.daily.done,run:obj(r.daily.run)?clone(r.daily.run):null,result:obj(r.daily.result)?clone(r.daily.result):null}:null;
@@ -236,7 +238,7 @@ const PURE=(()=>{
     const fresh=b.ts>a.ts?b:a,herb={c:{},n:[]};
     /* негодный забег более свежей копии не заменяет рабочий забег другой копии */
     const runOf=okRun&&fresh.run&&!okRun(fresh.run)?(fresh===a?b:a):fresh;
-    [a,b].forEach(r=>Object.keys(r.herb.c).forEach(k=>{herb.c[k]=Math.max(herb.c[k]||0,r.herb.c[k]);}));
+    [a,b].forEach(r=>Object.keys(r.herb.c).forEach(k=>{herb.c[k]=Math.max(own(herb.c,k)?herb.c[k]:0,r.herb.c[k]);}));
     [a,b].forEach(r=>r.herb.n.forEach(k=>{if(herb.n.indexOf(k)<0)herb.n.push(k);}));
     let streak=a.streak||b.streak;
     if(a.streak&&b.streak)streak=b.streak.last>a.streak.last||(b.streak.last===a.streak.last&&b.streak.n>a.streak.n)?b.streak:a.streak;
@@ -318,7 +320,40 @@ const PURE=(()=>{
   const shareText=r=>(r.daily?`Оранжерея, семя дня ${r.date}: ${r.score} очков`:`Мой сад в «Оранжерее»: ${r.score} очков`)+(r.lotus?', лотосов '+r.lotus:'')+'.';
   /* запись более новой версии формата: её оставила более новая сборка игры, старой сборке её нельзя ни читать, ни затирать */
   const foreign=r=>obj(r)&&typeof r.v==='number'&&r.v>1;
-  return {mergeSaves,foreign,adGate,canOffer,AD_GAP,AD_CANS,AD_FAILS,fit,shareText,SHOVEL_MAX,SHOVEL_CHAIN,earnsShovel,shovelsOf,digsNeeded,rescue,adOpen,adTool,canUndo,STAGES,stageOf,stageSpan,stageEvents,stageNew,stageWeeds,stageGoals,stageBig,goalPool};
+  /* группа: соседние по сторонам растения одного вида и стадии; цветы (стадия 3) собираются в группу любых видов, из них растёт лотос */
+  function groupOf(g,i){
+    const t=g[i];if(!t)return [];
+    const seen=new Set([i]),q=[i];
+    while(q.length){const k=q.pop(),c=k%5,r=(k/5)|0;
+      [[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>{const c2=c+d[0],r2=r+d[1];if(c2<0||c2>4||r2<0||r2>4)return;const j=r2*5+c2;if(seen.has(j))return;const o=g[j];if(o&&o.st===t.st&&(o.sp===t.sp||t.st===3)){seen.add(j);q.push(j);}});}
+    return [...seen];
+  }
+  /* Считает ход наперёд на копии грядки: и подсветка до хода, и сам ход идут по одному списку шагов.
+     Правило одно: группа из трёх и больше стягивается в ту клетку, куда поставили фигуру. bf — клетка с бабочкой или -1 */
+  function plan(g,placed,bf){
+    const steps=[];bf=bf>=0?bf:-1;
+    for(const i of placed){let combo=0;
+      while(g[i]){
+        const grp=groupOf(g,i);if(grp.length<3)break;combo++;
+        const t=g[i],others=grp.filter(k=>k!==i),same=grp.every(k=>g[k].sp===t.sp);others.forEach(k=>{g[k]=null;});
+        /* редкие находки: четыре и больше бутонов дают махровый цветок; три одинаковых цветка дают лотос их цвета, четыре и больше дают королевский */
+        const res=t.st===4?null:t.st===3?{sp:'w',st:4,v:grp.length>=4?'k':same?t.sp:'w'}:t.st===2&&grp.length>=4?{sp:t.sp,st:3,v:'d'}:{sp:t.sp,st:t.st+1};g[i]=res;
+        /* бабочка на одном из слившихся растений удваивает очки; сорняки по соседству с точкой слияния пропадают */
+        const dbl=bf>=0&&grp.indexOf(bf)>=0,weeds=[];if(dbl)bf=-1;
+        [[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>{const c2=i%5+d[0],r2=((i/5)|0)+d[1];if(c2<0||c2>4||r2<0||r2>4)return;const j=r2*5+c2;if(g[j]&&g[j].sp==='x'){g[j]=null;weeds.push(j);}});
+        steps.push({i,others,res,combo,weeds,bf:dbl,pts:(res?Math.round([0,0,20,60,200][res.st]*combo*(grp.length>3?1.5:1)):600*combo)*(dbl?2:1)+weeds.length*15});
+        if(!res)break;}}
+    return steps;
+  }
+  /* золотое семя подстраивается под соседей: становится тем растением, с которым получится самая большая группа */
+  function wild(g,i){
+    let best=null;
+    [[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>{const c2=i%5+d[0],r2=((i/5)|0)+d[1];if(c2<0||c2>4||r2<0||r2>4)return;const t=g[r2*5+c2];if(!t||t.sp==='x')return;
+      const keep=g[i];g[i]={sp:t.sp,st:t.st};const n=groupOf(g,i).length;g[i]=keep;
+      if(!best||n>best.n||(n===best.n&&t.st>best.st))best={n,sp:t.sp,st:t.st};});
+    return best?(best.st===4?{sp:'w',st:4,v:'w'}:{sp:best.sp,st:best.st}):{sp:'r',st:1};
+  }
+  return {mergeSaves,foreign,adGate,canOffer,AD_GAP,AD_CANS,AD_FAILS,fit,shareText,SHOVEL_MAX,SHOVEL_CHAIN,earnsShovel,shovelsOf,digsNeeded,rescue,adOpen,adTool,canUndo,STAGES,stageOf,stageSpan,stageEvents,stageNew,stageWeeds,stageGoals,stageBig,goalPool,groupOf,plan,wild};
 })();
 /*</pure>*/
 /* хранилище данных игрока: память и зеркало в localStorage. Если localStorage недоступен, игра живёт на памяти и облаке */
@@ -800,7 +835,8 @@ const FX={
   /* искры поднимаются по всей грядке: лотос или новый уровень цветения */
   rise(n){for(let k=0;k<NN(n);k++)emit({t:'glow',img:sprite(k%3?'gold':'white'),x:20+grnd()*350,y:300+grnd()*380,vx:(grnd()-.5)*20,vy:-40-grnd()*70,g:-12,drag:.99,r:4+grnd()*5,life:1.2+grnd(),age:-grnd()*.5,a:.85});}
 };
-const buzz=v=>{try{if(navigator.vibrate&&(!navigator.userActivation||navigator.userActivation.hasBeenActive))navigator.vibrate(v);}catch(e){}};
+/* вибрация молчит вместе со звуком: «тишина» значит без звука и без жужжания телефона */
+const buzz=v=>{try{if(SND.mode&&navigator.vibrate&&(!navigator.userActivation||navigator.userActivation.hasBeenActive))navigator.vibrate(v);}catch(e){}};
 
 /* ---------- звук: всё синтезируется на месте, файлов нет ---------- */
 const SND=(()=>{
@@ -810,15 +846,25 @@ const SND=(()=>{
   const hz=m=>440*Math.pow(2,(m-69)/12);
   /* пентатоника от до первой октавы: любые её ноты согласны со всеми аккордами фона */
   const PENTA=[0,2,4,7,9],note=n=>60+PENTA[((n%5)+5)%5]+12*Math.floor(n/5);
-  function build(c){
-    const m=c.createGain(),comp=c.createDynamicsCompressor();m.gain.value=.8;m.connect(comp);comp.connect(c.destination);
+  /* время суток в звуке: ночью тише и глуше, как будто в теплице все спят. f — срез верхов у всего звука, pad — у фоновых аккордов, g — громкость на выходе.
+     Срез и громкость стоят после компрессора: перед ним он съедает разницу и ночь выходит не тише */
+  const TONE={dawn:{f:18000,pad:950,g:1},day:{f:18000,pad:950,g:1},dusk:{f:7000,pad:880,g:.92},night:{f:2600,pad:720,g:.78}};
+  const toneOf=th=>TONE[th]||TONE.day;
+  /* земля звучит каждый раз чуть иначе: высота плавает на четверть полутона, громкость и шорох на несколько процентов */
+  const vary=c=>Math.pow(2,(Math.random()*2-1)*c/1200),jit=k=>1+(Math.random()*2-1)*k;
+  function build(c,th){
+    const tn=toneOf(th===undefined?themeId:th);
+    const m=c.createGain(),comp=c.createDynamicsCompressor(),tone=c.createBiquadFilter(),out=c.createGain();m.gain.value=.8;
+    /* Q −3 дБ: срез без горба на частоте среза */
+    tone.type='lowpass';tone.Q.value=-3;tone.frequency.value=tn.f;out.gain.value=tn.g;
+    m.connect(comp);comp.connect(tone);tone.connect(out);out.connect(c.destination);
     /* мягкое длинное эхо: затухающий шум без верхов */
     const rev=c.createConvolver(),len=(c.sampleRate*2.6)|0,buf=c.createBuffer(2,len,c.sampleRate);
     for(let ch=0;ch<2;ch++){const d=buf.getChannelData(ch);let y=0;for(let i=0;i<len;i++){y=y*.72+(Math.random()*2-1)*.28;d[i]=y*Math.pow(1-i/len,3);}}
     rev.buffer=buf;const w=c.createGain();w.gain.value=.5;rev.connect(w);w.connect(m);
     const nb=c.createBuffer(1,c.sampleRate,c.sampleRate),nd=nb.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
-    const padf=c.createBiquadFilter();padf.type='lowpass';padf.frequency.value=950;padf.connect(m);padf.connect(rev);
-    return {c,m,rev,nb,padf,pl:{},deg:7,rest:false};
+    const padf=c.createBiquadFilter();padf.type='lowpass';padf.frequency.value=tn.pad;padf.connect(m);padf.connect(rev);
+    return {c,m,tone,out,rev,nb,padf,pl:{},deg:7,rest:false};
   }
   /* щипок струны (алгоритм Карплуса и Стронга): звучит как калимба или арфа, считается один раз на ноту */
   function pluckBuf(b,m){
@@ -874,14 +920,14 @@ const SND=(()=>{
   const S={
     pick:(b,t)=>blip(b,t,520,640,.045,.06),
     turn:(b,t)=>{blip(b,t,470,600,.05,.06);blip(b,t+.045,600,540,.04,.035);},
-    drop:(b,t)=>{blip(b,t,170,72,.13,.26);hiss(b,t,.08,.07,1100);},
+    drop:(b,t)=>{const p=vary(25),v=jit(.08);blip(b,t,170*p,72*p,.13,.26*v);hiss(b,t,.08,.07*v,1100*jit(.1));},
     back:(b,t)=>blip(b,t,280,200,.09,.05),
     merge:(b,t,st,combo)=>{const n=5+((st||2)-2)*2+((combo||1)-1)*2;pluck(b,t,note(n),.2);pluck(b,t+.07,note(n+2),.13);if(st>=3)pluck(b,t+.14,note(n+4),.1);},
     lotus:(b,t)=>{[5,7,9,10,12,14].forEach((n,i)=>pluck(b,t+i*.075,note(n),.15));bell(b,t+.3,hz(note(14)),.05,2.2);},
     clear:(b,t)=>{for(let i=0;i<8;i++)pluck(b,t+i*.05,note(8+i),.1);},
     level:(b,t)=>{pluck(b,t,note(7),.11);pluck(b,t+.13,note(9),.11);pluck(b,t+.26,note(12),.1);},
     over:(b,t)=>{pluck(b,t,note(7),.14);pluck(b,t+.32,note(5),.14);pluck(b,t+.68,note(2),.13);},
-    dig:(b,t)=>{blip(b,t,130,60,.12,.2);hiss(b,t+.03,.14,.06,650);},
+    dig:(b,t)=>{const p=vary(25),v=jit(.08);blip(b,t,130*p,60*p,.12,.2*v);hiss(b,t+.03,.14,.06*v,650*jit(.1));},
     ui:(b,t)=>blip(b,t,700,700,.02,.035)
   };
   function bedOn(){
@@ -902,7 +948,8 @@ const SND=(()=>{
     get mode(){return mode;},
     play(name,a,b){if(!ensure()||ac.state!=='running')return;try{S[name](B,ac.currentTime+.004,a,b);}catch(e){}},
     unlock(){if(ensure()&&ac.state==='running'&&!musT)wake();},
-    retheme(){},
+    /* сменилось время суток: звук переходит к новому за пару секунд */
+    retheme(){if(!B)return;try{const tn=toneOf(themeId),t=B.c.currentTime;B.tone.frequency.setTargetAtTime(tn.f,t,.8);B.padf.frequency.setTargetAtTime(tn.pad,t,.8);B.out.gain.setTargetAtTime(tn.g,t,.8);}catch(e){}},
     toggle(){mode=mode?0:2;try{localStorage.setItem('orangery-snd2',String(mode));}catch(e){}
       if(!mode){clearInterval(musT);musT=0;if(ac)ac.suspend().catch(()=>{});}
       else if(ensure()&&ac.state==='running')wake();
@@ -911,8 +958,10 @@ const SND=(()=>{
     /* проверка без динамиков: звуки и 32 секунды музыки считаются в память, возвращаются пик и средняя громкость */
     async test(){
       const C=window.OfflineAudioContext||window.webkitOfflineAudioContext,out={},meas=d=>{let pk=0,sq=0,bad=0;for(let i=0;i<d.length;i++){const v=Math.abs(d[i]);if(!(v>=0))bad++;if(v>pk)pk=v;sq+=v*v;}return [+pk.toFixed(3),+Math.sqrt(sq/d.length).toFixed(4),bad];};
-      for(const name of Object.keys(S)){const oc=new C(1,44100*3,44100),b=build(oc);S[name](b,.01,3,2);out[name]=meas((await oc.startRendering()).getChannelData(0));}
-      const oc=new C(1,44100*34,44100),b=build(oc);for(let s=0;s<64;s++)musStep(b,.05+s*STEP,s);out.music=meas((await oc.startRendering()).getChannelData(0));
+      for(const name of Object.keys(S)){const oc=new C(1,44100*3,44100),b=build(oc,'day');S[name](b,.01,3,2);out[name]=meas((await oc.startRendering()).getChannelData(0));}
+      const oc=new C(1,44100*34,44100),b=build(oc,'day');for(let s=0;s<64;s++)musStep(b,.05+s*STEP,s);out.music=meas((await oc.startRendering()).getChannelData(0));
+      /* тот же лотос днём и ночью: ночью тише */
+      for(const th of ['day','night']){const o2=new C(1,44100*3,44100),b2=build(o2,th);S.lotus(b2,.01);out['lotus-'+th]=meas((await o2.startRendering()).getChannelData(0));}
       return out;
     }
   };
@@ -1011,7 +1060,13 @@ const PF=(()=>{
     rewarded(){return adv('showRewardedVideo',api.patience.rew).then(r=>r.rewarded?'rewarded':r.opened?'closed':'error');},
     ready(){wantReady=true;if(readyDone||!y)return;readyDone=true;try{const L=y.features&&y.features.LoadingAPI;if(L)L.ready();}catch(e){}},
     play(on){on=!!on;wantPlay=on;if(!y||gp===on)return;if(gp===null&&!on){gp=false;return;}gp=on;try{const g=y.features&&y.features.GameplayAPI;if(g){if(on)g.start();else g.stop();}}catch(e){}},
-    onPause(fn){pauseFn=fn;}
+    onPause(fn){pauseFn=fn;},
+    /* копирование способом самой площадки: буфер обмена браузера во вложенной рамке зависит от её разрешений.
+       null — у площадки такого способа нет; иначе обещание: true, если площадка приняла текст */
+    copy(text){
+      if(!y||!y.clipboard||typeof y.clipboard.writeText!=='function')return null;
+      try{return Promise.resolve(y.clipboard.writeText(text)).then(()=>true,()=>false);}catch(e){return null;}
+    }
   };
   return api;
 })();
@@ -1261,39 +1316,18 @@ function setLevel(){
   const up=l>level;level=l;applyLevel();
   if(up){SND.play('level');FX.rise(16);}
 }
-function groupOf(g,i){
-  const t=g[i];if(!t)return [];
-  const seen=new Set([i]),q=[i];
-  while(q.length){const k=q.pop(),c=k%5,r=(k/5)|0;
-    [[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>{const c2=c+d[0],r2=r+d[1];if(c2<0||c2>4||r2<0||r2>4)return;const j=r2*5+c2;if(seen.has(j))return;const o=g[j];if(o&&o.st===t.st&&(o.sp===t.sp||t.st===3)){seen.add(j);q.push(j);}});}
-  return [...seen];
-}
-/* Считает ход наперёд на копии грядки: и подсветка до хода, и сам ход идут по одному списку шагов.
-   Правило одно: группа из трёх и больше стягивается в ту клетку, куда поставили фигуру. */
-function plan(g,placed){
-  const steps=[];let bf=ev.bfly?ev.bfly.i:-1;
-  for(const i of placed){let combo=0;
-    while(g[i]){
-      const grp=groupOf(g,i);if(grp.length<3)break;combo++;
-      const t=g[i],others=grp.filter(k=>k!==i),same=grp.every(k=>g[k].sp===t.sp);others.forEach(k=>{g[k]=null;});
-      /* редкие находки: четыре и больше бутонов дают махровый цветок; три одинаковых цветка дают лотос их цвета, четыре и больше дают королевский */
-      const res=t.st===4?null:t.st===3?{sp:'w',st:4,v:grp.length>=4?'k':same?t.sp:'w'}:t.st===2&&grp.length>=4?{sp:t.sp,st:3,v:'d'}:{sp:t.sp,st:t.st+1};g[i]=res;
-      /* бабочка на одном из слившихся растений удваивает очки; сорняки по соседству с точкой слияния пропадают */
-      const dbl=bf>=0&&grp.indexOf(bf)>=0,weeds=[];if(dbl)bf=-1;
-      [[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>{const c2=i%5+d[0],r2=((i/5)|0)+d[1];if(c2<0||c2>4||r2<0||r2>4)return;const j=r2*5+c2;if(g[j]&&g[j].sp==='x'){g[j]=null;weeds.push(j);}});
-      steps.push({i,others,res,combo,weeds,bf:dbl,pts:(res?Math.round([0,0,20,60,200][res.st]*combo*(grp.length>3?1.5:1)):600*combo)*(dbl?2:1)+weeds.length*15});
-      if(!res)break;}}
-  return steps;
-}
+/* клетка с бабочкой для подсчёта хода: -1, если бабочки нет */
+const bfAt=()=>ev.bfly?ev.bfly.i:-1;
 /* подсветка до хода: что исчезнет (пунктир) и что вырастет (сплошная рамка) */
 let preKey='',dimmed=[];
 function showPreview(p,c,r,ok){
-  const key=p&&ok?gv+':'+c+','+r+':'+p.cells.map(q=>q[0]+''+q[1]).join(''):'';
+  /* в ключе и запас лопаток: поздняя награда за ролик может заполнить его посреди перетаскивания, и значок лопатки должен уйти */
+  const key=p&&ok?gv+':'+shovels+':'+c+','+r+':'+p.cells.map(q=>q[0]+''+q[1]).join(''):'';
   if(key===preKey)return;preKey=key;
   dimmed.forEach(k=>{holders[k].style.opacity='';});dimmed=[];
   if(!key){preG.innerHTML='';return;}
-  const g=grid.slice(),placed=p.cells.map(q=>{const i=(r+q[1])*5+c+q[0];g[i]=q[2]==='g'?wild(g,i):{sp:q[2],st:q[3]};return i;});
-  const eaten=new Set(),made=new Set(),steps=plan(g,placed);
+  const g=grid.slice(),placed=p.cells.map(q=>{const i=(r+q[1])*5+c+q[0];g[i]=q[2]==='g'?PURE.wild(g,i):{sp:q[2],st:q[3]};return i;});
+  const eaten=new Set(),made=new Set(),steps=PURE.plan(g,placed,bfAt());
   steps.forEach(s=>{s.others.forEach(k=>eaten.add(k));s.weeds.forEach(k=>eaten.add(k));made.add(s.i);});
   const xy=i=>[BX+(i%5)*STEP,BY+((i/5)|0)*STEP];
   let h='';
@@ -1305,6 +1339,10 @@ function showPreview(p,c,r,ok){
     else if(m)h+=`<g transform="translate(${x+30},${y+30}) scale(2.2)"><path d="${STAR}" style="${fill('gold')}"/></g>`;
     h+=m?`<rect class="made" x="${x+1}" y="${y+1}" width="${CELL-2}" height="${CELL-2}" rx="12"/>`:t?'':`<rect class="eat" x="${x+1}" y="${y+1}" width="${CELL-2}" height="${CELL-2}" rx="12"/>`;});
   steps.forEach(s=>{if(s.bf){const [x,y]=xy(s.i);h+=`<text class="pop" x="${x+30}" y="${y-3}" text-anchor="middle">×2</text>`;}});
+  /* ход даст цепочку: в углу клетки, где она случится, лопатка, которую за неё дадут. Если запас полон, лопатки не будет и значка нет */
+  const chain=!tut&&shovels<PURE.SHOVEL_MAX&&steps.find(s=>s.combo>=PURE.SHOVEL_CHAIN);
+  if(chain){const [x,y]=xy(chain.i),cx=x+CELL-6,cy=y+6;
+    h+=`<g class="earn"><circle cx="${cx}" cy="${cy}" r="12" style="fill:${u('soil')};stroke:var(--gold);stroke-width:1.6"/>${shovelArt(cx,cy+.5,.56,false,false)}</g>`;}
   preG.innerHTML=h;
 }
 /* одно слияние в три такта: замах, полёт, удар */
@@ -1343,12 +1381,12 @@ async function place(k,p,c,r){
   undoMark('place');
   const st0=stg();
   busy=true;acted=true;tray[k]=null;gv++;
-  const placed=p.cells.map(q=>{const i=(r+q[1])*5+c+q[0];grid[i]=q[2]==='g'?wild(grid,i):{sp:q[2],st:q[3]};renderCell(i,'pop');FX.puff(i);found(grid[i],true);return i;});
+  const placed=p.cells.map(q=>{const i=(r+q[1])*5+c+q[0];grid[i]=q[2]==='g'?PURE.wild(grid,i):{sp:q[2],st:q[3]};renderCell(i,'pop');FX.puff(i);found(grid[i],true);return i;});
   SND.play('drop');buzz(8);stats.moves++;
   setScore(score+placed.length);
   renderTray();
   await wait(170);
-  const steps=plan(grid.slice(),placed);
+  const steps=PURE.plan(grid.slice(),placed,bfAt());
   for(const s of steps)await playStep(s);
   if(steps.filter(s=>s.combo===1).length>=2)goalBump('double',1);
   if(PURE.earnsShovel(steps))gainShovel('chain');
@@ -1396,22 +1434,20 @@ function share(el){
   const say=ok=>{const t=el.querySelector('text');if(t)t.textContent=ok?'скопировано':'не получилось';};
   /* запасной способ для рамки, где у страницы нет доступа к буферу обмена */
   const legacy=()=>{try{const ta=document.createElement('textarea');ta.value=text;ta.setAttribute('readonly','');ta.style.cssText='position:fixed;left:-9999px;top:0;opacity:0';document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();return ok;}catch(e){return false;}};
-  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(()=>say(true),()=>say(legacy()));
-  else say(legacy());
+  /* копируем сразу двумя путями, пока нажатие свежее: буфером браузера и способом площадки. Хватит любого.
+     Площадка может не ответить вовсе (у её метода нет срока), поэтому её ждём не дольше PF_COPY_WAIT */
+  let left=2,done=false;
+  const fin=ok=>{if(done)return;if(ok){done=true;say(true);return;}if(--left===0){done=true;say(false);}};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(()=>fin(true),()=>fin(legacy()));else fin(legacy());
+  const viaPf=PF.copy(text);
+  if(viaPf)Promise.race([viaPf,new Promise(r=>setTimeout(()=>r(false),PF_COPY_WAIT))]).then(fin);else fin(false);
 }
+const PF_COPY_WAIT=1500;
 /* ---------- события на грядке: бабочка, сорняк, золотое семя ---------- */
 const weedArt=()=>{const lf=`fill:${u('leaf')};stroke:var(--edge);stroke-width:.9;stroke-linejoin:round`;
   return `<g transform="translate(31 58) scale(1.15) translate(-31 -58)"><ellipse cx="31" cy="57.5" rx="13" ry="3.2" style="${fill('black')};opacity:var(--shade)"/><g class="idle" style="${dly(3,5)}"><path d="M31,56 L21,46 L25.5,46.5 L16,35 L22.5,37.5 L18.5,24 L31,43Z" style="${lf}"/><path d="M31,56 L41,46 L36.5,46.5 L46,35 L39.5,37.5 L43.5,24 L31,43Z" style="${lf}"/><path d="M31,56 L25.5,39 L29,41.5 L27,26 L31,32 L35,26 L33,41.5 L36.5,39Z" style="${lf}"/>
     <circle cx="31" cy="49.5" r="7.6" style="${fill('leaf1')};stroke:var(--edge);stroke-width:.9"/>${dots(31,48.4,2.7,1)}${arc(31,53.6,4.6,-1.9,1.2)}</g></g>`;};
 const cellArt=t=>t.sp==='x'?weedArt():plant(t.sp,t.st,t.v);
-/* золотое семя подстраивается под соседей: становится тем растением, с которым получится самая большая группа */
-function wild(g,i){
-  let best=null;
-  [[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>{const c2=i%5+d[0],r2=((i/5)|0)+d[1];if(c2<0||c2>4||r2<0||r2>4)return;const t=g[r2*5+c2];if(!t||t.sp==='x')return;
-    const keep=g[i];g[i]={sp:t.sp,st:t.st};const n=groupOf(g,i).length;g[i]=keep;
-    if(!best||n>best.n||(n===best.n&&t.st>best.st))best={n,sp:t.sp,st:t.st};});
-  return best?(best.st===4?{sp:'w',st:4,v:'w'}:{sp:best.sp,st:best.st}):{sp:'r',st:1};
-}
 const BFLY=`<g class="bob"><g class="flap fl"><path d="M0,0 C-3,-10 -13,-11 -12,-3.5 C-11.4,1 -5,2 0,0Z" style="fill:${u('c-y')};stroke:var(--petal-rim);stroke-width:.6"/><path d="M0,0 C-4.5,2 -9.5,4.5 -8.4,8.6 C-7.2,11.6 -2,8.4 0,0Z" style="fill:${u('c-r')};stroke:var(--petal-rim);stroke-width:.6"/></g><g class="flap fr"><path d="M0,0 C3,-10 13,-11 12,-3.5 C11.4,1 5,2 0,0Z" style="fill:${u('c-y')};stroke:var(--petal-rim);stroke-width:.6"/><path d="M0,0 C4.5,2 9.5,4.5 8.4,8.6 C7.2,11.6 2,8.4 0,0Z" style="fill:${u('c-r')};stroke:var(--petal-rim);stroke-width:.6"/></g><path d="M0,-4.5 V5.5" style="fill:none;stroke:var(--dark);stroke-width:1.8;stroke-linecap:round"/></g>`;
 function renderEvt(how){
   const old=evtG.firstChild;
@@ -2386,7 +2422,7 @@ window.__orangery={LS,localRec,PF,adState,setLastAd:v=>{lastAdAt=v;},setAdFails:
 <!--orangery-build-->
 <div id="orangery-build-label" aria-hidden="true" style="position:fixed;left:8px;bottom:6px;z-index:50;pointer-events:none;font:11px/1.4 system-ui,sans-serif;color:rgba(255,255,255,.85);background:rgba(0,0,0,.38);padding:1px 7px;border-radius:8px"></div>
 <script>/*orangery-update*/(function(){
-var cur='b64b853',at='2026-11-26T06:40:39Z',el=document.getElementById('orangery-build-label');
+var cur='c7fb4ab',at='2026-11-26T14:02:19Z',el=document.getElementById('orangery-build-label');
 try{var d=new Date(at),z=function(v){return String(v).padStart(2,'0')};el.textContent='сборка '+cur+' · '+z(d.getDate())+'.'+z(d.getMonth()+1)+' '+z(d.getHours())+':'+z(d.getMinutes());}catch(e){el.textContent='сборка '+cur;}
 function check(){
   fetch(location.pathname+'?build-check='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){
